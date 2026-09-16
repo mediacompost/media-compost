@@ -21,6 +21,11 @@
 
 name: Release Publish
 
+# The list otherwise shows every one of these as "Release Publish" on "main":
+# a dispatched run belongs to the branch it was started from rather than to
+# the tag it is about.
+run-name: Publish ${{ inputs.tag }}
+
 on:
   workflow_dispatch:
     inputs:
