@@ -56,6 +56,12 @@
 # — which is a fact about the call rather than about the event that caused it.
 name: Docs
 
+# Three kinds of run that otherwise look identical in the list: a release's,
+# a repair of a series already out, and /dev/. An empty `ref` is falsy, so it
+# falls through to "dev"; `latest` says whether this one takes the alias,
+# which is the difference between a rebuild and a redirection of everybody.
+run-name: Docs ${{ inputs.ref || 'dev' }}${{ inputs.latest && ' (latest)' || '' }}
+
 on:
   workflow_call:
     inputs:
