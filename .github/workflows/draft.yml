@@ -26,11 +26,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           # The same Node the CI build uses: `npm test` is not run here, but
           # the build is the same script, and one version means one bundle.
@@ -67,7 +67,7 @@ jobs:
         run: |
           mkdir -p _notes
           python scripts/bump_version.py --section "${TAG#v}" | tee _notes/notes.md
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: notes
           path: _notes/notes.md
@@ -88,7 +88,7 @@ jobs:
           assert any(n.endswith("_web_dist/index.html") for n in names), \
               "sdist has no frontend in it — check MANIFEST.in"
           EOF
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dist
           path: |
@@ -109,11 +109,11 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: dist
           path: _dist
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: notes
           path: _notes
