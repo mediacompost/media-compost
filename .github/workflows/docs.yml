@@ -19,8 +19,8 @@
 # NOT do the job either way: it would land inside the version directory rather
 # than at the root where Pages looks for it.
 #
-#   a published release  ->  /1.2.3/, and `latest` starts pointing at it
-#   run by hand          ->  /dev/, from whatever branch you pick
+#   a `vX.Y.Z` tag pushed  ->  /1.2.3/, and `latest` starts pointing at it
+#   run by hand            ->  /dev/, from whatever branch you pick
 #
 # RELEASES ONLY (owner 2026-09). This used to run on every push to main, which
 # republished the whole site for a typo in a docstring and put a second job in
@@ -31,16 +31,23 @@
 # last manual run, which is the honest state of unreleased documentation
 # anyway.
 #
-# The trigger is the RELEASE rather than the tag push, for the same reason
-# `publish.yml` uses it: a tag usually points at a commit that is already
-# pushed, so the event carries no file changes and any `paths:` economy would
-# silently skip the publish that matters. Both workflows then fire once, from
-# one gesture — PyPI and the site.
+# PUBLISH.YML CALLS THIS ONE — it is not watching for anything of its own.
+# `workflow_call` is what makes a site that only ever describes a version
+# somebody can install: the calling job says `needs: publish`, so a wheel
+# PyPI refused never gets documentation claiming otherwise. On a tag of its
+# own this would fire beside the upload rather than after it, and there is no
+# `release: published` to wait for either, since publish.yml creates that
+# release with GITHUB_TOKEN and a token-made release raises no event another
+# workflow can see.
+#
+# A called workflow runs with the CALLER's context — `github.ref` is the tag
+# that started the whole thing and `github.event_name` is `push` — which is
+# why the two steps at the bottom can tell a release from a hand-started run
+# without being told.
 name: Docs
 
 on:
-  release:
-    types: [published]
+  workflow_call:
   workflow_dispatch:
 
 # `mike` pushes the built site to gh-pages, so this needs write access to the
@@ -61,10 +68,10 @@ jobs:
           # mike reads and rewrites the gh-pages branch; a shallow clone has
           # neither it nor the history it appends to.
           fetch-depth: 0
-          # A release is about its TAG. The default checkout for the event is
-          # the same commit today, and naming it is what keeps that true after
-          # somebody edits a release, or re-runs this job a week later.
-          ref: ${{ github.event.release.tag_name || github.ref }}
+          # The tag for a release run, the chosen branch for a hand-started
+          # one — `github.ref` is both, and naming it keeps a re-run a week
+          # later building what it built the first time.
+          ref: ${{ github.ref }}
 
       - uses: actions/setup-python@v5
         with:
@@ -85,9 +92,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Publish the released version
-        if: github.event_name == 'release'
+        if: github.event_name == 'push'
         env:
-          TAG: ${{ github.event.release.tag_name }}
+          TAG: ${{ github.ref_name }}
         run: |
           version="${TAG#v}"
           mike deploy -F website/mkdocs.yml --push --update-aliases "$version" latest

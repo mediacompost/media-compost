@@ -28,11 +28,11 @@ your changes under that licence.
 
 - Work happens on a short-lived branch — in your fork, unless you are a
   maintainer — and lands on `main` through a pull request.
-- **A release is a tag on `main`**, named `v1.2.0`, published as a GitHub
-  Release. Publishing that release — not pushing the tag — runs `publish.yml`
-  (the wheel, to PyPI) and `docs.yml` (the versioned documentation, as
-  `/1.2.0/` and `latest`). The unreleased docs at `/dev/` are a hand-started
-  run of the same workflow.
+- **A release is a tag on `main`**, named `v1.2.0`. Pushing it is the whole
+  gesture: `publish.yml` uploads the wheel to PyPI and then creates the
+  GitHub Release itself, notes and files included, and `docs.yml` publishes
+  the versioned documentation as `/1.2.0/` and `latest`. The unreleased docs
+  at `/dev/` are a hand-started run of the same workflow.
 - **`gh-pages` is written by machines** (`mike`, from the docs workflow).
   Never commit to it, never branch from it.
 
@@ -291,23 +291,23 @@ python3 -m venv /tmp/mc-check
 /tmp/mc-check/bin/media-compost serve --data-dir /tmp/mc-check-lib
 #    The library page must render — a blank page means the bundle is missing.
 
-# 6. Commit and tag on main.
+# 6. Commit and tag on main. PUSHING THE TAG IS THE RELEASE: there is no
+#    GitHub form to fill in afterwards, and nothing else to press.
 git commit -am "Release X.Y.Z"
 git tag -a vX.Y.Z -m "X.Y.Z"
 git push && git push --tags
 
-# 7. PUBLISH THE RELEASE ON GITHUB — the tag on its own does nothing. Both
-#    workflows trigger on `release: published`, so this one gesture is what
-#    uploads the wheel to PyPI (publish.yml, trusted publishing, no token)
-#    and puts the documentation up as /X.Y.Z/ with `latest` moved to it
-#    (docs.yml). Draft it against the tag and publish it EMPTY: the notes are
-#    CHANGELOG.md's `## X.Y.Z` section, which publish.yml reads before it
-#    builds anything — a version with no entry fails there, while the release
-#    is still something you can delete — and writes into the release when it
-#    is done. The wheel and the sdist attach themselves too, the same files
-#    PyPI got rather than a rebuild. (Committing them is not an option:
-#    content-hashed filenames make every rebuild a new ~1.3 MB blob in a
-#    history that is forever.)
+# 7. Watch Actions. publish.yml holds the version to the tag and reads
+#    CHANGELOG.md's `## X.Y.Z` section BEFORE it builds anything — a version
+#    with no entry fails there, when deleting the tag is the whole of the
+#    cleanup — then uploads to PyPI (trusted publishing, no token) and drafts
+#    the GitHub Release with that section as its notes and the very files
+#    PyPI took, publishing it once they are on it. The documentation follows
+#    the upload rather than racing it — publish.yml CALLS docs.yml once PyPI
+#    has the files — and goes up as /X.Y.Z/ with `latest` moved to it. (The
+#    files are
+#    deliberately not committed: content-hashed filenames make every rebuild
+#    a new ~1.3 MB blob in a history that is forever.)
 
 # 8. Move main past the release AT ONCE, so a build from main never carries
 #    the released number: pip would refuse to install it over the release.
@@ -339,14 +339,13 @@ git push
 - [ ] The wheel installed into a clean venv serves the app, not a blank page.
 - [ ] `CHANGELOG.md`'s `Unreleased` section is now headed `X.Y.Z` (the bump
       does it, and refuses to release an empty one).
-- [ ] Tag `vX.Y.Z` pushed **and the GitHub release published** — the release
-      is the trigger, not the tag. It runs `publish.yml` (the wheel, to PyPI)
-      and `docs.yml`, which publishes `/X.Y.Z/` and moves the `latest` alias
-      to it. `/dev/` is a hand-started run of the same workflow and is as old
-      as the last one.
-- [ ] The release page carries the changelog's entry as its notes, and the
-      wheel and the sdist as its files — `publish.yml` writes all three after
-      the upload, so a release still empty means something went wrong.
+- [ ] Tag `vX.Y.Z` pushed — which runs `publish.yml`: PyPI, then the GitHub
+      Release, and `docs.yml` called from it once the upload succeeded
+      (`/X.Y.Z/`, with the `latest` alias moved to it). `/dev/` is a
+      hand-started run of that same workflow and is as old as the last one.
+- [ ] Both workflows green, and the release page carries the changelog's
+      entry as its notes with the wheel and the sdist as its files. No
+      release page at all means `publish.yml` stopped before it got there.
 - [ ] `scripts/bump_version.py --next-dev` committed on `main` right after,
       with an empty `Unreleased` reopened above `X.Y.Z`.
 

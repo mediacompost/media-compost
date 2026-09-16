@@ -13,15 +13,30 @@
 # and the environment (pypi) as its publisher, and the `id-token: write`
 # permission is what lets the job prove it is that workflow.
 #
-# Draft a GitHub Release with tag `vX.Y.Z` and publish it; the version is
-# held to the tag first, so a mistagged release fails here rather than
-# uploading under the wrong number.
+# PUSHING THE TAG IS THE RELEASE. This workflow uploads to PyPI and then
+# creates the GitHub Release itself — as a DRAFT carrying the notes and the
+# files, published only once they are on it.
+#
+# That order is not a preference. Immutable releases are on for this
+# repository, and GitHub's rule is that once a release is published "assets
+# can't be added, modified, or deleted" (the tag is frozen to its commit
+# too); the title and the notes stay editable, which is the only reason the
+# earlier shape — publish by hand, attach afterwards — got as far as writing
+# the notes before failing. Draft, attach, publish is the order the feature
+# documents, and a workflow can only take it by owning the publish.
+#
+# So nothing here waits for a person, and one consequence is worth knowing:
+# a release published by GITHUB_TOKEN raises no event other workflows can
+# see, which is why docs.yml watches the same tag rather than the release.
+#
+# The version is held to the tag before anything is built, so a mistagged
+# release fails while deleting the tag is the whole of the cleanup.
 
 name: Publish
 
 on:
-  release:
-    types: [published]
+  push:
+    tags: ["v*"]
 
 jobs:
   build:
@@ -38,7 +53,7 @@ jobs:
           node-version: "24"
       - name: The release tag names the version the package declares
         run: |
-          python - "${{ github.event.release.tag_name }}" <<'EOF'
+          python - "${{ github.ref_name }}" <<'EOF'
           import re, sys, tomllib
           tag = sys.argv[1]
           m = re.fullmatch(r"v?(\d+\.\d+\.\d+(?:[a-z0-9.+-]*)?)", tag)
@@ -64,7 +79,7 @@ jobs:
       # same parser that renames `## Unreleased` on release day.
       - name: The changelog has an entry for this version, and it becomes the notes
         env:
-          TAG: ${{ github.event.release.tag_name }}
+          TAG: ${{ github.ref_name }}
         run: |
           mkdir -p _notes
           python scripts/bump_version.py --section "${TAG#v}" | tee _notes/notes.md
@@ -114,9 +129,8 @@ jobs:
         with:
           packages-dir: _dist
 
-  # The same files on the release page, for somebody who downloads rather than
-  # installs. They are the artifact the build job made — not a second build,
-  # which would be a different file with the same version on it.
+  # The release page itself: the changelog's own words for notes, and the very
+  # files PyPI took rather than a second build of the same version.
   #
   # Its own job for two reasons: it runs only once PyPI has taken them, so the
   # release never advertises a wheel that is not on the index; and `contents:
@@ -124,10 +138,8 @@ jobs:
   # permission in this repository that can speak for the project on PyPI.
   #
   # `gh` is on the runner, so this needs no action and no checkout — `--repo`
-  # is what replaces the latter. Uploading an asset does not raise a `release`
-  # event of the kind either workflow here listens for (`published` alone), so
-  # there is nothing to loop.
-  attach:
+  # is what replaces the latter.
+  release:
     needs: publish
     runs-on: ubuntu-latest
     permissions:
@@ -141,18 +153,41 @@ jobs:
         with:
           name: notes
           path: _notes
-      # The release body is the changelog's entry, so the two cannot drift and
-      # nobody pastes anything. Editing a release raises `release: edited`,
-      # which neither workflow here listens for.
-      - name: The release says what the changelog says
+      # Created as a draft WITH its files, then published: after that press
+      # nothing can be attached to it ever again. `--title` is the tag, which
+      # is what an untitled release shows anyway — said explicitly so `gh` is
+      # never left wanting an answer nobody is there to give.
+      #
+      # A re-run deletes the draft it finds first. A published release it will
+      # not touch: that one is immutable, the upload is already on PyPI, and
+      # the way past it is the next version, not another attempt at this one.
+      - name: Draft the release with its notes and its files
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event.release.tag_name }}
-        run: gh release edit "$TAG" --notes-file _notes/notes.md --repo "${{ github.repository }}"
-      - name: Attach the wheel and the sdist to the release
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          if gh release view "$TAG" --repo "$REPO" --json isDraft --jq .isDraft 2>/dev/null | grep -qx true; then
+            gh release delete "$TAG" --repo "$REPO" --yes --cleanup-tag=false
+          fi
+          gh release create "$TAG" _dist/* \
+            --repo "$REPO" --draft --title "$TAG" --notes-file _notes/notes.md
+      - name: Publish it
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event.release.tag_name }}
-        # --clobber so re-running a failed publish replaces the assets rather
-        # than failing on the ones the first attempt already uploaded.
-        run: gh release upload "$TAG" _dist/* --clobber --repo "${{ github.repository }}"
+          TAG: ${{ github.ref_name }}
+        run: gh release edit "$TAG" --draft=false --repo "${{ github.repository }}"
+
+  # The site, only for a version that reached the index. It hangs off the
+  # UPLOAD rather than off the release job beside it: PyPI is what somebody
+  # installs from, and a hiccup writing the GitHub release should not leave
+  # the documentation a version behind.
+  #
+  # `uses:` rather than a copy of docs.yml's steps — one definition of how the
+  # site is built, called here and startable by hand for /dev/. The called
+  # workflow sees this run's own ref, so it needs no input to know the tag.
+  docs:
+    needs: publish
+    permissions:
+      contents: write
+    uses: ./.github/workflows/docs.yml
