@@ -1,0 +1,23 @@
+# Media Compost — the dedicated Florence-2 environment (optional).
+#
+# Florence-2's bundled ("trust_remote_code") model code is incompatible with
+# the transformers version the main app uses, so it runs out-of-process in its
+# own venv. The easiest way to build it is the command the UI runs (it
+# installs this file):
+#
+#   python -m media_compost.hub.setup_env florence [PYTHON]
+#
+# Manual equivalent:
+#
+#   python3 -m venv .venv-florence
+#   .venv-florence/bin/pip install -r media_compost/hub/requirements-florence-env.txt
+#
+# The app auto-detects .venv-florence at the REPO ROOT (override with
+# MEDIA_COMPOST_FLORENCE_PYTHON). Weights are downloaded from the app's
+# Settings → Models panel into the shared Hugging Face cache.
+
+torch
+transformers==4.49.0   # pinned: must match Florence-2's bundled model code
+timm
+einops
+pillow

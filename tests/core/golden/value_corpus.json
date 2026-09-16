@@ -1,0 +1,303 @@
+{
+ "_comment": "The <name>:<number><unit> value-tag convention, one answer per basename — parsed by media_compost/tagvalue.py AND frontend/src/shared/tagvalue.ts, asserted by both suites so the mirrors cannot drift. `space` is which values it compares against; `canon` is the value in that space's base unit. null means 'not a value tag'.",
+ "cases": [
+  {
+   "basename": "3",
+   "value": 3,
+   "unit": "",
+   "space": "",
+   "canon": 3
+  },
+  {
+   "basename": "12",
+   "value": 12,
+   "unit": "",
+   "space": "",
+   "canon": 12
+  },
+  {
+   "basename": "7",
+   "value": 7,
+   "unit": "",
+   "space": "",
+   "canon": 7
+  },
+  {
+   "basename": "-5",
+   "value": -5,
+   "unit": "",
+   "space": "",
+   "canon": -5
+  },
+  {
+   "basename": "1.72m",
+   "value": 1.72,
+   "unit": "m",
+   "space": "length",
+   "canon": 1.72
+  },
+  {
+   "basename": "1,72m",
+   "value": 1.72,
+   "unit": "m",
+   "space": "length",
+   "canon": 1.72
+  },
+  {
+   "basename": "172cm",
+   "value": 172,
+   "unit": "cm",
+   "space": "length",
+   "canon": 1.72
+  },
+  {
+   "basename": "990mm",
+   "value": 990,
+   "unit": "mm",
+   "space": "length",
+   "canon": 0.99
+  },
+  {
+   "basename": "5km",
+   "value": 5,
+   "unit": "km",
+   "space": "length",
+   "canon": 5000
+  },
+  {
+   "basename": "60kg",
+   "value": 60,
+   "unit": "kg",
+   "space": "mass",
+   "canon": 60
+  },
+  {
+   "basename": "1500g",
+   "value": 1500,
+   "unit": "g",
+   "space": "mass",
+   "canon": 1.5
+  },
+  {
+   "basename": "250mg",
+   "value": 250,
+   "unit": "mg",
+   "space": "mass",
+   "canon": 0.00025
+  },
+  {
+   "basename": "300px",
+   "value": 300,
+   "unit": "px",
+   "space": "u:px",
+   "canon": 300
+  },
+  {
+   "basename": "45%",
+   "value": 45,
+   "unit": "%",
+   "space": "u:%",
+   "canon": 45
+  },
+  {
+   "basename": "21°",
+   "value": 21,
+   "unit": "°",
+   "space": "u:°",
+   "canon": 21
+  },
+  {
+   "basename": "0.5",
+   "value": 0.5,
+   "unit": "",
+   "space": "",
+   "canon": 0.5
+  },
+  {
+   "basename": "tiger",
+   "value": null
+  },
+  {
+   "basename": "b:c",
+   "value": null
+  },
+  {
+   "basename": "1.2m2",
+   "value": null
+  },
+  {
+   "basename": "1.72.3m",
+   "value": null
+  },
+  {
+   "basename": "1.",
+   "value": null
+  },
+  {
+   "basename": ".5",
+   "value": null
+  },
+  {
+   "basename": "m",
+   "value": null
+  },
+  {
+   "basename": "",
+   "value": null
+  },
+  {
+   "basename": "172 cm",
+   "value": null
+  },
+  {
+   "basename": "172CM",
+   "value": null
+  }
+ ],
+ "matches": [
+  {
+   "basename": "172cm",
+   "op": ">",
+   "value": 1.5,
+   "unit": "m",
+   "tol": 0,
+   "hit": true
+  },
+  {
+   "basename": "1.72m",
+   "op": ">",
+   "value": 190,
+   "unit": "cm",
+   "tol": 0,
+   "hit": false
+  },
+  {
+   "basename": "172cm",
+   "op": "=",
+   "value": 1.7,
+   "unit": "m",
+   "tol": 0.05,
+   "hit": true
+  },
+  {
+   "basename": "172cm",
+   "op": "=",
+   "value": 1.72,
+   "unit": "m",
+   "tol": 0.005,
+   "hit": true
+  },
+  {
+   "basename": "172cm",
+   "op": "=",
+   "value": 1.7,
+   "unit": "m",
+   "tol": 0,
+   "hit": false
+  },
+  {
+   "basename": "8",
+   "op": ">=",
+   "value": 8,
+   "unit": "",
+   "tol": 0,
+   "hit": true
+  },
+  {
+   "basename": "8",
+   "op": ">=",
+   "value": 8.5,
+   "unit": "",
+   "tol": 0,
+   "hit": false
+  },
+  {
+   "basename": "300px",
+   "op": ">",
+   "value": 200,
+   "unit": "px",
+   "tol": 0,
+   "hit": true
+  },
+  {
+   "basename": "300px",
+   "op": ">",
+   "value": 200,
+   "unit": "pt",
+   "tol": 0,
+   "hit": false
+  },
+  {
+   "basename": "3",
+   "op": ">",
+   "value": 1,
+   "unit": "m",
+   "tol": 0,
+   "hit": false
+  },
+  {
+   "basename": "1500g",
+   "op": "=",
+   "value": 1.5,
+   "unit": "kg",
+   "tol": 0.05,
+   "hit": true
+  },
+  {
+   "basename": "tiger",
+   "op": ">",
+   "value": 0,
+   "unit": "",
+   "tol": 0,
+   "hit": false
+  },
+  {
+   "basename": "5",
+   "op": "!=",
+   "value": 4,
+   "unit": "",
+   "tol": 0.5,
+   "hit": true
+  },
+  {
+   "basename": "4.4",
+   "op": "!=",
+   "value": 4,
+   "unit": "",
+   "tol": 0.5,
+   "hit": false
+  },
+  {
+   "basename": "172cm",
+   "op": ">=",
+   "value": 0,
+   "unit": "",
+   "tol": 0,
+   "hit": true
+  },
+  {
+   "basename": "172cm",
+   "op": ">",
+   "value": 100,
+   "unit": "",
+   "tol": 0,
+   "hit": true
+  },
+  {
+   "basename": "1.72m",
+   "op": ">",
+   "value": 100,
+   "unit": "",
+   "tol": 0,
+   "hit": false
+  },
+  {
+   "basename": "300px",
+   "op": ">=",
+   "value": 200,
+   "unit": "",
+   "tol": 0,
+   "hit": true
+  }
+ ]
+}

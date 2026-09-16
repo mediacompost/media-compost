@@ -1,0 +1,250 @@
+{#-
+  THE HEADER, AND THERE IS ONLY ONE OF IT.
+
+  The landing page used to build its own bar and hide Material's, which is why
+  the two drifted: different links, a different GitHub label, a title that was
+  a link on one page and inert text on the other, and search and the theme
+  control existing on only one of them. Overriding this partial replaces the
+  header for EVERY page at once, so "the same everywhere" is true by
+  construction rather than by keeping two files in step.
+
+  THIS IS NOT THE `{% block header %}` TRAP that `home.html` documents. That
+  one was a header overridden for ONE page: `navigation.instant` swaps only a
+  fixed list of components — announce, container, header-topic, outdated,
+  logo, skip — so the header element itself survives a navigation, and a
+  per-page header therefore outlived the page it belonged to. One header for
+  all pages is exactly what that mechanism expects.
+
+  What follows from it: ANYTHING IN HERE THAT DEPENDS ON WHICH PAGE YOU ARE ON
+  MUST BE UPDATED BY THE SCRIPT AT THE BOTTOM, because this markup is rendered
+  once and then never re-rendered. That is the whole reason the Home/Docs
+  highlight is not a Jinja conditional.
+-#}
+{% set home_url = config.extra.homepage | d(nav.homepage.url, true) | url %}
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="{{ lang.t('header') }}">
+
+    {#- Mobile only; Material hides it past its own breakpoint. -#}
+    <label class="md-header__button md-icon mc-drawer" for="__drawer">
+      {% set icon = config.theme.icon.menu or "material/menu" %}
+      {% include ".icons/" ~ icon ~ ".svg" %}
+    </label>
+
+    {#- The mark AND the name are one link. They were two things — an anchored
+        logo beside inert text — so on a docs page clicking the site's name did
+        nothing, while on the landing page the same words went home. -#}
+    <a class="mc-brand" href="{{ home_url }}" title="{{ config.site_name | e }}" aria-label="{{ config.site_name }}">
+      <span class="mc-mark" data-md-component="logo">
+        {% include "partials/logo.html" %}
+      </span>
+      <div class="md-header__title" data-md-component="header-title">
+        <div class="md-header__ellipsis">
+          <div class="md-header__topic">
+            <span class="md-ellipsis">{{ config.site_name }}</span>
+          </div>
+          <div class="md-header__topic" data-md-component="header-topic">
+            <span class="md-ellipsis">
+              {% if page.meta and page.meta.title %}
+                {{ page.meta.title }}
+              {% else %}
+                {{ page.title }}
+              {% endif %}
+            </span>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    {#- Two links, always shown — at every width, and on the landing page too.
+        They replaced the landing page's in-page anchors (#features, #install,
+        …), which could only ever work on one page of the site. The active one
+        is marked by the script below, never here. -#}
+    <div class="mc-nav">
+      <a class="mc-nav__link" href="{{ home_url }}" data-mc-nav="home">Home</a>
+      <a class="mc-nav__link" href="{{ 'getting-started/' | url }}" data-mc-nav="docs">Docs</a>
+      {#- The generated reference. Its own destination rather than a page inside
+          Docs: coming to look up a signature you already know the name of is a
+          different errand from reading the guide. -#}
+      <a class="mc-nav__link" href="{{ 'api/' | url }}" data-mc-nav="api">API</a>
+    </div>
+
+    {% if config.theme.palette and not config.theme.palette is mapping %}
+      {#- THE PALETTE FORM IS MATERIAL'S, UNTOUCHED AND VISUALLY HIDDEN, and
+          the menu below is only a set of labels pointing into it. That split
+          is deliberate: Material's own component reads these radios, writes
+          `data-md-color-*` on the body and persists the choice to
+          localStorage, and reimplementing that to draw a nicer control would
+          be reimplementing the part that has to survive a page load.
+
+          Two details make it hold. The form is VISUALLY hidden rather than
+          `display: none`, because a label activates the control it names and
+          an undisplayed control is a worse bet than an offscreen one. And
+          each input is followed by a `sink`: Material sets `hidden` on every
+          input's NEXT SIBLING to show one toggle at a time, so without
+          something inert to absorb that write it would hide the radios
+          themselves — which is the same bet again, lost. -#}
+      <form class="mc-palette" data-md-component="palette">
+        {% for option in config.theme.palette %}
+          {% set scheme  = option.scheme  | d("default", true) %}
+          {% set primary = option.primary | d("indigo", true) %}
+          {% set accent  = option.accent  | d("indigo", true) %}
+          <input class="md-option" data-md-color-media="{{ option.media }}" data-md-color-scheme="{{ scheme | replace(' ', '-') }}" data-md-color-primary="{{ primary | replace(' ', '-') }}" data-md-color-accent="{{ accent | replace(' ', '-') }}" aria-label="{{ option.toggle.name if option.toggle else '' }}" type="radio" name="__palette" id="__palette_{{ loop.index0 }}">
+          <span class="mc-palette__sink" hidden></span>
+        {% endfor %}
+      </form>
+
+      <div class="mc-theme">
+        <button class="mc-theme__btn" type="button" aria-haspopup="true" aria-expanded="false" title="Theme">
+          {#- A plain half-filled circle. The palette's own icons are a sun, a
+              moon and an "A" inside a sunburst, and that last one is what the
+              button showed while the theme followed the system: at 18px it
+              reads as a cog or an asterisk rather than as anything about
+              light. -#}
+          {% include ".icons/material/circle-half-full.svg" %}
+        </button>
+        <div class="mc-theme__menu" hidden>
+          {% for option in config.theme.palette %}
+            {% if option.toggle %}
+              <label class="mc-theme__item" for="__palette_{{ loop.index0 }}">
+                <span class="mc-theme__tick">{% include ".icons/material/check.svg" %}</span>
+                <span class="mc-theme__label">{{ option.toggle.name }}</span>
+              </label>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      {% include "partials/javascripts/palette.html" %}
+    {% endif %}
+
+    {% if "material/search" in config.plugins %}
+      {% set search = config.plugins["material/search"] | attr("config") %}
+      {% if search.enabled %}
+        <label class="md-header__button md-icon mc-search-icon" for="__search">
+          {% set icon = config.theme.icon.search or "material/magnify" %}
+          {% include ".icons/" ~ icon ~ ".svg" %}
+        </label>
+        {% include "partials/search.html" %}
+      {% endif %}
+    {% endif %}
+
+    {% if config.repo_url %}
+      <div class="md-header__source">
+        {#- Material's `partials/source.html` prints `repo_name` and lays the
+            icon out absolutely so the label can wrap under a facts row we do
+            not load. Both are spelled out here instead: the label is the word
+            GitHub, as the landing page always said, and the pill is an
+            ordinary flex row so the gap between icon and label is a `gap`
+            rather than a padding that has to be guessed. -#}
+        <a class="md-source" href="{{ config.repo_url }}" title="{{ lang.t('source') }}">
+          {% set icon = config.theme.icon.repo or "fontawesome/brands/git-alt" %}
+          <span class="md-source__icon">{% include ".icons/" ~ icon ~ ".svg" %}</span>
+          <span class="md-source__label">GitHub</span>
+        </a>
+      </div>
+    {% endif %}
+  </nav>
+</header>
+
+{#-
+  Rendered once, so everything page-dependent is set here. Inline rather than
+  in `assets/home.js`: that file is the landing page's, this is the header's,
+  and the header is never swapped so a script inside it runs exactly once —
+  which is also why the nav highlight needs an observer rather than a re-render.
+  `header-topic` IS one of the components instant navigation swaps, so watching
+  the title subtree is watching navigation itself.
+-#}
+<script>
+  (function () {
+    var hdr = document.querySelector(".md-header");
+    if (!hdr) return;
+
+    var links = [].slice.call(hdr.querySelectorAll("[data-mc-nav]"));
+    var path = function (u) {
+      return new URL(u, location.href).pathname.replace(/index\.html$/, "");
+    };
+    // Home is an exact match and API is a PREFIX — everything under `/api/` is
+    // the reference. Docs is what is left over, so a page added anywhere in the
+    // documentation lights the right link without being listed here.
+    var syncNav = function () {
+      if (!links.length) return;
+      var here = path(location.href);
+      var of = {};
+      links.forEach(function (a) { of[a.getAttribute("data-mc-nav")] = path(a.href); });
+      var active =
+        here === of.home ? "home"
+        : of.api && here.indexOf(of.api) === 0 ? "api"
+        : "docs";
+      links.forEach(function (a) {
+        var on = a.getAttribute("data-mc-nav") === active;
+        a.classList.toggle("mc-nav__link--on", on);
+        if (on) a.setAttribute("aria-current", "page");
+        else a.removeAttribute("aria-current");
+      });
+    };
+    syncNav();
+    var title = hdr.querySelector("[data-md-component=header-title]");
+    if (title && window.MutationObserver) {
+      new MutationObserver(syncNav).observe(title, {
+        childList: true, subtree: true, characterData: true
+      });
+    }
+
+    var btn = hdr.querySelector(".mc-theme__btn");
+    var menu = hdr.querySelector(".mc-theme__menu");
+    if (!btn || !menu) return;
+    var items = [].slice.call(menu.querySelectorAll(".mc-theme__item"));
+
+    // WHICH ENTRY IS LIVE IS NOT SIMPLY "THE CHECKED RADIO". Material never
+    // checks one on a first visit — it derives the palette from the media
+    // query and keeps the index to itself, so on a fresh browser all three
+    // radios are unchecked while the page is plainly in one of them, and a
+    // menu reading the radios alone showed no tick at all.
+    //
+    // So the order is: a radio that IS checked (you have picked one this
+    // session), else what Material persisted, read through its own
+    // `__md_get` — the storage key is scoped by pathname and re-deriving that
+    // here would be a second copy of it — else the first media query that
+    // matches, which is Material's own fallback.
+    var inputs = [].slice.call(hdr.querySelectorAll("input[name=__palette]"));
+    var activeIndex = function () {
+      for (var i = 0; i < inputs.length; i++) if (inputs[i].checked) return i;
+      var saved = window.__md_get && window.__md_get("__palette");
+      if (saved && typeof saved.index === "number") {
+        return Math.max(0, Math.min(saved.index, inputs.length - 1));
+      }
+      for (var j = 0; j < inputs.length; j++) {
+        var media = inputs[j].getAttribute("data-md-color-media");
+        if (media && matchMedia(media).matches) return j;
+      }
+      return 0;
+    };
+    var syncTicks = function () {
+      var live = inputs[activeIndex()];
+      items.forEach(function (l) {
+        if (live && l.htmlFor === live.id) l.setAttribute("data-on", "");
+        else l.removeAttribute("data-on");
+      });
+    };
+    var open = function (v) {
+      menu.hidden = !v;
+      btn.setAttribute("aria-expanded", v ? "true" : "false");
+      if (v) syncTicks();
+    };
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      open(menu.hidden);
+    });
+    // The tick is read AFTER the label's own click has checked the radio.
+    menu.addEventListener("click", function () {
+      setTimeout(function () { syncTicks(); open(false); }, 0);
+    });
+    document.addEventListener("click", function (e) {
+      if (!menu.hidden && !menu.contains(e.target) && !btn.contains(e.target)) open(false);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") open(false);
+    });
+    inputs.forEach(function (i) { i.addEventListener("change", syncTicks); });
+    syncTicks();
+  })();
+</script>

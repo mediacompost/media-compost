@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+# A library, not an application: it runs on any Python 3.11+, so a pinned
+# interpreter belongs to whoever pinned it.
+.python-version
+
+# Virtualenvs. `.venv` is the documented one; `.venv-*` are the dedicated
+# model and trainer envs beside it, found by `plugins.framework.repo_root()`.
+.venv
+.venv-*/
+venv/
+
+# Node / Vite
+node_modules/
+*.tsbuildinfo
+.vite/
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+npm-debug.log*
+*.log
+
+# Vite loads these from the frontend root. Nothing here ships one, and a
+# secret typed into one should not be committable by accident.
+.env
+.env.*
+
+# Generated output. This project names it `_something`, so `build/` and
+# `dist/` above do not cover it.
+/_build/
+/_dist/
+/website/_build/
+frontend/_dist/
+media_compost/ui/_web_dist/
+
+# The default library directory, created by running the app from a checkout.
+/_data/
+
+# Editor and tool state
+.vscode/
+.idea/
+.claude/
+
+# macOS
+.DS_Store
+._*
+__MACOSX/
+
+# Windows
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*

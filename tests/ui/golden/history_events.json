@@ -1,0 +1,2005 @@
+{
+  "events": [
+    {
+      "action": "create_tag",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "alias_of",
+        "implies",
+        "name",
+        "tag_id"
+      ],
+      "summary": "Created tag portrait"
+    },
+    {
+      "action": "create_tag",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "alias_of",
+        "implies",
+        "name",
+        "tag_id"
+      ],
+      "summary": "Created tag poodle"
+    },
+    {
+      "action": "create_tag",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "alias_of",
+        "implies",
+        "name",
+        "tag_id"
+      ],
+      "summary": "Created tag dog"
+    },
+    {
+      "action": "create_tag",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "alias_of",
+        "implies",
+        "name",
+        "tag_id"
+      ],
+      "summary": "Created tag doggy"
+    },
+    {
+      "action": "comment_tag",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "comment",
+        "old_comment",
+        "tag",
+        "tag_id"
+      ],
+      "summary": "Commented on tag portrait: “a face, close up”"
+    },
+    {
+      "action": "add_link_tag",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "count",
+        "name",
+        "tag",
+        "tag_id"
+      ],
+      "summary": "Added meta tag “tumblr” to tag portrait"
+    },
+    {
+      "action": "set_meta_count",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "count",
+        "name",
+        "old_count",
+        "tag",
+        "tag_id"
+      ],
+      "summary": "Set the “tumblr” count on portrait to 950"
+    },
+    {
+      "action": "set_tag_hidden",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "hidden",
+        "names"
+      ],
+      "summary": "Hid 1 tags from the autocomplete"
+    },
+    {
+      "action": "set_hidden_namespaces",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "after",
+        "before"
+      ],
+      "summary": "Changed which namespaces the autocomplete offers"
+    },
+    {
+      "action": "describe_tag",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "description",
+        "old_description",
+        "tag",
+        "tag_id"
+      ],
+      "summary": "Described tag doggy"
+    },
+    {
+      "action": "create_tag_set_category",
+      "source": "web",
+      "entity_type": "tag_set",
+      "data_keys": [
+        "category_id",
+        "key",
+        "name",
+        "parent_id",
+        "tag_set_id"
+      ],
+      "summary": "Added category Animals to tag set Library"
+    },
+    {
+      "action": "set_tag_category",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "before",
+        "category_id"
+      ],
+      "summary": "Filed 2 tags under Animals"
+    },
+    {
+      "action": "rename_tag",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "name",
+        "old_name",
+        "tag_id"
+      ],
+      "summary": "Renamed tag portrait → portrait_shot"
+    },
+    {
+      "action": "add_tag_implication",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "implies",
+        "name",
+        "tag_id"
+      ],
+      "summary": "poodle now implies dog"
+    },
+    {
+      "action": "remove_tag_implication",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "implies",
+        "name",
+        "tag_id"
+      ],
+      "summary": "poodle no longer implies dog"
+    },
+    {
+      "action": "set_alias",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "name",
+        "new_alias_of",
+        "old_alias_of",
+        "tag_id"
+      ],
+      "summary": "Aliased doggy → dog"
+    },
+    {
+      "action": "add_tag",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id",
+        "negative",
+        "tag"
+      ],
+      "summary": "Tagged item #N +portrait_shot"
+    },
+    {
+      "action": "add_tag",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id",
+        "negative",
+        "tag"
+      ],
+      "summary": "Tagged item #N −blurry"
+    },
+    {
+      "action": "remove_tag",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id",
+        "negative",
+        "tag"
+      ],
+      "summary": "Removed tag blurry from item #N"
+    },
+    {
+      "action": "add_tag",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id",
+        "negative",
+        "tag"
+      ],
+      "summary": "Tagged item #N +portrait_shot"
+    },
+    {
+      "action": "create_tag_group",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "group_id",
+        "item_id",
+        "name",
+        "position"
+      ],
+      "summary": "Added the tag group “Hers”"
+    },
+    {
+      "action": "rename_tag_group",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "group_id",
+        "item_id",
+        "name",
+        "old_name"
+      ],
+      "summary": "Renamed the tag group “Hers” → “Her side”"
+    },
+    {
+      "action": "add_tag_group_tag",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "group_id",
+        "item_id",
+        "name"
+      ],
+      "summary": "Added meta tag “de” to tag group “Her side”"
+    },
+    {
+      "action": "remove_tag_group_tag",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "group_id",
+        "item_id",
+        "name"
+      ],
+      "summary": "Removed meta tag “de” from tag group “Her side”"
+    },
+    {
+      "action": "move_tag_group",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "from_group",
+        "from_group_id",
+        "item_id",
+        "tag",
+        "to_group",
+        "to_group_id"
+      ],
+      "summary": "Moved tag portrait_shot from Ungrouped to Her side"
+    },
+    {
+      "action": "create_tag_group",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "group_id",
+        "item_id",
+        "name",
+        "position"
+      ],
+      "summary": "Added the tag group “Spare”"
+    },
+    {
+      "action": "delete_tag_group",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "group_id",
+        "item_id",
+        "meta_tags",
+        "name",
+        "position",
+        "subjects",
+        "system",
+        "tags"
+      ],
+      "summary": "Deleted the tag group “Spare”"
+    },
+    {
+      "action": "create_group",
+      "source": "web",
+      "entity_type": "group",
+      "data_keys": [
+        "group_id",
+        "group_name",
+        "parent_id"
+      ],
+      "summary": "Created group “Trips”"
+    },
+    {
+      "action": "add_to_group",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "group_id",
+        "group_name",
+        "item_id"
+      ],
+      "summary": "Added item #N to group “Trips”"
+    },
+    {
+      "action": "remove_from_group",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "group_id",
+        "group_name",
+        "item_id"
+      ],
+      "summary": "Removed item #N from group “Trips”"
+    },
+    {
+      "action": "add_group_tag",
+      "source": "web",
+      "entity_type": "group",
+      "data_keys": [
+        "group_id",
+        "negative",
+        "tag"
+      ],
+      "summary": "Tagged group “Trips” +travel"
+    },
+    {
+      "action": "remove_group_tag",
+      "source": "web",
+      "entity_type": "group",
+      "data_keys": [
+        "group_id",
+        "negative",
+        "tag"
+      ],
+      "summary": "Removed tag travel from group “Trips”"
+    },
+    {
+      "action": "add_caption",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "caption_id",
+        "item_id",
+        "text"
+      ],
+      "summary": "Added caption “a dog”"
+    },
+    {
+      "action": "edit_caption",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "caption_id",
+        "item_id",
+        "old_text",
+        "text",
+        "was_edited",
+        "was_pending"
+      ],
+      "summary": "Edited caption to “a small dog”"
+    },
+    {
+      "action": "add_caption_tag",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "caption_id",
+        "item_id",
+        "name"
+      ],
+      "summary": "Added meta tag “en” to a caption"
+    },
+    {
+      "action": "remove_caption_tag",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "caption_id",
+        "item_id",
+        "name"
+      ],
+      "summary": "Removed meta tag “en” from a caption"
+    },
+    {
+      "action": "remove_caption",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "edited",
+        "item_id",
+        "model",
+        "pending",
+        "position",
+        "tags",
+        "text"
+      ],
+      "summary": "Removed caption “a small dog”"
+    },
+    {
+      "action": "add_caption",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "caption_id",
+        "item_id",
+        "kind",
+        "text"
+      ],
+      "summary": "Added instruction “make it snow”"
+    },
+    {
+      "action": "set_caption_refs",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "caption_id",
+        "item_id",
+        "old_refs",
+        "refs"
+      ],
+      "summary": "Gave an instruction 1 reference image"
+    },
+    {
+      "action": "set_caption_refs",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "caption_id",
+        "item_id",
+        "old_refs",
+        "refs"
+      ],
+      "summary": "Cleared an instruction's reference images"
+    },
+    {
+      "action": "remove_caption",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "edited",
+        "item_id",
+        "kind",
+        "model",
+        "pending",
+        "position",
+        "tags",
+        "text"
+      ],
+      "summary": "Removed instruction “make it snow”"
+    },
+    {
+      "action": "create_meta_tag",
+      "source": "web",
+      "entity_type": "meta_tag",
+      "data_keys": [
+        "name"
+      ],
+      "summary": "Created meta tag scan"
+    },
+    {
+      "action": "comment_meta_tag",
+      "source": "web",
+      "entity_type": "meta_tag",
+      "data_keys": [
+        "comment",
+        "name",
+        "old_comment"
+      ],
+      "summary": "Commented on meta tag scan"
+    },
+    {
+      "action": "describe_meta_tag",
+      "source": "web",
+      "entity_type": "meta_tag",
+      "data_keys": [
+        "description",
+        "name",
+        "old_description"
+      ],
+      "summary": "Described meta tag scan"
+    },
+    {
+      "action": "rename_meta_tag",
+      "source": "web",
+      "entity_type": "meta_tag",
+      "data_keys": [
+        "name",
+        "old_name"
+      ],
+      "summary": "Renamed meta tag scan → scanned"
+    },
+    {
+      "action": "delete_meta_tag",
+      "source": "web",
+      "entity_type": "meta_tag",
+      "data_keys": [
+        "captions",
+        "comment",
+        "name",
+        "relationships",
+        "tag_groups",
+        "tags"
+      ],
+      "summary": "Deleted meta tag scanned"
+    },
+    {
+      "action": "add_link",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "from_item_id",
+        "kind",
+        "rel_id",
+        "to_item_id"
+      ],
+      "summary": "Linked two items"
+    },
+    {
+      "action": "add_link_tag",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id",
+        "name",
+        "rel_id"
+      ],
+      "summary": "Added meta tag “same_scene” to a link"
+    },
+    {
+      "action": "remove_link_tag",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id",
+        "name",
+        "rel_id"
+      ],
+      "summary": "Removed meta tag “same_scene” from a link"
+    },
+    {
+      "action": "remove_link",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "from_item_id",
+        "kind",
+        "link_tags",
+        "meta",
+        "to_item_id"
+      ],
+      "summary": "Removed a link between two items"
+    },
+    {
+      "action": "set_taken",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id",
+        "old_taken_at",
+        "taken_at"
+      ],
+      "summary": "Dated this item"
+    },
+    {
+      "action": "rotate_item",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "active_file_id",
+        "delta",
+        "item_id",
+        "prev_active_file_id",
+        "rotation"
+      ],
+      "summary": "Rotated “src/two.png” right"
+    },
+    {
+      "action": "set_hidden",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "hidden",
+        "item_id",
+        "item_name"
+      ],
+      "summary": "Hid “src/one.png”"
+    },
+    {
+      "action": "set_hidden",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "hidden",
+        "item_id",
+        "item_name"
+      ],
+      "summary": "Showed “src/one.png”"
+    },
+    {
+      "action": "trash_item",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id",
+        "item_name"
+      ],
+      "summary": "Moved “src/one.png” to Trash"
+    },
+    {
+      "action": "restore_item",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id",
+        "item_name"
+      ],
+      "summary": "Restored “src/one.png” from Trash"
+    },
+    {
+      "action": "add_source",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "accessed_at",
+        "file_id",
+        "is_url",
+        "name",
+        "name_id"
+      ],
+      "summary": "Added a source"
+    },
+    {
+      "action": "rename_source",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "file_id",
+        "name_id",
+        "new_name",
+        "old_name"
+      ],
+      "summary": "Edited a source"
+    },
+    {
+      "action": "remove_source",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "accessed_at",
+        "file_id",
+        "is_url",
+        "name"
+      ],
+      "summary": "Removed a source"
+    },
+    {
+      "action": "comment_tag",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "comment",
+        "old_comment",
+        "tag",
+        "tag_id"
+      ],
+      "summary": "Commented on tag subject:alice: “the tall one”"
+    },
+    {
+      "action": "create_subject",
+      "source": "web",
+      "entity_type": "subject",
+      "data_keys": [
+        "display_name",
+        "since_date",
+        "subject_id",
+        "tag_id"
+      ],
+      "summary": "Created subject Alice"
+    },
+    {
+      "action": "rename_subject",
+      "source": "web",
+      "entity_type": "subject",
+      "data_keys": [
+        "name",
+        "old_name",
+        "subject_id"
+      ],
+      "summary": "Renamed subject Alice → Alice Meyer"
+    },
+    {
+      "action": "comment_tag",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "comment",
+        "old_comment",
+        "tag",
+        "tag_id"
+      ],
+      "summary": "Updated comment on tag subject:alice: “the taller one”"
+    },
+    {
+      "action": "date_subject",
+      "source": "web",
+      "entity_type": "subject",
+      "data_keys": [
+        "old_since_date",
+        "since_date",
+        "subject_id"
+      ],
+      "summary": "Alice Meyer exists since 15 June 1990"
+    },
+    {
+      "action": "add_tag_group_subject",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "group_id",
+        "item_id",
+        "subject_id"
+      ],
+      "summary": "Tag group “Her side” is about Alice Meyer"
+    },
+    {
+      "action": "remove_tag_group_subject",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "group_id",
+        "item_id",
+        "subject_id"
+      ],
+      "summary": "Tag group “Her side” is no longer about that subject"
+    },
+    {
+      "action": "add_appearance",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "appearance_id",
+        "created_subject",
+        "face_id",
+        "item_id",
+        "subject_id"
+      ],
+      "summary": "Alice Meyer is in this picture"
+    },
+    {
+      "action": "edit_appearance",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "age",
+        "appearance_id",
+        "date",
+        "face_id",
+        "item_id",
+        "old_age",
+        "old_date",
+        "old_face_id"
+      ],
+      "summary": "Changed where and when Alice Meyer is here"
+    },
+    {
+      "action": "remove_appearance",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "age",
+        "appearance_id",
+        "assigned_by",
+        "date",
+        "face_id",
+        "item_id",
+        "match_score",
+        "subject_id",
+        "tag_removed"
+      ],
+      "summary": "Alice Meyer is not in this picture"
+    },
+    {
+      "action": "approve_tag",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "group_name",
+        "item_id",
+        "tag"
+      ],
+      "summary": "Approved AI tag +ai_guess"
+    },
+    {
+      "action": "approve_caption",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "caption_id",
+        "item_id"
+      ],
+      "summary": "Approved AI caption “a machine wrote this”"
+    },
+    {
+      "action": "confirm_appearance",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "appearance_id",
+        "item_id",
+        "old_assigned_by",
+        "old_match_score",
+        "tag_added"
+      ],
+      "summary": "Agreed that Nina is here"
+    },
+    {
+      "action": "add_face",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "face_id",
+        "item_id"
+      ],
+      "summary": "Added a face by hand"
+    },
+    {
+      "action": "add_face",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "face_id",
+        "item_id"
+      ],
+      "summary": "Added a face by hand"
+    },
+    {
+      "action": "move_face",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "box",
+        "face_id",
+        "item_id",
+        "old_box",
+        "orig_recorded"
+      ],
+      "summary": "Moved a face's box"
+    },
+    {
+      "action": "name_face",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "appearance_id",
+        "created_subject",
+        "face_id",
+        "item_id",
+        "subject_id",
+        "was_new"
+      ],
+      "summary": "Named a face Alice Meyer"
+    },
+    {
+      "action": "unname_face",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "face_id",
+        "item_id",
+        "old_age",
+        "old_appearance_id",
+        "old_assigned_by",
+        "old_date",
+        "old_match_score",
+        "old_subject_id",
+        "tag_removed"
+      ],
+      "summary": "Took Alice Meyer off a face"
+    },
+    {
+      "action": "name_faces",
+      "source": "web",
+      "entity_type": "subject",
+      "data_keys": [
+        "backfilled",
+        "before",
+        "created_subject",
+        "face_ids",
+        "subject_id"
+      ],
+      "summary": "Named 2 faces Alice Meyer"
+    },
+    {
+      "action": "split_faces",
+      "source": "web",
+      "entity_type": "subject",
+      "data_keys": [
+        "before",
+        "created_subject",
+        "face_ids",
+        "subject_id"
+      ],
+      "summary": "Split 1 face onto a new unnamed person"
+    },
+    {
+      "action": "rename_subject",
+      "source": "web",
+      "entity_type": "subject",
+      "data_keys": [
+        "name",
+        "old_name",
+        "subject_id"
+      ],
+      "summary": "Renamed subject (unnamed) → Bob"
+    },
+    {
+      "action": "name_subject",
+      "source": "web",
+      "entity_type": "subject",
+      "data_keys": [
+        "backfilled",
+        "name",
+        "subject_id",
+        "tag_id"
+      ],
+      "summary": "Named subject Bob (subject:bob), on 1 items"
+    },
+    {
+      "action": "merge_faces",
+      "source": "web",
+      "entity_type": "subject",
+      "data_keys": [
+        "before",
+        "created_subject",
+        "face_ids",
+        "subject_id"
+      ],
+      "summary": "Merged 2 faces into one unnamed person"
+    },
+    {
+      "action": "set_cluster_unnamed",
+      "source": "web",
+      "entity_type": "subject",
+      "data_keys": [
+        "before",
+        "created_subject",
+        "face_ids",
+        "subject_id",
+        "unnamed",
+        "was"
+      ],
+      "summary": "Marked 2 faces as somebody unnamed"
+    },
+    {
+      "action": "set_cluster_unnamed",
+      "source": "web",
+      "entity_type": "subject",
+      "data_keys": [
+        "before",
+        "created_subject",
+        "face_ids",
+        "subject_id",
+        "unnamed",
+        "was"
+      ],
+      "summary": "Took the unnamed mark off 2 faces"
+    },
+    {
+      "action": "clusters_differ",
+      "source": "web",
+      "entity_type": "subject",
+      "data_keys": [
+        "a_subject_id",
+        "b_subject_id"
+      ],
+      "summary": "Said two face clusters are not one person"
+    },
+    {
+      "action": "dismiss_face",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "dismissed",
+        "face_id",
+        "item_id"
+      ],
+      "summary": "Dismissed a face"
+    },
+    {
+      "action": "delete_face",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "box",
+        "det_score",
+        "dismissed",
+        "face_id",
+        "item_id",
+        "model",
+        "subjects"
+      ],
+      "summary": "Deleted a face"
+    },
+    {
+      "action": "add_text",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id",
+        "parent_id",
+        "region_id"
+      ],
+      "summary": "Added a text box by hand"
+    },
+    {
+      "action": "add_text",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id",
+        "parent_id",
+        "region_id"
+      ],
+      "summary": "Added a text box by hand"
+    },
+    {
+      "action": "edit_text",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "edited",
+        "item_id",
+        "old_edited",
+        "old_text",
+        "region_id",
+        "text"
+      ],
+      "summary": "Corrected a text block"
+    },
+    {
+      "action": "move_text",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "box",
+        "item_id",
+        "old_box",
+        "old_quad",
+        "quad",
+        "region_id"
+      ],
+      "summary": "Moved a text box"
+    },
+    {
+      "action": "dismiss_text",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "dismissed",
+        "item_id",
+        "region_id"
+      ],
+      "summary": "Marked a region as not text"
+    },
+    {
+      "action": "dismiss_text",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "dismissed",
+        "item_id",
+        "region_id"
+      ],
+      "summary": "Restored a dismissed text region"
+    },
+    {
+      "action": "add_text",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id",
+        "parent_id",
+        "region_id"
+      ],
+      "summary": "Added a text box by hand"
+    },
+    {
+      "action": "add_text",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id",
+        "parent_id",
+        "region_id"
+      ],
+      "summary": "Added a text box by hand"
+    },
+    {
+      "action": "reorder_text",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id",
+        "old_order",
+        "order",
+        "parent_id"
+      ],
+      "summary": "Reordered the text blocks"
+    },
+    {
+      "action": "delete_text",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "file_id",
+        "item_id",
+        "ord",
+        "parent_id",
+        "region_id",
+        "tree"
+      ],
+      "summary": "Deleted a text region"
+    },
+    {
+      "action": "set_coords",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id",
+        "lat",
+        "lon",
+        "old_lat",
+        "old_lon"
+      ],
+      "summary": "Placed this item"
+    },
+    {
+      "action": "set_coords",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id",
+        "lat",
+        "lon",
+        "old_lat",
+        "old_lon"
+      ],
+      "summary": "Took the coordinates off this item"
+    },
+    {
+      "action": "set_coords",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id",
+        "lat",
+        "lon",
+        "old_lat",
+        "old_lon"
+      ],
+      "summary": "Said this item has no coordinates"
+    },
+    {
+      "action": "create_place",
+      "source": "web",
+      "entity_type": "place",
+      "data_keys": [
+        "lat",
+        "lon",
+        "name",
+        "parent_id",
+        "place_id",
+        "tag_id"
+      ],
+      "summary": "Added the place 35.6000, 139.7000"
+    },
+    {
+      "action": "edit_place",
+      "source": "web",
+      "entity_type": "place",
+      "data_keys": [
+        "lat",
+        "lon",
+        "name",
+        "old_lat",
+        "old_lon",
+        "old_name",
+        "old_parent_id",
+        "parent_id",
+        "place_id"
+      ],
+      "summary": "Edited the place Tokyo"
+    },
+    {
+      "action": "name_place",
+      "source": "web",
+      "entity_type": "place",
+      "data_keys": [
+        "backfilled",
+        "name",
+        "place_id",
+        "tag_id"
+      ],
+      "summary": "Named the place place:tokyo"
+    },
+    {
+      "action": "create_place",
+      "source": "web",
+      "entity_type": "place",
+      "data_keys": [
+        "lat",
+        "lon",
+        "name",
+        "parent_id",
+        "place_id",
+        "tag_id"
+      ],
+      "summary": "Added the place place:japan"
+    },
+    {
+      "action": "add_tag_implication",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "implies",
+        "name",
+        "tag_id"
+      ],
+      "summary": "place:tokyo now implies place:japan"
+    },
+    {
+      "action": "edit_place",
+      "source": "web",
+      "entity_type": "place",
+      "data_keys": [
+        "lat",
+        "lon",
+        "name",
+        "old_lat",
+        "old_lon",
+        "old_name",
+        "old_parent_id",
+        "parent_id",
+        "place_id"
+      ],
+      "summary": "Edited the place place:tokyo"
+    },
+    {
+      "action": "remove_tag_implication",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "implies",
+        "name",
+        "tag_id"
+      ],
+      "summary": "place:tokyo no longer implies place:japan"
+    },
+    {
+      "action": "edit_place",
+      "source": "web",
+      "entity_type": "place",
+      "data_keys": [
+        "lat",
+        "lon",
+        "name",
+        "old_lat",
+        "old_lon",
+        "old_name",
+        "old_parent_id",
+        "parent_id",
+        "place_id"
+      ],
+      "summary": "Edited the place place:tokyo"
+    },
+    {
+      "action": "dismiss_place",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id",
+        "location_id",
+        "place_tag",
+        "via_occasion_id"
+      ],
+      "summary": "Not at place:tokyo"
+    },
+    {
+      "action": "dismiss_file_place",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id"
+      ],
+      "summary": "Not at that place"
+    },
+    {
+      "action": "create_event",
+      "source": "web",
+      "entity_type": "event",
+      "data_keys": [
+        "display_name",
+        "end_date",
+        "occasion_id",
+        "parent_id",
+        "place_ids",
+        "start_date",
+        "tag_id"
+      ],
+      "summary": "Added the event Comic-Con"
+    },
+    {
+      "action": "comment_tag",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "comment",
+        "old_comment",
+        "tag",
+        "tag_id"
+      ],
+      "summary": "Commented on tag event:comic_con: “the big one”"
+    },
+    {
+      "action": "edit_event",
+      "source": "web",
+      "entity_type": "event",
+      "data_keys": [
+        "display_name",
+        "end_date",
+        "occasion_id",
+        "old_display_name",
+        "old_end_date",
+        "old_parent_id",
+        "old_place_ids",
+        "old_start_date",
+        "parent_id",
+        "place_ids",
+        "start_date",
+        "tag_id"
+      ],
+      "summary": "Edited the event Comic-Con"
+    },
+    {
+      "action": "dismiss_event",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "event_tag",
+        "item_id",
+        "occasion_id"
+      ],
+      "summary": "Not from Comic-Con"
+    },
+    {
+      "action": "edit_group",
+      "source": "web",
+      "entity_type": "group",
+      "data_keys": [
+        "group_id",
+        "group_name",
+        "new",
+        "old"
+      ],
+      "summary": "Edited group “Journeys”"
+    },
+    {
+      "action": "create_group",
+      "source": "web",
+      "entity_type": "group",
+      "data_keys": [
+        "group_id",
+        "group_name",
+        "parent_id"
+      ],
+      "summary": "Created group “Albums”"
+    },
+    {
+      "action": "move_group",
+      "source": "web",
+      "entity_type": "group",
+      "data_keys": [
+        "group_id",
+        "group_name",
+        "name",
+        "old_name",
+        "old_parent_id",
+        "parent_id"
+      ],
+      "summary": "Moved group “Journeys”"
+    },
+    {
+      "action": "duplicate_group",
+      "source": "web",
+      "entity_type": "group",
+      "data_keys": [
+        "group_id",
+        "group_name",
+        "parent_id",
+        "source_group_id"
+      ],
+      "summary": "Duplicated group “Journeys”"
+    },
+    {
+      "action": "create_sequence",
+      "source": "web",
+      "entity_type": "sequence",
+      "data_keys": [
+        "item_ids",
+        "sequence_id",
+        "sequence_name"
+      ],
+      "summary": "Created sequence “Chapter 1”"
+    },
+    {
+      "action": "rename_sequence",
+      "source": "web",
+      "entity_type": "sequence",
+      "data_keys": [
+        "name",
+        "old_name",
+        "sequence_id"
+      ],
+      "summary": "Renamed sequence “Chapter 1” to “Chapter One”"
+    },
+    {
+      "action": "reorder_sequence",
+      "source": "web",
+      "entity_type": "sequence",
+      "data_keys": [
+        "member_ids",
+        "old_member_ids",
+        "sequence_id",
+        "sequence_name"
+      ],
+      "summary": "Reordered sequence “Chapter One”"
+    },
+    {
+      "action": "set_main_sequence",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id",
+        "old_sequence_id",
+        "sequence_id"
+      ],
+      "summary": "Cleared the main sequence for “src/one.png”"
+    },
+    {
+      "action": "set_main_sequence",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id",
+        "old_sequence_id",
+        "sequence_id"
+      ],
+      "summary": "Made “Chapter One” the main sequence for “src/one.png”"
+    },
+    {
+      "action": "remove_sequence_members",
+      "source": "web",
+      "entity_type": "sequence",
+      "data_keys": [
+        "emptied",
+        "removed",
+        "sequence",
+        "sequence_id",
+        "sequence_name"
+      ],
+      "summary": "Removed 1 item from sequence “Chapter One”"
+    },
+    {
+      "action": "delete_sequence",
+      "source": "web",
+      "entity_type": "sequence",
+      "data_keys": [
+        "sequence",
+        "sequence_id",
+        "sequence_name"
+      ],
+      "summary": "Removed sequence “Chapter One”"
+    },
+    {
+      "action": "add_tag_box",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "box",
+        "box_id",
+        "item_id",
+        "minted_tag",
+        "tag",
+        "tag_id"
+      ],
+      "summary": "Drew a box for “portrait_shot”"
+    },
+    {
+      "action": "edit_tag_box",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "box_id",
+        "item_id",
+        "new",
+        "old",
+        "tag"
+      ],
+      "summary": "Edited the box for “portrait_shot”"
+    },
+    {
+      "action": "delete_tag_box",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "box",
+        "box_id",
+        "item_id",
+        "tag"
+      ],
+      "summary": "Removed the box for “portrait_shot”"
+    },
+    {
+      "action": "edit_image",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "file_id",
+        "item_id",
+        "mode",
+        "new_item_id",
+        "old_active_file_id",
+        "source_file_id"
+      ],
+      "summary": "Saved an edited picture"
+    },
+    {
+      "action": "add_link",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "from_item_id",
+        "kind",
+        "rel_id",
+        "to_item_id"
+      ],
+      "summary": "Linked two items"
+    },
+    {
+      "action": "flip_link",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "dropped",
+        "from_item_id",
+        "kind",
+        "moved_rel_ids",
+        "rel_id",
+        "to_item_id"
+      ],
+      "summary": "Reversed a link"
+    },
+    {
+      "action": "create_tag_set",
+      "source": "web",
+      "entity_type": "tag_set",
+      "data_keys": [
+        "description",
+        "key",
+        "name",
+        "position",
+        "tag_set_id",
+        "version"
+      ],
+      "summary": "Created tag set Scenario set"
+    },
+    {
+      "action": "edit_tag_set",
+      "source": "web",
+      "entity_type": "tag_set",
+      "data_keys": [
+        "description",
+        "key",
+        "old_description",
+        "tag_set_id"
+      ],
+      "summary": "Edited tag set Scenario set"
+    },
+    {
+      "action": "create_tag_set_category",
+      "source": "web",
+      "entity_type": "tag_set",
+      "data_keys": [
+        "category_id",
+        "key",
+        "name",
+        "parent_id",
+        "tag_set_id"
+      ],
+      "summary": "Added category people to tag set Scenario set"
+    },
+    {
+      "action": "create_tag_set_category",
+      "source": "web",
+      "entity_type": "tag_set",
+      "data_keys": [
+        "category_id",
+        "key",
+        "name",
+        "parent_id",
+        "tag_set_id"
+      ],
+      "summary": "Added category people › count to tag set Scenario set"
+    },
+    {
+      "action": "edit_tag_set_category",
+      "source": "web",
+      "entity_type": "tag_set",
+      "data_keys": [
+        "category_id",
+        "key",
+        "name",
+        "old_name",
+        "tag_set_id"
+      ],
+      "summary": "Edited category people › how_many in tag set Scenario set"
+    },
+    {
+      "action": "move_tag_set_category",
+      "source": "web",
+      "entity_type": "tag_set",
+      "data_keys": [
+        "category_id",
+        "key",
+        "old_orders",
+        "old_parent_id",
+        "orders",
+        "parent_id",
+        "tag_set_id"
+      ],
+      "summary": "Moved category how_many in tag set Scenario set"
+    },
+    {
+      "action": "move_tag_set_category",
+      "source": "web",
+      "entity_type": "tag_set",
+      "data_keys": [
+        "category_id",
+        "key",
+        "old_orders",
+        "old_parent_id",
+        "orders",
+        "parent_id",
+        "tag_set_id"
+      ],
+      "summary": "Moved category people › how_many in tag set Scenario set"
+    },
+    {
+      "action": "create_tag_set_entry",
+      "source": "web",
+      "entity_type": "tag_set",
+      "data_keys": [
+        "aliases",
+        "category_id",
+        "count",
+        "description",
+        "entry_id",
+        "key",
+        "name",
+        "position",
+        "tag_set_id"
+      ],
+      "summary": "Added scenario_1girl to tag set Scenario set"
+    },
+    {
+      "action": "edit_tag_set_entry",
+      "source": "web",
+      "entity_type": "tag_set",
+      "data_keys": [
+        "count",
+        "description",
+        "entry_id",
+        "key",
+        "old_count",
+        "old_description",
+        "tag_set_id"
+      ],
+      "summary": "Edited scenario_1girl in tag set Scenario set"
+    },
+    {
+      "action": "create_tag_set_meta",
+      "source": "web",
+      "entity_type": "tag_set",
+      "data_keys": [
+        "comment",
+        "description",
+        "key",
+        "meta_id",
+        "name",
+        "tag_set_id"
+      ],
+      "summary": "Added meta tag scenario_character to tag set Scenario set"
+    },
+    {
+      "action": "edit_tag_set_entry",
+      "source": "web",
+      "entity_type": "tag_set",
+      "data_keys": [
+        "entry_id",
+        "key",
+        "meta",
+        "old_meta",
+        "tag_set_id"
+      ],
+      "summary": "Edited scenario_1girl in tag set Scenario set"
+    },
+    {
+      "action": "edit_tag_set_meta",
+      "source": "web",
+      "entity_type": "tag_set",
+      "data_keys": [
+        "key",
+        "meta_id",
+        "name",
+        "old_name",
+        "tag_set_id"
+      ],
+      "summary": "Edited meta tag scenario_person in tag set Scenario set"
+    },
+    {
+      "action": "delete_tag_set_meta",
+      "source": "web",
+      "entity_type": "tag_set",
+      "data_keys": [
+        "comment",
+        "description",
+        "entry_ids",
+        "key",
+        "meta_id",
+        "name",
+        "position",
+        "tag_set_id"
+      ],
+      "summary": "Removed meta tag scenario_person from tag set Scenario set"
+    },
+    {
+      "action": "set_tag_set_enabled",
+      "source": "web",
+      "entity_type": "tag_set",
+      "data_keys": [
+        "enabled",
+        "key",
+        "old_enabled",
+        "tag_set_id"
+      ],
+      "summary": "Disabled tag set Scenario set"
+    },
+    {
+      "action": "set_tag_set_enabled",
+      "source": "web",
+      "entity_type": "tag_set",
+      "data_keys": [
+        "enabled",
+        "key",
+        "old_enabled",
+        "tag_set_id"
+      ],
+      "summary": "Enabled tag set Scenario set"
+    },
+    {
+      "action": "duplicate_tag_set",
+      "source": "web",
+      "entity_type": "tag_set",
+      "data_keys": [
+        "key",
+        "name",
+        "new_key",
+        "new_tag_set_id",
+        "tag_set_id"
+      ],
+      "summary": "Duplicated tag set Scenario set as Scenario copy"
+    },
+    {
+      "action": "import_tag_set",
+      "source": "web",
+      "entity_type": "tag_set",
+      "data_keys": [
+        "created",
+        "key",
+        "tag_set_id",
+        "undo",
+        "updated"
+      ],
+      "summary": "Imported 2 entries into tag set Scenario set"
+    },
+    {
+      "action": "delete_tag_set_entry",
+      "source": "web",
+      "entity_type": "tag_set",
+      "data_keys": [
+        "aliases",
+        "category_id",
+        "count",
+        "description",
+        "entry_id",
+        "key",
+        "name",
+        "position",
+        "tag_set_id"
+      ],
+      "summary": "Removed scenario_1girl from tag set Scenario set"
+    },
+    {
+      "action": "delete_tag_set_category",
+      "source": "web",
+      "entity_type": "tag_set",
+      "data_keys": [
+        "category_id",
+        "entry_ids",
+        "key",
+        "name",
+        "parent_id",
+        "position",
+        "tag_set_id"
+      ],
+      "summary": "Removed category people › how_many from tag set Scenario set"
+    },
+    {
+      "action": "import",
+      "source": "web",
+      "entity_type": "import",
+      "data_keys": [
+        "alternatives",
+        "edit_links",
+        "groups_created",
+        "imported",
+        "imported_item_ids",
+        "parent_group_id",
+        "skipped"
+      ],
+      "summary": "Imported 1 new"
+    },
+    {
+      "action": "delete_tag",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "alias_of",
+        "aliases",
+        "comment",
+        "group_tags",
+        "implied_by",
+        "implies",
+        "merged_into",
+        "name",
+        "subject_id"
+      ],
+      "summary": "Merged tag doggy into dog"
+    },
+    {
+      "action": "delete_tag",
+      "source": "web",
+      "entity_type": "tag",
+      "data_keys": [
+        "alias_of",
+        "aliases",
+        "comment",
+        "group_tags",
+        "implied_by",
+        "implies",
+        "name",
+        "subject_id"
+      ],
+      "summary": "Deleted tag dog"
+    },
+    {
+      "action": "delete_subject",
+      "source": "web",
+      "entity_type": "subject",
+      "data_keys": [
+        "display_name",
+        "since_date",
+        "subject_id",
+        "tag_id",
+        "tag_name"
+      ],
+      "summary": "Deleted subject Alice Meyer"
+    },
+    {
+      "action": "delete_place",
+      "source": "web",
+      "entity_type": "place",
+      "data_keys": [
+        "lat",
+        "lon",
+        "name",
+        "parent_id",
+        "place_id",
+        "tag_id",
+        "tag_name"
+      ],
+      "summary": "Deleted the place place:tokyo"
+    },
+    {
+      "action": "delete_event",
+      "source": "web",
+      "entity_type": "event",
+      "data_keys": [
+        "display_name",
+        "end_date",
+        "occasion_id",
+        "parent_id",
+        "place_ids",
+        "start_date",
+        "tag_id",
+        "tag_name"
+      ],
+      "summary": "Deleted the event Comic-Con"
+    },
+    {
+      "action": "merge_item",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "added_group_ids",
+        "moved_caption_ids",
+        "moved_file_ids",
+        "moved_tags",
+        "source_active_file_id",
+        "source_created_at",
+        "source_id",
+        "source_last_imported_at",
+        "source_name",
+        "source_rels",
+        "source_updated_at",
+        "target_active_prev",
+        "target_id"
+      ],
+      "summary": "Merged src/one.png into src/two.png"
+    },
+    {
+      "action": "set_active_file",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "item_id",
+        "new_active_file_id",
+        "prev_active_file_id"
+      ],
+      "summary": "Changed the active source file"
+    },
+    {
+      "action": "split_item",
+      "source": "web",
+      "entity_type": "item",
+      "data_keys": [
+        "file_id",
+        "files",
+        "new_item_id",
+        "old_active_before",
+        "old_item_id"
+      ],
+      "summary": "Split two.png into its own item"
+    }
+  ],
+  "state_hash": "44b649169bcb1852c545e7b6564946cd53eec5f85d866519cd2cfdb1419aeb93"
+}

@@ -1,0 +1,295 @@
+# The project website: the landing page plus everything already written in
+# `docs/`, published to GitHub Pages.
+#
+# MkDocs rather than Sphinx because `docs/` was already a folder of plain
+# Markdown cross-linked by file name — which is exactly what MkDocs reads, and
+# what Sphinx would need MyST plus a toctree in every page to accept. The
+# version switcher below is `mike`, which is the tool that keeps several built
+# versions side by side in the `gh-pages` branch; that is the whole reason to
+# prefer it over a hand-rolled static site here.
+#
+# EVERY PATH BELOW IS RELATIVE TO THIS FILE, which is what lets the site's
+# tooling sit in `website/` while the prose it publishes stays at `docs/` —
+# where the repository's own readers already look for it, and where every
+# cross-reference between the pages points. Hence `../` on `docs_dir`, and
+# bare names for the two
+# things that genuinely belong to the site.
+#
+# Build:   .venv-docs/bin/mkdocs serve -f website/mkdocs.yml --watch-theme
+#          (preview on :8000; --watch-theme is NOT optional here — see below)
+# Publish: see .github/workflows/docs.yml — it runs `mike deploy`.
+
+site_name: Media Compost
+site_description: >-
+  Organize, deduplicate and annotate image and video datasets for AI
+  training — a web app that runs on your own machine.
+site_author: Media Compost
+# `site_url` is what the version switcher, the canonical links and the sitemap
+# are built against, so a wrong one shows up as a switcher that navigates
+# nowhere. It is the PROJECT PAGES ADDRESS: the one GitHub serves off
+# `gh-pages` with nothing to configure, nothing to renew and nothing that can
+# expire out from under the site. A project site is served from a
+# SUBDIRECTORY, hence `/media-compost/`.
+#
+# AND THE TRAILING SLASH IS LOAD-BEARING, which is the one thing here that
+# looks like tidying and is not: mike builds each version with `site_url`
+# replaced by `urljoin(site_url, version)`, so ".../media-compost/" yields
+# ".../media-compost/1.0.0" and ".../media-compost" yields ".../1.0.0" — an
+# address that does not exist, on every canonical link of every page.
+#
+# IT WAS THE CUSTOM DOMAIN `compost.media` until 2026-09, and putting one back
+# is TWO changes rather than this line alone: the domain also goes in the
+# repository's Pages settings, which is what writes the `CNAME` at the root of
+# `gh-pages` — `mike` then leaves it alone, because a deploy deletes only the
+# version directories it is replacing and adds `versions.json` and `.nojekyll`
+# beside them. While a custom domain is set there, Pages REDIRECTS this
+# address to it, so a `site_url` left behind is not merely cosmetic.
+#
+# Either way, a `CNAME` committed to `docs/` is the obvious move and does
+# nothing: `docs_dir` lands INSIDE a version directory, so it would publish
+# `/1.0.0/CNAME` and never the root one Pages reads.
+site_url: https://mediacompost.github.io/media-compost/
+repo_url: https://github.com/mediacompost/media-compost
+repo_name: media-compost
+edit_uri: edit/main/docs/
+
+docs_dir: ../docs
+# A LOCAL PREVIEW BUILD, and nothing else — it is gitignored, and the published
+# site is never built from here: `.github/workflows/docs.yml` runs `mike`, which
+# builds in the runner and commits the HTML to the `gh-pages` branch. So this
+# names a scratch directory beside the config that produces it, rather than a
+# `site/` at the repository root pretending to be part of the project. The
+# leading underscore is this repository's mark for a generated directory (see
+# .gitignore) — mkdocs' own default would be `site/`.
+site_dir: _build
+# The docs folder doubles as the in-repo documentation, and its README is the
+# index somebody browsing the repository on GitHub lands on. MkDocs would
+# otherwise treat it as a second home page and warn that two files claim `/`.
+#
+# `training/fields/` is the other one: those are FRAGMENTS, one per section of
+# the job editor, included into `docs/training.md` by `pymdownx.snippets` and
+# compiled into the app by `scripts/gen_field_help.py`. As pages they would be
+# twenty headless stubs in the search index saying what the training page
+# already says.
+exclude_docs: |
+  README.md
+  training/fields/
+
+theme:
+  name: material
+  # Two overrides live here. `overrides/home.html` is the landing page — markup
+  # rather than prose, with a footer of its own — and
+  # `overrides/partials/header.html` is THE header, for every page: the landing
+  # page used to build its own and hide Material's, which is how the two came
+  # to disagree about their links, their GitHub label and whether the site's
+  # name was a link at all.
+  #
+  # `mkdocs serve` DOES NOT WATCH THIS DIRECTORY unless you pass
+  # `--watch-theme`. Without it a template edit changes nothing on the page and
+  # nothing in the log either — it looks exactly like a change that had no
+  # effect, which cost an hour of editing the wrong thing.
+  custom_dir: overrides
+  language: en
+  icon:
+    # The same glyph `overrides/home.html` includes for its own mark, so the
+    # two headers carry one logo. It was a leaf here and a compost mark there.
+    logo: material/compost
+    repo: fontawesome/brands/github
+  favicon: assets/favicon.svg
+  font:
+    text: IBM Plex Sans
+    code: IBM Plex Mono
+  palette:
+    # The app itself has a light and a dark theme and follows the system by
+    # default; the site does the same.
+    #
+    # `toggle.name` IS THE MENU ENTRY, so each one names a STATE. Material's
+    # own control is a cycle — one button that advances to the next palette —
+    # so these read "Switch to dark mode", i.e. what pressing it would DO.
+    # `overrides/partials/header.html` shows all three at once with the live
+    # one ticked, where a row saying "switch to dark mode" beside a tick means
+    # two contradictory things at once. The `icon` is no longer rendered: the
+    # menu button carries one stable glyph, because an icon that changes with
+    # the state is a button that moves under the hand that is pressing it.
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: System
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Light
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Dark
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+    - content.action.edit
+    - search.suggest
+    - search.highlight
+    - toc.follow
+
+extra_css:
+  - assets/site.css
+
+# The landing page's install switcher and screenshot lightbox. Nothing else on
+# the site needs it, and it no-ops on every page that is not the landing page.
+extra_javascript:
+  - assets/home.js
+
+extra:
+  version:
+    provider: mike
+    alias: true
+  generator: false
+  # What the footer's small print and the install commands say. `extra.version`
+  # above is mike's switcher and carries no number, so this is the one place the
+  # release is written down for the site.
+  version_number: "1.0.0"
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - def_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  # BOTH OF THESE ARE LOAD-BEARING. `base_path` defaults to the process's
+  # WORKING DIRECTORY — not `docs_dir`, and not the config's own folder — so
+  # `--8<-- "training/fields/adapter.md"` resolved against wherever mkdocs
+  # happened to be started from and found nothing; `!relative` means "against
+  # the page doing the including", which is the only spelling that does not
+  # depend on how the build was invoked. And `check_paths` is off by default,
+  # which makes a missing include render as NOTHING AT ALL — the whole point
+  # of that include is that the website carries the same words as the app, so
+  # silence is the one failure it must not have.
+  - pymdownx.snippets:
+      base_path:
+        - !relative
+      check_paths: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+plugins:
+  - search
+  # THE API REFERENCE IS GENERATED FROM THE SOURCE, so it cannot fall behind it.
+  # `docs/python-api.md` is the hand-written GUIDE and stays: it says which
+  # three calls get you started and why the API is shaped the way it is, which
+  # no docstring extractor can produce. This is the exhaustive other half — one
+  # page per module, so a class added to `library/handles.py` appears here with
+  # nobody remembering to add it.
+  #
+  # `paths` is relative to THIS FILE, so `..` is the repository root, where
+  # `media_compost/` sits. Griffe reads the source statically — it never imports
+  # the package — which is why `website/requirements.txt` can stay three lines
+  # long and the docs job installs no part of the app.
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [..]
+          options:
+            # Badge every Enum subclass `enum`, the way a dataclass already
+            # gets its badge — see griffe_enums.py beside this file.
+            extensions:
+              - griffe_enums.py
+            # The docstrings here are prose, not Args:/Returns: blocks, so most
+            # of what this section does is decide the SHAPE of the page.
+            show_root_heading: true
+            show_root_full_path: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            show_if_no_docstring: false
+            # Every OUR-type mentioned in a signature is a link to its own
+            # documentation (prose mentions use explicit [`X`][full.path]
+            # cross-references in the docstrings). Needs the signature in its
+            # own block to have anything to link in.
+            separate_signature: true
+            signature_crossrefs: true
+            # Source order, not alphabetical: these modules are written to be
+            # read top to bottom, and the alphabet would open `handles.py` on
+            # `Appearance` rather than on `Item`.
+            members_order: source
+            group_by_category: false
+            # A signature on its own line, with types linked to their own entry.
+            separate_signature: true
+            signature_crossrefs: true
+            show_signature_annotations: true
+            # `__init__` is documented as part of the class it constructs.
+            merge_init_into_class: true
+            filters: ["!^_"]
+            # No embedded source: it doubles the length of every page, and the
+            # repository link that would replace it is still a placeholder.
+            show_source: false
+            heading_level: 2
+
+nav:
+  - Home: index.md
+  - Features: features.md
+  - Install:
+      - Installation: installation.md
+      - Compatibility: compatibility.md
+      - Troubleshooting: troubleshooting.md
+  - Use it:
+      - Getting started: getting-started.md
+      - Importing files: import.md
+      - Browsing the library: library.md
+      - Searching: search.md
+      - The item panel: item-properties.md
+  - Edit and annotate:
+      - Image editor: image-editor.md
+      - Annotation editor: annotation-editor.md
+      - Video editor: video-editor.md
+  - Your vocabulary:
+      - Tags: tags.md
+      - Tag sets: tag-sets.md
+      - Subjects and faces: subjects-and-faces.md
+      - Places: places.md
+      - Events: events.md
+      - Rankings and batch sessions: rankings.md
+      - History: history.md
+  - AI and training:
+      - Settings: settings.md
+      - Training: training.md
+      - Evaluate: evaluate.md
+  - Automation:
+      - Command line: cli.md
+      - Python API: python-api.md
+      - Translating: translating.md
+  # GENERATED from the source (see the mkdocstrings plugin above). It is its own
+  # top-level section because the header links to it as a third destination
+  # beside Home and Docs: a reference you come to knowing the name you want is a
+  # different errand from reading the guide, and burying it under Automation
+  # made it the eleventh item of a list you had to already be inside.
+  - API:
+      - Overview: api/index.md
+      - Opening a library: api/library.md
+      - Items and tag set: api/handles.md
+      - Collections: api/collections.md
+      - Querying: api/query.md
+      - Building conditions: api/conditions.md
+      - Importing: api/importing.md
+      - History: api/history.md
+      - Settings: api/settings.md
+      - Value types: api/values.md
+      - Errors: api/errors.md

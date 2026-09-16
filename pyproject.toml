@@ -1,0 +1,233 @@
+[project]
+name = "media-compost"
+version = "1.0.0"
+description = "Organize, deduplicate and annotate images with tags/captions for AI training datasets."
+requires-python = ">=3.11"
+# AGPL because this is a SERVER: the app is something you run and reach over a
+# network, and §13 is the clause that makes a modified copy offered to other
+# people come with its source. "or-later" is the FSF's own recommendation.
+license = "AGPL-3.0-or-later"
+# What must travel with the artifact. `THIRD-PARTY-NOTICES.md` is the whole of
+# the attribution the bundled fonts, the JS bundle and the vendored model code
+# require, and `licenses/` holds the texts it points at — a wheel is often the
+# only thing a user has, so pointing them at a repository would be an
+# attribution nobody can read. The FONTS carry their licence a second time, in
+# `_web_dist/fonts/` beside the .woff2 files, since those are served to a
+# browser separately from anything in dist-info.
+license-files = ["LICENSE", "THIRD-PARTY-NOTICES.md", "licenses/*.txt"]
+# The BASE: what reading and writing a library needs — the public Python API
+# and the `media-compost` CLI, nothing a script that tags pictures has no use
+# for. `pillow-heif`, `py7zr` and `pypdfium2` stay here deliberately (an
+# iPhone photo, a CBZ comic and a PDF are half of what many libraries hold,
+# for ~30 MB, and all three ship self-contained wheels that add no system
+# dependency); `numpy` could not leave even if we wanted it to
+# (colorkey/dedup/orient are built on it).
+dependencies = [
+    "sqlalchemy>=2.0",
+    "pydantic>=2.6",
+    "pillow>=10.2",
+    "pillow-heif>=0.16",
+    "imagehash>=4.3",
+    "numpy>=1.26",
+    "py7zr>=0.21",
+    "pypdfium2>=4.30",
+    "rich>=13.7",
+]
+
+# TWO extras and no more, because there are only two questions an installer
+# has: does this machine train, and does it serve. `[train]` deliberately does
+# not pull the app — the trainer runs from `media-compost-train` with no
+# server in the picture, which is what lets a headless GPU box skip it
+# entirely — and `[full]` is the app plus the trainer, which is every other
+# install there is.
+#
+# The finer extras this replaced (`[ui]`, `[hub]`, `[video]`) were names for
+# subsets nobody asks for by themselves: `[ui]` already pulled both of the
+# others, so it and `[full]` resolved to the same set, and the base install
+# needs neither (every hub import in core is function-local, and media.py
+# falls back to an ffmpeg on PATH). What is left is base, train, full.
+#
+# There is deliberately NO extra for the AI-action model stacks (torch and
+# friends), and the reason is a hard limit rather than a preference: a PEP 508
+# dependency specifier cannot name an index, and PyPI's torch wheel is
+# CPU-only on Windows (the CUDA builds live on download.pytorch.org) — an
+# extra listing torch would install a build that reads as a hang on exactly
+# the machines people buy GPUs for. `-m media_compost.hub.setup_env` (the
+# app's per-plugin "Run setup") is the supported path and gets the ordering
+# right.
+#
+# `rarfile` stays UNDECLARED everywhere: it needs an external unrar/bsdtar/7z
+# binary at runtime, so depending on it would be a promise the wheel cannot
+# keep. The friendly error in media.py names it when a CBR needs it.
+[project.optional-dependencies]
+# (There was a `pdf` extra here, holding `pypdfium2`. It is a BASE dependency
+# now: reading a PDF is not a specialism a picture library opts into, the
+# wheel is self-contained, and an extra whose absence turns every PDF into an
+# import error is a footgun for the one file type people are surprised by.)
+# The trainer: `media-compost-train`. The heavy stack (torch, diffusers, …)
+# lives in its own venv (`media-compost-train setup`), so the extra itself is
+# only the Hugging Face plumbing the manager needs to plan downloads.
+train = [
+    "huggingface_hub>=0.23",
+    # NVML, for the Train tab's stats boxes. NVIDIA'S OWN BINDING and not the
+    # `pynvml` package, which is now a shim that depends on this one anyway.
+    # Pure Python, `py3-none-any`, no dependencies of its own.
+    #
+    # It buys what nvidia-smi cannot give: an ABSOLUTE temperature threshold
+    # (`nvmlDeviceGetTemperatureThreshold`), where a current driver's
+    # `nvidia-smi -q` reports MARGINS instead ("GPU Shutdown T.Limit Temp:
+    # -5 C" beside a current 43 C). Without it the temperature has no ceiling
+    # to be a share of and so gets no bar — `gpu.py` shows one only where the
+    # hardware states a maximum.
+    #
+    # NOT on macOS, where no supported configuration has an NVIDIA GPU and
+    # this would be inert weight in every install. It is harmless there —
+    # `import pynvml` succeeds and `nvmlInit()` raises LibraryNotFound, which
+    # the probe already catches — so the marker is about not shipping an
+    # NVIDIA package to Apple silicon rather than about safety. A marker
+    # cannot ask whether a GPU is present, so a Linux AMD box still gets it,
+    # inert, and the probe simply falls through to the ROCm path.
+    'nvidia-ml-py>=12; platform_system != "Darwin"',
+]
+# The app (`media-compost serve`) and the trainer. `faiss-cpu` is a pure
+# accelerator for face clustering (facevec falls back to exact blocked matmul)
+# but the fallback is O(n²) on a first-class feature, and its wheel matrix
+# covers every supported target (macOS arm64/x86_64, Linux x86_64/aarch64
+# glibc+musl, Windows amd64 — checked 2026-08 at faiss-cpu 1.15.0).
+# `imageio-ffmpeg` bundles a binary for video import/edit; it is a convenience
+# rather than a gate, since media.py falls back to an ffmpeg on PATH, so a NAS
+# with a system ffmpeg gains nothing from it but loses nothing either.
+full = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "python-multipart>=0.0.9",
+    "faiss-cpu",
+    "imageio-ffmpeg>=0.4.9",
+    "media-compost[train]",
+]
+dev = [
+    "pytest>=8.0",
+    "httpx>=0.27",
+    # OPT-IN, deliberately: there is no `-n` in `addopts`. Measured on a
+    # 14-core machine, `-n 8 --dist loadfile` takes the default run from 149 s
+    # to 30 s and the whole thing from 345 s to 100 s — but parallel output is
+    # far worse to read the moment something fails, and 149 s is a tolerable
+    # default. Reach for it when the wait is what you are paying, not always.
+    #
+    # `--dist loadfile` was REQUIRED until `test_training_manifest_golden.py`
+    # stopped sharing one mutated library across its thirteen dataset builds
+    # (it copies a session-scoped template per test now, 100x cheaper than
+    # rebuilding). The plain default works today — but a module-scoped fixture
+    # the tests MUTATE is order-dependence with a long fuse, and this is where
+    # it surfaces first, so reach for `--dist loadfile` before assuming xdist
+    # is at fault.
+    "pytest-xdist>=3.0",
+]
+
+[project.scripts]
+# ONE tool: `media-compost serve` runs the app. Entry points install with the
+# distribution whatever the extras, so on an install without `[full]` the
+# subcommand refuses with the install line rather than a traceback, and every
+# import it needs is deferred — `import media_compost.cli` stays as light as
+# the base promises. (`media-compost-ui` was its own script until 2026-08;
+# the app is named only as uvicorn's STRING, the one sanctioned crossing.)
+media-compost = "media_compost.cli:main"
+# The trainer's own command, so a headless box can run a job without the app.
+media-compost-train = "media_compost.train.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/mediacompost/media-compost"
+Repository = "https://github.com/mediacompost/media-compost"
+Issues = "https://github.com/mediacompost/media-compost/issues"
+
+[build-system]
+# 77 is where PEP 639 lands — the SPDX `license` string and
+# `license-files` above are silently ignored by anything older, which
+# would ship a wheel whose dist-info carries no licence at all.
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+# ONE package, one distribution. The library is the package root; the app
+# (`media_compost.ui`) and the trainer (`media_compost.train`) are
+# subpackages. The layering between them is a stated contract rather than a
+# directory boundary now — `tests/core/test_import_boundary.py` and
+# `tests/train/test_import_contract.py` are what hold it.
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["media_compost*"]
+
+# The built SPA. `_web_dist/` holds no `__init__.py` — it is not a package, it
+# is data the server serves — so `packages.find` above will never pick it up
+# and a wheel built without this contains no frontend at all. The app then
+# installs, starts, answers the API, and serves a blank page.
+#
+# It is generated (gitignored, written by `scripts/build.sh`), so a wheel is
+# only complete if it is built AFTER the frontend. `scripts/package.sh` does
+# both in order and refuses to hand you an artifact missing the UI;
+# `tests/ui/test_packaging.py` holds these patterns to whatever Vite actually
+# emitted. The leading underscore is this repository's mark for a generated
+# directory (see .gitignore); package-data is glob-based, so it neither helps
+# nor hinders setuptools here.
+# Both patterns, deliberately. `_web_dist/**/*` alone DOES pick up the
+# top-level `index.html` — but only because setuptools expands it with
+# `glob(recursive=True)`, where `**/` matches zero directories. Read as an
+# ordinary glob it does not, and the file it would drop is the one naming the
+# bundle. Spelling both is one line against depending on which meaning of `**`
+# a future setuptools picks.
+[tool.setuptools.package-data]
+"media_compost.ui" = ["_web_dist/*", "_web_dist/**/*"]
+# The dedicated-env package lists, read by `media_compost/hub/setup_env.py`
+# from BESIDE ITSELF — inside the package so a wheel carries them. They lived
+# at the repo root, which a wheel install does not have: the in-app "Run
+# setup" then failed on every non-editable install with a missing-file error.
+"media_compost.hub" = ["requirements-*-env.txt"]
+# The shipped tag set TEMPLATES (`media_compost/tagsets/*.json`), read by
+# `ops/tagsets.templates` from BESIDE ITSELF when somebody creates a set from
+# one. A data directory with no `__init__.py`, so it needs naming here.
+"media_compost" = ["tagsets/*.json"]
+# The standalone trainer, spawned by file path in `.venv-training`
+# (`train/paths.py: TRAIN_SCRIPTS`). Data, not a package, DELIBERATELY:
+# `scripts/` has no `__init__.py`, so `packages.find` never sees it and the
+# torch-importing modules inside can never be imported into the torch-free
+# server by accident — the same reason it lived outside the package as
+# `training_scripts/`, which is exactly what a wheel install did not have.
+# (`scripts/engines/` keeps its `__init__.py` — the trainer imports it as a
+# package from its own sys.path — but with a data directory above it,
+# `find` cannot reach it either.)
+"media_compost.train" = ["scripts/*.py", "scripts/engines/*.py"]
+
+[tool.pytest.ini_options]
+# One suite per subsystem, as subpackages of one `tests` tree. They stay
+# separate directories because each is about a different thing, and because a
+# base-only install must be able to run `pytest tests/core` alone — which is
+# also why `tests/conftest.py` may import nothing beyond the stdlib.
+testpaths = ["tests"]
+# Two markers, both deselected by default, and they are deselected for
+# DIFFERENT reasons — which is why they are two.
+#
+# `perf` is about a synthetic 50k-item library and answers a question nobody
+# asks on an ordinary edit: `pytest -m perf`.
+#
+# `slow` is about WALL CLOCK and nothing else. It marks the two files that
+# spend it: `tests/train/test_training.py` waits on the manager's 2 s tick
+# thread through a fake trainer (88 s), and `tests/train/test_engine_smoke.py`
+# spawns a torch interpreter per engine (79 s). Together they were 167 s of a
+# 314 s suite — 53% of it, for two files out of ~130 — and the rest of
+# `tests/train` is 8.6 s, so this is NOT "skip the trainer's tests".
+#
+# It is deliberately NOT a which-subsystem-did-you-touch rule. Everything else
+# still runs on every edit, because what this codebase's tests catch is
+# precisely what the file you edited would not have made you predict: a change
+# to `prefilter`/`query`/`searchctx` last went red in the history golden, the
+# i18n templates and an API schema.
+#
+# `pytest -m ""` runs everything, and CI does — `.github/workflows/ci.yml`
+# passes `-m "not perf"`, which excludes perf and KEEPS slow. A marker CI
+# inherits from `addopts` is a test nobody runs; that is the same shape as the
+# extras-matrix job that installed extras which did not exist and exited 0.
+markers = [
+    "perf: scaling tripwires over a synthetic library (slow)",
+    "slow: spends wall clock waiting on a subprocess or a tick thread",
+    "real_worker: spawns a real plugin worker (the app suite refuses by default)",
+]
+addopts = "-m 'not perf and not slow'"

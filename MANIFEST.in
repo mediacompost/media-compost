@@ -1,0 +1,24 @@
+# The built SPA, for the SOURCE distribution.
+#
+# `[tool.setuptools.package-data]` covers the WHEEL; an sdist is assembled
+# separately and would go out without a frontend — installing perfectly and
+# serving a blank page, the same silent failure `scripts/package.sh` refuses
+# to hand over in a wheel.
+recursive-include media_compost/ui/_web_dist *
+
+# The dedicated-env package lists, for the SOURCE distribution (the wheel
+# gets them via `[tool.setuptools.package-data]`, like `_web_dist` above).
+include media_compost/hub/requirements-*-env.txt
+
+# The shipped tag set, for the sdist.
+include media_compost/tagsets/*.json
+
+# The standalone trainer (spawned by path, not a package), for the sdist.
+recursive-include media_compost/train/scripts *.py
+
+# Licences, for the SOURCE distribution. `[project] license-files` puts these
+# in the wheel's dist-info; an sdist is assembled separately and would go out
+# with the attribution its own contents require missing.
+include LICENSE
+include THIRD-PARTY-NOTICES.md
+recursive-include licenses *.txt

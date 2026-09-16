@@ -1,0 +1,38 @@
+# Line endings, once, for every platform.
+#
+# `text=auto` ALONE is the usual advice and is wrong here: it normalizes to LF
+# in the repository and then checks out CRLF on Windows — which is a supported
+# target, so contributors really are there. That lands CRLF in `scripts/*.sh`
+# (a shell script git-bash then refuses) and in the ~25 tests that read this
+# repository's own source files, as a diff nobody made. `eol=lf` pins the
+# working copy too: one line ending, everywhere, in the repo and on disk.
+* text=auto eol=lf
+
+# Except two third-party licence texts, which are kept byte-for-byte as their
+# authors published them — both arrived with CRLF and must keep it.
+frontend/public/fonts/LICENSE-IBM-Plex.txt -text
+licenses/OFL-1.1-IBM-Plex.txt              -text
+
+# Binary, said out loud. Git's own detection already gets these right; saying
+# it means a webp whose first bytes happen to look like text can never be
+# classified as text and mangled by the rule above.
+*.woff2 binary
+*.webp  binary
+
+# Better diff hunk headers: git names the enclosing function or heading in the
+# `@@` line instead of a bare line number. Only the two drivers git ships that
+# match a language here — there is no built-in TypeScript one.
+*.py       diff=python
+*.md       diff=markdown
+
+# GENERATED, so collapsed by default in GitHub's diff view: the SOURCE is the
+# reviewable thing, and the generated copy is noise on top of it.
+#   fieldHelp.ts  <- scripts/gen_field_help.py, from docs/training/fields/*.md
+frontend/src/train/fieldHelp.ts linguist-generated=true
+frontend/package-lock.json      linguist-generated=true
+
+# The GOLDENS are deliberately NOT marked generated, though they are
+# regenerated rather than edited. A changed golden is the most reviewable
+# thing in a diff — it is the log, the manifest or the public API saying
+# something different than it said before — and collapsing it by default is
+# exactly the wrong way round. See CONTRIBUTING.md.

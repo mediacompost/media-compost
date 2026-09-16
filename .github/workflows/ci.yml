@@ -1,0 +1,230 @@
+# What GitHub runs, and why it is this little.
+#
+# Everything here already passed on the machine it was written on, so a hosted
+# runner that repeats the whole suite buys a queue and nothing else. What it
+# buys that the developer's machine cannot is A DIFFERENT MACHINE: Linux on
+# x86-64, where the wheel's zlib is not the one a digest was generated
+# against, and a venv with NOTHING in it, where an import the app leans on
+# quietly is simply absent. Both of those have failed for real — the first run
+# of this file found a fixture its encoder wrote differently on Linux and an
+# install line rich was eating on every platform at once.
+#
+# So the jobs here are about the MACHINE, and the long tests stay where they
+# are cheap. What is deliberately NOT run here, with the one command each:
+#
+#   the `slow` marker     pytest -m "not perf" -q
+#                          (the trainer's whole lifecycle: a tick thread and a
+#                          torch subprocess, ~167 s of waiting)
+#   the `perf` marker      pytest -m perf -q
+#                          (seeds a 50k-item library to assert statement
+#                          SHAPES — minutes, and nothing about this OS)
+#   the bundle             ./scripts/build.sh
+#                          (the typecheck and the node ratchets DO run here;
+#                          bundling is the step before a deploy, not a test)
+#   a real training run    a tiny model on the CPU slot, locally
+#
+# `-m "not perf and not slow"` is SPELLED OUT rather than inherited from
+# addopts, because a job that stops testing something by inheritance stops
+# saying so — which is how this file once ran a matrix over extras that did
+# not exist and exited 0.
+
+name: CI
+
+# ONCE A DAY, AND ONLY IF SOMETHING WAS PUSHED (owner 2026-09). A push used to
+# start a run, which for a day of small commits is a queue of answers nobody
+# reads — the machine that made them has already run the suite. What is worth
+# knowing is whether the OTHER machine still agrees, and that question keeps
+# overnight.
+#
+# A pull request still runs on the spot: that IS somebody asking, and the
+# answer is wanted before a merge rather than tomorrow morning. So does a hand
+# started run (Actions -> CI -> Run workflow), which is what to reach for after
+# a push worth checking now.
+#
+# Two things about `schedule:` that are GitHub's and not this file's: the cron
+# runs the copy of this file on the DEFAULT BRANCH, whatever branch the commits
+# are on, and a repository with no activity for 60 days has its schedules
+# disabled (with an email first). The time is UTC and the queue is busy on the
+# hour, hence the odd minute.
+on:
+  schedule:
+    - cron: "23 3 * * *"
+  pull_request:
+  workflow_dispatch:
+
+# A second push to a branch makes the first one's answer worthless, and a
+# queued run of it is a runner somebody else is waiting for.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # "Is this commit one we have already answered for?" — asked of the runs
+  # themselves rather than of a clock. A window ("anything pushed in the last
+  # 25 hours") would be simpler and wrong twice: it re-runs a commit the night
+  # the schedule slips, and it MISSES one the night it slips the other way.
+  # The last run's `head_sha` is exactly what was tested, so comparing it to
+  # today's head answers the question with no state kept anywhere.
+  #
+  # A run that skipped still records the head it skipped ON, which is the same
+  # head, so a quiet week costs one of these a day and nothing else. The other
+  # events do not ask: a pull request and a hand-started run are somebody
+  # wanting an answer about a commit, whether or not one exists already.
+  decide:
+    name: has anything landed since the last run?
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      run: ${{ steps.ask.outputs.run }}
+    steps:
+      - id: ask
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # The newest run of THIS workflow on this branch that is not the one
+          # asking. `--jq` over the API rather than `git log`, so no checkout.
+          last=$(gh api \
+            "repos/${{ github.repository }}/actions/workflows/ci.yml/runs?branch=${{ github.ref_name }}&per_page=20" \
+            --jq "[.workflow_runs[] | select(.id != ${{ github.run_id }})][0].head_sha // \"\"")
+          if [ "$last" = "$HEAD_SHA" ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::nothing has landed since $last — nothing to answer"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::head is $HEAD_SHA, last run was ${last:-nothing}"
+          fi
+
+  # The portability canary, and the strongest form of "the library needs eight
+  # dependencies": core's whole suite, on a venv with no fastapi, no torch and
+  # no huggingface_hub in it. This is the job that catches an encoder, a codec
+  # or a libm that answers differently over here.
+  base:
+    name: core suite, base-only venv
+    needs: decide
+    if: needs.decide.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      # pytest-xdist is the runner, not a dependency of the app: it adds
+      # execnet and nothing the leak check below is about.
+      - name: Install the BASE only
+        run: python -m pip install -e . pytest pytest-xdist
+      - name: The venv really is base-only
+        run: |
+          python - <<'EOF'
+          import importlib.util as u
+          for m in ("fastapi", "uvicorn", "torch", "huggingface_hub",
+                    "httpx", "faiss", "imageio_ffmpeg"):
+              assert u.find_spec(m) is None, m + " leaked into the base install"
+          import media_compost
+          EOF
+      - name: ffmpeg for the video tests (the PATH fallback, not a dependency)
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Core suite
+        run: python -m pytest tests/core -q -n auto
+
+  # The same three suites the developer runs, on the other operating system,
+  # plus the frontend's ratchets — the boundary tests, the i18n coverage and
+  # the recipe counts, which are what a new component quietly breaks.
+  suites:
+    name: every suite + the frontend's ratchets
+    needs: decide
+    if: needs.decide.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - uses: actions/setup-node@v4
+        with:
+          # npm test is `node --test "src/**/*.test.ts"`: the glob needs
+          # Node >= 21 and the TS type stripping >= 23.6, so 20 failed the
+          # step outright ("Could not find 'src/**/*.test.ts'").
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install everything
+        run: python -m pip install -e ".[full,dev]"
+      - name: ffmpeg for the video tests
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Frontend typecheck and node tests
+        working-directory: frontend
+        run: |
+          npm ci
+          npx tsc -b
+          npm test
+      - name: The Python suites, less the two long markers
+        run: python -m pytest -q -n auto -m "not perf and not slow"
+
+  # The WHEEL honours the extras: a base install refuses `serve` with the
+  # install line instead of a traceback, `[train]` drives the trainer's CLI
+  # with no fastapi anywhere, `[full]` imports the app whole. None of it is
+  # reachable from an editable checkout, which is why it is its own job.
+  wheel:
+    name: the wheel honours its extras
+    needs: decide
+    if: needs.decide.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Build the wheel (no frontend — this job is about imports)
+        run: |
+          python -m pip install build
+          python -m build --wheel --outdir _dist
+      - name: Base install refuses serve with the install line
+        run: |
+          python -m venv /tmp/venv-base
+          /tmp/venv-base/bin/pip install -q _dist/media_compost-*.whl
+          /tmp/venv-base/bin/media-compost --help > /dev/null
+          set +e
+          out=$(/tmp/venv-base/bin/media-compost serve --no-open 2>&1)
+          code=$?
+          set -e
+          test $code -ne 0
+          # The line as it REACHES A TERMINAL: rich reads `[full]` as a style
+          # tag, so this grep is what says the escape is still there.
+          echo "$out" | grep -q "media-compost\[full\]"
+      - name: "[train] drives the trainer with no fastapi"
+        run: |
+          python -m venv /tmp/venv-train
+          W=$(ls _dist/media_compost-*.whl)
+          # `--no-deps` is deliberately NOT used: the point is that the extra
+          # resolves. pip only WARNS on an extra that does not exist, so a
+          # renamed one installs the base and every assertion below then fails
+          # for the wrong reason — `tests/ui/test_packaging.py` holds the names
+          # this file uses to the ones pyproject declares.
+          /tmp/venv-train/bin/pip install -q "${W}[train]"
+          /tmp/venv-train/bin/python - <<'EOF'
+          import importlib.util as u
+          assert u.find_spec("fastapi") is None, "fastapi leaked into [train]"
+          import media_compost.train
+          assert media_compost.train.available()
+          EOF
+          /tmp/venv-train/bin/media-compost-train --help > /dev/null
+          /tmp/venv-train/bin/media-compost-train list --data-dir /tmp/lib
+      - name: "[full] imports the app whole"
+        run: |
+          python -m venv /tmp/venv-ui
+          W=$(ls _dist/media_compost-*.whl)
+          /tmp/venv-ui/bin/pip install -q "${W}[full]"
+          /tmp/venv-ui/bin/python -c "import media_compost.ui.server.app"

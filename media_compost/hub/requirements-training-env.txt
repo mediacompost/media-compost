@@ -1,0 +1,50 @@
+# Media Compost — DEDICATED training environment (.venv-training, at the repo root).
+#
+# Model training and the Evaluate tab's generation runs happen out-of-process
+# in this venv; the app itself (requirements.txt) stays torch-free and works
+# without it — the Train/Evaluate tabs then just show the one-click setup.
+# The recommended install is the command the UI runs:
+#   python -m media_compost.hub.setup_env training
+# It INSTALLS THIS FILE, which sits beside it in the package; the list here
+# is the definition of the env, kept as a plain requirements file for tooling.
+#
+# bitsandbytes (8-bit AdamW) needs an NVIDIA GPU or an AMD one under ROCm;
+# the setup script installs it when nvidia-smi or a ROCm stack is present
+# (on AMD the trainer probes the installed build before trusting it).
+#
+# AMD (Linux/ROCm): PyPI's Linux torch wheel is the CUDA build — it installs
+# fine and trains on the CPU. The setup script routes torch through the ROCm
+# index automatically; the hand-run equivalent is
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/rocm7.1
+
+torch
+torchvision
+diffusers>=0.34
+transformers>=4.44
+accelerate
+peft
+safetensors
+# int8 quantization where bitsandbytes cannot go — Apple silicon above all.
+# Pure Python over torch, no CUDA, so it installs everywhere and simply is not
+# reached on a CUDA box (which keeps bitsandbytes). It is what makes
+# Qwen-Image trainable on a Mac at all: 57.7 GB of bf16 weights become 37.5,
+# or 30.3 with the text encoder quantized too.
+optimum-quanto
+# The Prodigy optimizer, which works its own learning rate out from how far
+# the weights have travelled. Pure Python over torch — no CUDA — so it
+# installs and runs on every backend, Apple silicon included.
+prodigyopt
+sentencepiece
+protobuf
+pillow
+numpy
+# A SCHEDULER CAN NEED THIS, AND ONE IN THE REGISTRY DOES. diffusers computes
+# "beta sigmas" through scipy and imports it lazily, so its absence is not a
+# load-time error anywhere — it is an ImportError raised from inside
+# `from_pretrained` for the models whose scheduler config asks for them, and
+# silence for every other. Chroma1-Base is one: it failed with "Make sure to
+# install scipy if you want to use beta sigmas" while Chroma1-HD, the same
+# engine and the same architecture, loaded fine. So the model was in the
+# registry, offered in the editor, and could not be trained or evaluated at
+# all.
+scipy

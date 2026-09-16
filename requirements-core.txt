@@ -1,0 +1,23 @@
+# Media Compost — the BASE dependencies: the public Python API and the
+# `media-compost` CLI. Reading and writing a library needs these nine packages
+# and nothing else — no server, no torch, no Hugging Face.
+#
+# Mirrors [project.dependencies] in the repo-root pyproject.toml, which is the
+# authoritative copy (`pip install media-compost` reads it); this file exists
+# for tooling that wants a plain requirements file. Keep the two in sync —
+# tests/ui/test_packaging.py pins the pyproject side.
+#
+# What each extra adds is pyproject's story ([train], [full] — there are only
+# those two); the AI-action model stacks are deliberately NOT an extra at all —
+# see the comment there — and install via `-m media_compost.hub.setup_env`
+# or the app's per-plugin "Run setup".
+
+sqlalchemy>=2.0
+pydantic>=2.6
+pillow>=10.2
+pillow-heif>=0.16
+imagehash>=4.3
+numpy>=1.26
+py7zr>=0.21
+pypdfium2>=4.30
+rich>=13.7

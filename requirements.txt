@@ -1,0 +1,32 @@
+# Media Compost — EVERYTHING that installs into the main environment: the app
+# with all three packages plus every optional AI-model dependency.
+#
+#   pip install -r requirements.txt          (from the repo root)
+#
+# The LAYERS, smallest first — each is exactly what its name says, and
+# pyproject.toml is the authoritative copy of the first two:
+#
+#   requirements-core.txt      the base — the Python API + CLI, nine packages
+#                              (PDF page rendering is among them, not an extra)
+#   pip install -e ".[train]"  adds the trainer's manager, i.e. huggingface_hub
+#                              (the heavy stack lives in .venv-training —
+#                              `media-compost-train setup` builds it)
+#   pip install -e ".[full]"   adds the web app on top (fastapi, uvicorn,
+#                              faiss-cpu, imageio-ffmpeg)
+#   requirements-ai.txt     the optional AI-action model dependencies
+#   this file                  all of the above
+#
+# THE DEDICATED ENVIRONMENTS ARE NOT INCLUDED, and cannot be: Florence-2 and
+# Magi v3 pin `transformers==4.49.0` to match their bundled model code, which
+# is not the version the models above want, and the trainer wants a different
+# set again. They each get their own venv and run out-of-process:
+#
+#   python -m media_compost.hub.setup_env florence   media_compost/hub/requirements-florence-env.txt
+#   python -m media_compost.hub.setup_env magi       media_compost/hub/requirements-magi-env.txt
+#   python -m media_compost.hub.setup_env training   media_compost/hub/requirements-training-env.txt
+#
+# Model WEIGHTS are not pip packages: download them from the app's
+# Settings → Models panel, into the shared Hugging Face cache.
+
+-e .[full]
+-r requirements-ai.txt

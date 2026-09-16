@@ -1,0 +1,31 @@
+# The build context is what the image copies; stage 1 builds the SPA itself.
+.git
+**/__pycache__
+**/*.pyc
+**/.DS_Store
+
+# Frontend build products — the image builds its own.
+frontend/node_modules
+frontend/_dist
+frontend/tsconfig.tsbuildinfo
+media_compost/ui/_web_dist
+
+# Local environments and install metadata.
+.venv
+.venv-*
+_build
+_dist
+media_compost.egg-info
+
+_data
+tests
+
+# Not needed at runtime.
+docs
+website
+*.md
+# …EXCEPT THIS ONE, which is an attribution the artifact has to carry: it is
+# named in `pyproject`'s `license-files`, and a COPY of a path the context
+# excludes fails the build outright. The negation must stay BELOW `*.md` —
+# in a .dockerignore the last matching pattern wins.
+!THIRD-PARTY-NOTICES.md

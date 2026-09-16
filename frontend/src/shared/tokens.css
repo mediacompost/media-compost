@@ -1,0 +1,694 @@
+/* Design tokens extracted from the prototype (Media Compost.dc.html). */
+:root {
+  /* Drives native controls (e.g. the datetime-local picker) to match the theme. */
+  color-scheme: dark;
+  --accent: #4f8cff;
+  --accent-dim: rgba(79, 140, 255, 0.15);
+  --accent-soft: rgba(79, 140, 255, 0.28);
+
+  --bg: #161619;
+  --panel: #1a1a1e;
+  --panel-2: #1c1c20;
+  --panel-3: #1d1d22;
+  --topbar: #1c1c20;
+  --border: #2c2c33;
+  --border-soft: #26262c;
+  --border-strong: #33333b;
+
+  --text: #e6e6e9;
+  --text-2: #c8c8d0;
+  --text-3: #b7b7bf;
+  --muted: #8a8a92;
+  --muted-2: #6a6a72;
+  --muted-3: #5f5f68;
+
+  --green: #5db075;
+  --green-text: #7fc394;
+  --red: #d9574f;
+  --red-text: #e08a84;
+  /* Partial / mixed state across a multi-selection (e.g. a tag on some but not
+     all selected images, or with differing polarity). */
+  --yellow: #e0b84f;
+  --yellow-text: #e8c86a;
+  /* The amber fill behind a "nobody has agreed with this yet" chip — what
+     --accent-dim is to accent. Named because three places were spelling the
+     same rgba out by hand. */
+  --yellow-dim: rgba(224, 184, 79, 0.16);
+  --movie: #c98a5a;
+  --archive: #b58ad0;
+
+  /* Semantic tokens for colors that used to be hard-coded inline, so the light
+     theme below can override them in one place. */
+  --on-accent: #ffffff;      /* text/icons on accent-colored fills */
+  --danger: #ff6b6b;         /* destructive actions */
+  /* The fill behind a destructive control, what --accent-dim is to accent:
+     twenty sites spelled the rgba out by hand. */
+  --danger-dim: rgba(255, 107, 107, 0.12);
+  --danger-border: rgba(255, 107, 107, 0.4);
+  --text-bright: #d6d6db;    /* slightly brighter body text (names/values) */
+  --surface-float: #232329;  /* dropdown menus, popovers, thumbnail backgrounds */
+  /* Quick Look's backdrop and the words drawn straight on it. Dark themes
+     dim with black; the light theme dims with WHITE (below), so the text on
+     it has to follow the theme rather than being fixed light. */
+  --preview-backdrop: rgba(8, 8, 10, 0.82);
+  --preview-text: rgba(255, 255, 255, 0.92);
+  --preview-text-2: rgba(255, 255, 255, 0.6);
+  --preview-text-3: rgba(255, 255, 255, 0.55);
+  --preview-text-4: rgba(255, 255, 255, 0.3);
+  --menu-border: #35353d;    /* border of floating surfaces */
+  --bg-deep: #111114;        /* deepest background (editor canvas, insets) */
+  --checker-a: #1b1b1f;      /* transparency checkerboard (behind thumbnails) */
+  --checker-b: #2a2a30;
+  --editor-checker-a: #141416; /* editor canvas checkerboard (annotator/editor) */
+  --editor-checker-b: #191a1c;
+  /* Label text of a selected sidebar row (sits on the translucent accent-dim
+     fill). Near-white reads well on the dark fill; the light theme overrides it
+     to a readable blue (white would vanish on the pale fill). */
+  --selected-text: #eaf1ff;
+  /* Search bar field — intentionally a touch darker than the query builder
+     so the two read as distinct halves of the combined field. */
+  --search-field-bg: #141418;
+  /* Query-builder panel — a touch brighter than the surrounding panels in dark
+     mode (and darker than them in light mode) so the builder stands out from the
+     search bar and page behind it. */
+  --builder-bg: #232329;
+
+  /* ANSI terminal palette for the background-task log viewer. Tuned so each
+     color reads on the dark log background; the light theme overrides them to
+     darker variants that read on a pale background. */
+  --ansi-black: #6a6a72;
+  --ansi-red: #ff7b72;
+  --ansi-green: #4ec9a0;
+  --ansi-yellow: #d7ba7d;
+  --ansi-blue: #6aa9ff;
+  --ansi-magenta: #d982d0;
+  --ansi-cyan: #56b6c2;
+  --ansi-white: #c8c8d0;
+  /* The architecture map's middle band — a colour of its own, not the log's. */
+  --magenta-text: #d982d0;
+
+  /* SCRIMS: the dims drawn over pictures and over the page. Theme-invariant
+     — a scrim sits on a photograph, which has no theme — and four steps
+     where there were eleven alphas spelled by hand over ~190 sites. */
+  --scrim-1: rgba(0, 0, 0, 0.35);
+  --scrim-2: rgba(0, 0, 0, 0.5);
+  --scrim-3: rgba(0, 0, 0, 0.65);
+  --scrim-4: rgba(0, 0, 0, 0.82);
+  /* What is written ON a scrim or a session's dark backdrop: white at four
+     strengths. (Quick Look's chrome flips with the theme and reads
+     --preview-text instead; the sessions' backdrops do not flip.) */
+  --on-scrim: #ffffff;
+  --on-scrim-2: rgba(255, 255, 255, 0.72);
+  --on-scrim-3: rgba(255, 255, 255, 0.55);
+  --on-scrim-4: rgba(255, 255, 255, 0.3);
+  /* The blurred pill of chrome over a picture — the judging card's corner,
+     the sidebar preview's, the Lightbox's — and its hairline and its lit
+     wash; the accent-tinted one is the tag grid's picked cell. */
+  --overlay-chrome: rgba(20, 22, 28, 0.72);
+  --overlay-chrome-accent: rgba(46, 92, 184, 0.92);
+  --overlay-hairline: rgba(255, 255, 255, 0.18);
+  --overlay-wash: rgba(255, 255, 255, 0.16);
+  /* The one-pixel dark outline around a thumbnail or a badge on a picture. */
+  --ring-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+  /* SHADOWS at three sizes: a small lift (a chip, a pill), a floating
+     surface (a menu, a toast), a sheet (a dialog, the preview). The light
+     theme carries its own, lighter alphas — dark mode's shadows on a white
+     page read as smudges. */
+  --shadow-1: 0 2px 10px rgba(0, 0, 0, 0.28);
+  --shadow-2: 0 6px 20px rgba(0, 0, 0, 0.35);
+  --shadow-3: 0 18px 48px rgba(0, 0, 0, 0.55);
+  /* The washes and borders of the three signal colours, what --accent-dim
+     and --danger-dim are to theirs. */
+  --green-dim: rgba(93, 176, 117, 0.16);
+  --green-border: rgba(93, 176, 117, 0.4);
+  --red-dim: rgba(217, 87, 79, 0.16);
+  --red-border: rgba(217, 87, 79, 0.4);
+  --yellow-border: rgba(224, 184, 79, 0.4);
+  --muted-dim: rgba(128, 128, 128, 0.18);
+  /* The top bar's mark: the accent lifting to this. */
+  --accent-bright: #7aa8ff;
+
+  /* THE TYPE SCALE. Sixteen distinct font sizes were in use, most of them
+     half a pixel from a neighbour; eight steps now, and every literal in a
+     component names one. The body is --fs-3 (13px was its old size). */
+  --fs-0: 9.5px;
+  --fs-1: 10.5px;
+  --fs-2: 11.5px;
+  --fs-3: 12.5px;
+  --fs-4: 13.5px;
+  --fs-5: 15px;
+  --fs-6: 18px;
+  --fs-7: 22px;
+  /* THE RADIUS SCALE: a control's radius is a quarter of its height, and
+     these are the quarters of the heights in use. --r-round is a pill. */
+  --r-1: 5px;
+  --r-2: 6px;
+  --r-3: 7px;
+  --r-4: 8px;
+  --r-5: 9px;
+  --r-6: 10px;
+  --r-7: 12px;
+  --r-round: 999px;
+
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  --sans: "IBM Plex Sans", system-ui, sans-serif;
+}
+
+/* CJK UI languages: system CJK faces AFTER IBM Plex, so Latin text stays Plex
+   and only the glyphs Plex lacks fall through — to a face with matched
+   metrics rather than whatever `system-ui` guesses. No CJK webfont is
+   vendored on purpose: the self-hosted fonts exist for offline use and one
+   CJK weight is several megabytes, while every target OS ships these.
+   `App.tsx` stamps `<html lang>` from the app language, which is what these
+   selectors key on. */
+:root:lang(ja) {
+  --sans: "IBM Plex Sans", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic",
+    "Noto Sans JP", "Meiryo", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", "Hiragino Sans", "Yu Gothic", "Noto Sans JP",
+    ui-monospace, monospace;
+}
+:root:lang(zh-Hans) {
+  --sans: "IBM Plex Sans", "PingFang SC", "Microsoft YaHei UI",
+    "Microsoft YaHei", "Noto Sans SC", "Source Han Sans SC", system-ui,
+    sans-serif;
+  --mono: "IBM Plex Mono", "PingFang SC", "Microsoft YaHei",
+    "Noto Sans SC", ui-monospace, monospace;
+}
+:root:lang(ko) {
+  --sans: "IBM Plex Sans", "Apple SD Gothic Neo", "Malgun Gothic",
+    "Noto Sans KR", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", "Apple SD Gothic Neo", "Malgun Gothic",
+    "Noto Sans KR", ui-monospace, monospace;
+}
+
+/* Light theme — applied when <html data-theme="light"> (set by theme.ts, which
+   resolves the light/dark/system preference and also follows the OS setting). */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --accent-dim: rgba(79, 140, 255, 0.14);
+  --accent-soft: rgba(79, 140, 255, 0.3);
+
+  --bg: #f4f4f6;
+  --panel: #ffffff;
+  --panel-2: #f1f1f4;
+  --panel-3: #f7f7f9;
+  --topbar: #ffffff;
+  --border: #e3e3e9;
+  --border-soft: #ededf1;
+  --border-strong: #d6d6de;
+
+  --text: #1c1c22;
+  --text-2: #3a3a42;
+  --text-3: #4a4a54;
+  --muted: #6a6a74;
+  --muted-2: #8a8a94;
+  --muted-3: #9a9aa4;
+
+  --green: #3f9d5c;
+  --green-text: #2f7d47;
+  --red: #d24a42;
+  --red-text: #b33830;
+  /* Warm amber (not olive): reads as "paused/warning" on light surfaces and
+     keeps ~4.6:1 text contrast on white. */
+  --yellow: #e0a30c;
+  --yellow-text: #b45309;
+  --yellow-dim: rgba(224, 163, 12, 0.16);
+  --shadow-1: 0 2px 10px rgba(0, 0, 0, 0.10);
+  --shadow-2: 0 6px 20px rgba(0, 0, 0, 0.14);
+  --shadow-3: 0 18px 48px rgba(0, 0, 0, 0.22);
+  --green-dim: rgba(63, 157, 92, 0.14);
+  --green-border: rgba(63, 157, 92, 0.4);
+  --red-dim: rgba(210, 74, 66, 0.12);
+  --red-border: rgba(210, 74, 66, 0.4);
+  --yellow-border: rgba(224, 163, 12, 0.4);
+
+  --on-accent: #ffffff;
+  --danger: #d64545;
+  --danger-dim: rgba(214, 69, 69, 0.10);
+  --danger-border: rgba(214, 69, 69, 0.4);
+  --text-bright: #1c1c22;
+  --surface-float: #ffffff;
+  --preview-backdrop: rgba(244, 244, 246, 0.86);
+  --preview-text: rgba(28, 28, 34, 0.92);
+  --preview-text-2: rgba(28, 28, 34, 0.62);
+  --preview-text-3: rgba(28, 28, 34, 0.55);
+  --preview-text-4: rgba(28, 28, 34, 0.3);
+  --menu-border: #dcdce2;
+  --bg-deep: #ececf0;
+  --checker-a: #e9e9ee;
+  --checker-b: #d2d2da;
+  /* Bright checkerboard for the editor canvas in light mode. */
+  --editor-checker-a: #ffffff;
+  --editor-checker-b: #e2e2e8;
+  /* On the pale accent-dim fill a near-white label is invisible; use a strong
+     blue that reads clearly instead. */
+  --selected-text: #1f57d6;
+  /* Light mode: a clean white input, brighter than the grey builder panel. */
+  --search-field-bg: #ffffff;
+  /* Light mode: slightly darker than the surrounding panels so the builder
+     reads as a distinct, recessed half of the combined field. */
+  --builder-bg: #e8e8ed;
+
+  /* ANSI palette darkened for the pale log background in light mode. */
+  --ansi-black: #55555f;
+  --ansi-red: #c8322b;
+  --ansi-green: #1a7f4b;
+  --ansi-yellow: #8a6d00;
+  --ansi-blue: #2b6fe0;
+  --ansi-magenta: #a83398;
+  --ansi-cyan: #0e7490;
+  --ansi-white: #3a3a42;
+  --magenta-text: #a83398;
+}
+
+/* Transparency checkerboard, painted behind thumbnails of images that have an
+   alpha channel (opaque images fully cover it). Theme-aware via the vars above,
+   so it isn't baked into the stored thumbnail. */
+.mc-checker {
+  background-color: var(--checker-a);
+  background-image:
+    linear-gradient(45deg, var(--checker-b) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--checker-b) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--checker-b) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--checker-b) 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* THE RECORDED DIMENSIONS ARE THE PICTURE, so a browser may not turn one.
+   This library stores pixels already in their orientation (`File.rotation` is
+   provenance, and `/api/files/{id}` transforms nothing), and it records a
+   file's RAW width and height — `media.image_size` says so deliberately, "so
+   the gate and the stored file can never disagree about how big the picture
+   is". A browser disagrees anyway: `image-orientation: from-image` is the CSS
+   default, so an `<img>` honours an EXIF Orientation tag the app treats as
+   indexed metadata. Measured on a 400x150 JPEG carrying Orientation 6: laid
+   out at width 200 the browser gives it a height of 533 (i.e. 150x400,
+   turned) and `image-orientation: none` gives 75 (400x150, as recorded).
+   That is the whole of "some images appear rotated while the chessboard
+   background shows the right aspect ratio" — the checker box is shaped by the
+   recorded dimensions and the picture inside it was not. It bites wherever a
+   stored file is drawn at size (the session cards, Quick Look, the tag
+   overlay's strip, the face preview) and never in the grid, whose thumbnails
+   Pillow generates without applying the tag either.
+   Global rather than per `<img>`: every image here is a stored file or an
+   app-generated asset, the CSP blocks external hosts, and the sites that draw
+   a raw file are not a list worth keeping in step.
+   WHAT IT CANNOT REACH is a canvas: measured in the same engine,
+   `naturalWidth`, `drawImage` and even
+   `createImageBitmap(blob, {imageOrientation: "none"})` all report the
+   ORIENTED size for that file, so the image editor opens such a picture
+   turned. Repairing that means changing what the library records, not what a
+   stylesheet says. */
+img {
+  image-orientation: none;
+}
+
+
+/* A placeholder is a HINT, not a value. Browsers render it at the input's own
+   colour with a light opacity, which in this palette lands close enough to real
+   text that a form full of examples reads as a form full of answers — the place
+   editor, where every field carries a sample address, was unreadable that way.
+   Pinned to the faintest muted token instead. */
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted-3);
+  opacity: 0.55;
+}
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: var(--fs-3);
+  -webkit-font-smoothing: antialiased;
+  /* Suppress accidental text selection everywhere (e.g. Shift-clicking rows);
+     the focused-field exception below keeps inputs/textareas selectable. */
+  user-select: none;
+  -webkit-user-select: none;
+}
+input,
+textarea,
+[contenteditable="true"] {
+  user-select: text;
+  -webkit-user-select: text;
+}
+/* PROSE OPTS BACK IN: a setting's name, its subtitle, a help text. The body
+   rule above suppresses selection app-wide so a shift-click range over rows
+   never drags a text selection with it — but these are words somebody wants
+   to paste into a search engine, and a name you cannot select is a name you
+   have to retype.
+
+   BOTH properties, which is the whole reason this is a class rather than an
+   inline style. The body rule sets both, and `-webkit-user-select` is the one
+   Safari reads: an inline `userSelect: "text"` on its own works in Chrome and
+   silently does nothing in Safari. Every site in `train/FormRows.tsx` was
+   exactly that — the training editor's labels and hints looked selectable to
+   whoever wrote them and were not, on the one browser nobody here tests on. */
+/* Every SETTINGS SURFACE opts in wholesale — the app's Settings pages and the
+   training job editor share `.mc-settings-page`. Naming each label and hint
+   individually was the first version and it is a list that can only ever be
+   incomplete: three settings hints and every help text in the training editor
+   were already missing from it, and each new row would have to remember. A
+   form has no row-range selection to protect, so the whole page can simply be
+   selectable. */
+.mc-settings-page,
+.mc-settings-page *,
+.mc-copy,
+.mc-copy * {
+  user-select: text;
+  -webkit-user-select: text;
+}
+/* …EXCEPT the icons. `.msym` renders a LIGATURE, so its text content is the
+   glyph's source name — a selection dragged across a row of controls copies
+   "expand_more content_copy delete" into whatever the words were being pasted
+   into. They are pictures as far as a reader is concerned, so they stay out
+   of every selection. Last, so it wins over the container rule above. */
+.mc-settings-page .msym,
+.mc-copy .msym {
+  user-select: none;
+  -webkit-user-select: none;
+}
+input,
+select,
+button,
+textarea {
+  font-family: inherit;
+}
+
+/* A DISABLED CONTROL DOES NOT OFFER A CLICKING HAND. The panels are styled
+   inline throughout, so nearly every button here carries its own
+   `cursor: pointer` — and an inline style beats any selector, which is why
+   this is the second rule in the sheet that has to shout to be heard (the
+   drag highlight is the other). One rule, rather than a
+   `disabled ? "default" : "pointer"` ternary at a hundred-odd call sites,
+   each of which is one edit away from being forgotten. */
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: default !important;
+}
+
+.msym {
+  font-family: "Material Symbols Rounded";
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  -webkit-font-feature-settings: "liga";
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #3a3a42;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4a4a54;
+  background-clip: padding-box;
+}
+:root[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: #c8c8d0;
+  background-clip: padding-box;
+}
+:root[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: #b0b0ba;
+  background-clip: padding-box;
+}
+
+/* On light backgrounds the hover wash needs to darken, not lighten.
+   `--row-wash` is the SAME wash as a variable, for a control OVERLAID on a
+   hovered row (the tag-set list's pencil and bin): it paints its own opaque
+   background over the row's text, and that background has to be the row's
+   colour AS HOVERED — the panel plus this wash — or it sits on the tinted
+   row as a rectangle of the untinted one. Stacked as
+   `linear-gradient(var(--row-wash), var(--row-wash)), <base>`. */
+.hoverable {
+  --row-wash: transparent;
+}
+:root[data-theme="light"] .hoverable:hover {
+  --row-wash: rgba(0, 0, 0, 0.04);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.hoverable:hover {
+  --row-wash: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* While dragging the sidebar divider, suppress text selection everywhere. */
+body.resizing,
+body.resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+body.resizing-v,
+body.resizing-v * {
+  cursor: row-resize !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+/* THE DROP HIGHLIGHT, DRAWN BY THE BROWSER. A row that accepts dropped images
+   says so with `data-itemdrop`, and while such a drag is in flight the row
+   under the pointer lights up through plain `:hover` — no dragover, no React,
+   no state in the way. WebKit resolves hover during a drag, so on the browser
+   this is aimed at the feedback tracks the pointer as fast as it can hover;
+   where a browser does not (Chromium), the rule never matches and the JS
+   highlight is the whole of it, exactly as before. `!important` because the
+   rows carry an inline `background: transparent`, which a class cannot beat.
+   The two paint the same colour, and a drop is hit-tested where the pointer
+   IS — so the faster of the two can never promise a row the drop would miss. */
+body.mc-dragging-items [data-itemdrop]:hover {
+  background: var(--accent-dim) !important;
+  outline: 1px solid var(--accent) !important;
+  outline-offset: -1px;
+}
+
+/* On row hover the edit/delete actions take the place of the item count.
+   EVERY hover reveal here is scoped to `body:not(.mc-dragging)`: they swap
+   `display`, which is a layout and two icon glyphs to rasterize per row, and
+   WebKit resolves `:hover` while a drag is in flight — so a drag across the
+   sidebar paid for all of it once per row crossed, on top of the drop
+   highlight it was actually there for. Nothing in a reveal can be pressed
+   with the pointer holding something, so it waits. See shared/dragBody.ts. */
+.row-actions {
+  display: none;
+  align-items: center;
+  gap: 1px;
+}
+body:not(.mc-dragging) .hoverable:hover .row-actions {
+  display: flex;
+}
+body:not(.mc-dragging) .hoverable:hover .row-count {
+  display: none;
+}
+/* The tag row's edit pencil: quiet until the row is hovered, and taking no
+   space until then, so the name beside it never shifts. */
+.tag-edit-btn {
+  display: none !important;
+  border-radius: 5px;
+}
+body:not(.mc-dragging) .hoverable:hover .tag-edit-btn {
+  display: flex !important;
+}
+.tag-edit-btn:hover {
+  background: var(--accent-dim);
+  color: var(--accent) !important;
+}
+
+/* `shared/IconButton`: the same wash on hover as a row action's. */
+.icon-btn:hover:not(:disabled) {
+  background: var(--accent-dim);
+  color: var(--accent) !important;
+}
+.icon-btn.danger:hover:not(:disabled) {
+  background: var(--danger-dim);
+  color: var(--danger) !important;
+}
+.row-action:hover {
+  background: var(--accent-dim);
+  color: var(--accent) !important;
+}
+/* A row action sitting ON an accent fill — a selected set pill's ⋯, the
+   folded sub-tabs' ⋯ while the open sub-tab is among them: the rule above
+   would paint an accent glyph on an accent fill, i.e. nothing, so the hover
+   is a white wash and the fill's own text colour instead. */
+.row-action.on-accent:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: var(--on-accent) !important;
+}
+/* A row action that only shows on row hover WITHOUT reflowing the row — kept
+   in the layout with its space reserved (a right-aligned value beside it
+   never shifts), or absolutely overlaid on the row's right edge with the
+   row's own background behind it (the sidebar tag rows: the name keeps the
+   whole width, and the ✕ fades in over it). VISIBILITY,
+   never an opacity fade: the same `:hover` selector drove a `display` flip
+   here for years without trouble, and the moment it drove a 0.1s opacity
+   transition instead, Safari left the button painted at full strength after
+   the pointer had left the row — the transition's end state was simply never
+   repainted. A visibility flip repaints reliably, is instant like the old
+   `display` swap, and makes the hidden button untouchable with no
+   pointer-events juggling (a `visibility: hidden` element takes no events). */
+.row-action-fixed {
+  visibility: hidden;
+}
+body:not(.mc-dragging) .hoverable:hover .row-action-fixed {
+  visibility: visible;
+}
+/* `:hover` is resolved from pointer EVENTS, so a list that scrolls under a
+   stationary cursor — or re-renders under it — leaves the old row hovered
+   until the mouse moves again. Safari holds that stale state across a wheel
+   scroll where Chromium re-resolves on the next frame, which is how a row
+   action came to stay lit on a row the pointer had left. `useHoverGuard`
+   re-derives the answer from `elementFromPoint` and writes it here.
+   One class more specific than the rule above, so it wins without
+   `!important`. */
+.nohover .hoverable:hover .row-action-fixed {
+  visibility: hidden;
+}
+/* Editor tool palette: instant tooltip to the right of the hovered tool
+   (native title tooltips only appear after the OS hover delay). */
+.mc-tool-tip {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--surface-float);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+  color: var(--text-2);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 20;
+}
+.mc-tool-btn:hover .mc-tool-tip {
+  opacity: 1;
+}
+
+/* Editor tool-properties bar scrolls horizontally when cramped, but never
+   shows a scrollbar (Chromium would render a classic bar inside the pill;
+   Safari's overlay bars already hide themselves). */
+.mc-props-bar {
+  scrollbar-width: none;
+}
+.mc-props-bar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Reference-picker tiles: the remove (✕) badge fades in on tile hover. */
+.mc-ref-del {
+  opacity: 0;
+  transition: opacity 0.1s;
+  cursor: pointer;
+}
+.mc-ref-tile:hover .mc-ref-del {
+  opacity: 1;
+}
+
+/* Tag state indicator: the green/red/yellow dot doubles as the positive/negative
+   toggle (click flips the tag). A faint ring on hover signals it's clickable. */
+.tag-state-toggle:hover {
+  background: var(--accent-dim);
+}
+.row-action.danger:hover {
+  background: var(--danger-dim);
+  color: var(--danger) !important;
+}
+
+/* "This is the one you asked for." Jumping between lists lands you in a table
+   of a hundred rows, where scrolling the right one into view still leaves you
+   to find it. The tint FADES rather than switching off, because a highlight
+   that vanishes is one you can miss by blinking — and it is an inset shadow
+   rather than a background, so the row's own colours (selected, hovered,
+   striped) are still the ones underneath. */
+.mc-flash {
+  animation: mc-flash 1.6s ease-out 1;
+}
+@keyframes mc-flash {
+  0%, 25% { box-shadow: inset 0 0 0 2px var(--accent), inset 0 0 0 999px var(--accent-dim); }
+  100% { box-shadow: inset 0 0 0 2px transparent, inset 0 0 0 999px transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mc-flash { animation-duration: 2.4s; animation-timing-function: steps(2, end); }
+}
+
+/* Spinner for running background jobs. `Icon spin` is the ONE spelling
+   (`shared/Icon.tsx`). The keyframes alone were here for a long time and
+   the class was not, so five call sites naming the class rendered a still
+   glyph — a running job that looked stuck — while nineteen others wrote
+   the `animation:` out inline. `tokens.test.ts` keeps it to the prop. */
+.mc-spin {
+  display: inline-flex;
+  animation: mc-spin 1s linear infinite;
+}
+@keyframes mc-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Quick-Assign "already applied" badge on a grid thumbnail: a green check that
+   becomes a red close glyph on hover to signal that a click removes the tags. */
+.qa-badge {
+  background: var(--green);
+  color: #0b1220;
+}
+/* The tick says the item carries the Quick-Assign set, and it says so whenever
+   there IS a set — the mode is about what a click on the PICTURE does, not
+   about whether you can see or undo the answer. So the badge is always the way
+   back off: red with a ✕ on hover, in both modes. It is 22 px in the card's
+   own corner and stops the click reaching the card, so it never competes with
+   the selection a click on the picture makes. */
+.qa-badge:hover {
+  background: var(--red);
+}
+.qa-badge .qa-badge-close {
+  display: none;
+}
+.qa-badge:hover .qa-badge-check {
+  display: none;
+}
+.qa-badge:hover .qa-badge-close {
+  display: inline;
+}
+
+/* A SETTINGS PAGE SCROLLS; ITS SECTIONS DO NOT SHRINK.
+   The page is a flex column with `overflow-y: auto`, and a flex child's
+   default is to shrink — so on a short window every section box squeezed
+   down and clipped its own rows instead of the page scrolling past them.
+   The container cannot say this with an inline style (it is about the
+   children), which is why it is a class. */
+.mc-settings-page > * {
+  flex-shrink: 0;
+}

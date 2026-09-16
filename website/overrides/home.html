@@ -1,0 +1,637 @@
+{#-
+  The landing page.
+
+  It extends `base.html` rather than sitting in `docs/index.md`, because the
+  page is markup — a two-column hero with a screenshot gallery, a tabbed
+  install panel, a card grid and four code panels — and stopped reading as
+  prose long ago. Everything here is structure; every value it is drawn with
+  lives in `docs/assets/site.css`, and the two pieces of behaviour (the
+  lightbox and the OS switcher) live in `docs/assets/home.js`.
+
+  THIS PAGE HAS NO HEADER OF ITS OWN, and the reason is worth keeping. It had
+  one — inside `{% block container %}`, never `{% block header %}`, because
+  `navigation.instant` swaps only a fixed list of components and the header is
+  not among them: overriding the header block for one page left that page's
+  bar, with its in-page anchors and no search, sitting on top of every docs
+  page reached from here, while Material's own header was gone for the rest of
+  the session. Inside the container it came and went correctly, and Material's
+  real header was hidden underneath by CSS.
+
+  What that bought was a header nobody else had, and what it cost was two of
+  them: different links, a different GitHub label, a title that was a link
+  here and inert text there, and search and the theme control on one page out
+  of twenty-six. `overrides/partials/header.html` is now the only header, for
+  every page including this one — which is the case the instant-navigation
+  mechanism is built for, and the drift has nowhere left to happen.
+
+  The FOOTER is still overridden the ordinary way: `{% block footer %}` is
+  inside the container, so it swaps correctly.
+-#}
+{% extends "base.html" %}
+
+{#- The docs sidebars have nothing to say about this page. -#}
+{% block site_nav %}{% endblock %}
+
+{% block container %}
+<div class="mc-home">
+
+  {#- No header here any more. This page had one of its own and hid Material's,
+      which is what made the two drift apart; `overrides/partials/header.html`
+      is now the only one, and this page gets it like every other. -#}
+
+  <!-- 1. Hero ------------------------------------------------------------ -->
+  <section class="mc-section mc-section--first">
+    <div class="mc-hero">
+      <div class="mc-hero__copy">
+        {#- NO FULL STOP, and the deadpan is the point: the headline says the
+            product's name back and nothing else, so the LEAD below carries the
+            whole plain meaning. Edit the two together — a shorter lead leaves a
+            reader who has not got the joke with nothing at all. -#}
+        <h1 class="mc-h1">Compost, for media</h1>
+        <p class="mc-lead">
+          A local web app that turns a pile of images and videos into
+          datasets: import without duplicates, tag and caption at scale,
+          search and organize, and train a model on the result — or read the
+          library from your own Python scripts.
+        </p>
+        <div class="mc-buttons">
+          <a class="mc-btn mc-btn--primary" href="#install">Install it</a>
+          <a class="mc-btn" href="#features">See what it does</a>
+        </div>
+      </div>
+
+      {#- The six shots, in lightbox order. The lead is index 0 and the five
+          thumbnails are 1–5, and each button CARRIES its own title, caption
+          and full-size source: an instant navigation swaps ordinary elements
+          verbatim but mangles inline `<script>` tags, so a JSON blob beside
+          the gallery arrives back on this page stripped of its attributes and
+          the lightbox silently has no data. Attributes on the buttons are
+          also the elements the openers already are — nothing to keep in step.
+
+          A caption is PLAIN TEXT — it is rendered into an attribute, so no
+          markup and no quotes. A shot of somebody else's work would carry its
+          credit here, beside the picture rather than in a notices file nobody
+          opens; none of these is one.
+
+          NOTHING IN THIS LIST MAY CARRY A JINJA COMMENT: it is one expression
+          rather than template body, so a `{#` inside the brackets is a syntax
+          error. Say it here instead.
+      -#}
+      {% set shots = [
+        {"key": "library",   "title": "The library",
+         "caption": "Group tree, item grid and item panel — the view you spend the day in."},
+        {"key": "search",    "title": "The query builder",
+         "caption": "A search you can read and edit either way — as text or as structure."},
+        {"key": "editor",    "title": "The image editor",
+         "caption": "Selections, brushes, transforms and inpainting, in a window of its own."},
+        {"key": "annotator", "title": "The annotation editor",
+         "caption": "Boxes, faces and the tag list, side by side with the image — a face is an oval, named where it is drawn."},
+        {"key": "subjects",  "title": "Faces, clustered and named",
+         "caption": "The clusters down one side, the picked one's crops beside them — and a row of what looks most like it. Naming one puts that person's tag on every picture."},
+        {"key": "training",  "title": "The Train tab",
+         "caption": "Every setting a run takes, with the memory it will need worked out as you go."}
+      ] %}
+      {% set lead = shots[0] %}
+
+      <div class="mc-gallery">
+        <button class="mc-shot" type="button"
+                data-mc-open="0" data-mc-shot="0"
+                data-mc-title="{{ lead.title }}"
+                data-mc-caption="{{ lead.caption }}"
+                data-mc-full="{{ ('assets/screenshots/' ~ lead.key ~ '.webp') | url }}">
+          <img src="{{ ('assets/screenshots/' ~ lead.key ~ '.webp') | url }}"
+               alt="{{ lead.title }} — {{ lead.caption }}"
+               width="2560" height="1600">
+        </button>
+        {#- The caption, and nothing beside it. There was an "Expand ⤢" button
+            here carrying the same `data-mc-open="0"` as the shot above it —
+            a second control for the click the picture already takes, on the
+            one element in the gallery that most obviously invites one (it is
+            `cursor: zoom-in`, like the thumbnails). -#}
+        <div class="mc-shot__caption">
+          <p>The library — group tree · item grid · item panel</p>
+        </div>
+        <div class="mc-thumbs">
+          {% for shot in shots[1:] %}
+            <button class="mc-thumb" type="button" title="{{ shot.title }}"
+                    data-mc-open="{{ loop.index }}" data-mc-shot="{{ loop.index }}"
+                    data-mc-title="{{ shot.title }}"
+                    data-mc-caption="{{ shot.caption }}"
+                    data-mc-full="{{ ('assets/screenshots/' ~ shot.key ~ '.webp') | url }}">
+              <img src="{{ ('assets/screenshots/' ~ shot.key ~ '-thumb.webp') | url }}"
+                   alt="{{ shot.title }}" width="640" height="400" loading="lazy">
+            </button>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Install ---------------------------------------------------------- -->
+  <section class="mc-section" id="install">
+    <div class="mc-head">
+      <div>
+        <h2 class="mc-h2">Install</h2>
+        <p class="mc-copy">
+          Python 3.11 or newer — or Docker, which needs not even that. A release
+          wheel carries the built web app inside it, so there is nothing to
+          compile and no Node on your machine (building it yourself wants
+          Node 20.19 or newer).
+        </p>
+      </div>
+      <a class="mc-head__link" href="{{ 'installation/' | url }}">Full installation guide →</a>
+    </div>
+
+    <div class="mc-panel" data-mc-install>
+      <div class="mc-tabs" role="tablist" aria-label="Operating system">
+        {% for os in ["macOS", "Linux", "Windows", "Source", "Docker"] %}
+          <button class="mc-tab{% if loop.first %} mc-tab--on{% endif %}" type="button"
+                  role="tab" id="mc-tab-{{ os | lower }}"
+                  aria-controls="mc-pane-{{ os | lower }}"
+                  aria-selected="{{ 'true' if loop.first else 'false' }}"
+                  data-mc-os="{{ os | lower }}">{{ os }}</button>
+        {% endfor %}
+      </div>
+
+      <div class="mc-panel__body">
+        <div class="mc-pane" id="mc-pane-macos" role="tabpanel" aria-labelledby="mc-tab-macos" data-mc-pane="macos">
+<pre class="mc-code">python3 -m venv ~/media-compost
+~/media-compost/bin/pip install media_compost-{{ config.extra.version_number | d('1.0.0', true) }}-py3-none-any.whl
+~/media-compost/bin/media-compost serve</pre>
+          <div class="mc-note">
+            <p>Videos need <code>ffmpeg</code> for probing and frame extraction:</p>
+<pre class="mc-note__code">brew install ffmpeg</pre>
+          </div>
+        </div>
+
+        <div class="mc-pane" id="mc-pane-linux" role="tabpanel" aria-labelledby="mc-tab-linux" data-mc-pane="linux" hidden>
+<pre class="mc-code">python3 -m venv ~/media-compost
+~/media-compost/bin/pip install media_compost-{{ config.extra.version_number | d('1.0.0', true) }}-py3-none-any.whl
+~/media-compost/bin/media-compost serve</pre>
+          <div class="mc-note">
+            <p>Videos need <code>ffmpeg</code> for probing and frame extraction:</p>
+<pre class="mc-note__code">sudo apt install ffmpeg        # or your distribution's equivalent</pre>
+          </div>
+        </div>
+
+        <div class="mc-pane" id="mc-pane-windows" role="tabpanel" aria-labelledby="mc-tab-windows" data-mc-pane="windows" hidden>
+<pre class="mc-code">py -3.11 -m venv %USERPROFILE%\media-compost
+%USERPROFILE%\media-compost\Scripts\pip install media_compost-{{ config.extra.version_number | d('1.0.0', true) }}-py3-none-any.whl
+%USERPROFILE%\media-compost\Scripts\media-compost serve</pre>
+          <div class="mc-note">
+            <p>Videos need <code>ffmpeg</code> on your <code>PATH</code>:</p>
+<pre class="mc-note__code">winget install Gyan.FFmpeg</pre>
+          </div>
+        </div>
+
+        <div class="mc-pane" id="mc-pane-source" role="tabpanel" aria-labelledby="mc-tab-source" data-mc-pane="source" hidden>
+<pre class="mc-code">git clone {{ config.repo_url }}
+cd media-compost
+python3 -m venv .venv && .venv/bin/pip install -e ".[full]"
+./scripts/build.sh
+.venv/bin/media-compost serve</pre>
+          <div class="mc-note">
+            <p>Building the web app yourself needs Node 20.19+ (or 22.12+).</p>
+<pre class="mc-note__code">node --version</pre>
+          </div>
+        </div>
+
+        <div class="mc-pane" id="mc-pane-docker" role="tabpanel" aria-labelledby="mc-tab-docker" data-mc-pane="docker" hidden>
+<pre class="mc-code">git clone {{ config.repo_url }}
+cd media-compost
+docker compose up -d          # http://localhost:8000</pre>
+          <div class="mc-note">
+            <p>The image builds the web app itself; <code>ffmpeg</code> is already inside.</p>
+<pre class="mc-note__code">docker compose logs -f</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="mc-after">
+      <code>serve</code> starts on 127.0.0.1:8000 (<code>--open</code> also
+      opens your browser on it). The
+      library lives in a folder you can back up, move between machines, and read
+      without this app.
+    </p>
+  </section>
+
+  <!-- 3. What it does ------------------------------------------------------ -->
+  <section class="mc-section" id="features">
+    <h2 class="mc-h2 mc-h2--spaced">What it does</h2>
+    <p class="mc-copy mc-copy--wide">
+      A library for pictures and film that knows what is in them — what you
+      already have, what each thing is, who is in it and where it was taken —
+      and does enough of the work for you that saying so is possible at all
+      across forty thousand pictures. Every card here links the page that
+      explains it.
+    </p>
+    <div class="mc-cards">
+      <div class="mc-card">
+        <h3>Everything in one library</h3>
+        <p>Images, videos, animated GIFs, PDFs and comic archives, dragged into the
+          window or imported from the command line. A GIF's frames and a PDF's pages
+          arrive as the ordered pages of one item rather than as a heap of files.</p>
+        <div class="mc-card__links">
+          <a href="{{ 'import/' | url }}">Importing files →</a>
+        </div>
+      </div>
+      <div class="mc-card">
+        <h3>Nothing lands twice</h3>
+        <p>Every file is checked against the whole library by its content and by how
+          it looks, so an exact copy is adopted and a rescale becomes another version of
+          the picture you already have. Your folder structure becomes groups, the
+          original filenames are kept, and a screenshot is matched to the film it came
+          from and linked at its timestamp.</p>
+        <div class="mc-card__links">
+          <a href="{{ 'import/' | url }}">Importing files →</a>
+        </div>
+      </div>
+      <div class="mc-card">
+        <h3>Order that matters</h3>
+        <p>A sequence keeps items in order — a comic's pages, an animation's frames, a
+          burst of photos. It is an item in its own right, so it can be tagged, grouped
+          and searched like any other.</p>
+        <div class="mc-card__links">
+          <a href="{{ 'library/#sequences' | url }}">Browsing the library →</a>
+        </div>
+      </div>
+      <div class="mc-card">
+        <h3>Groups, however you like</h3>
+        <p>An item can be in as many groups as you want, groups nest, and each has its
+          own colour and icon. A smart group is a saved search instead: whatever matches
+          is in it, kept up to date by itself.</p>
+        <div class="mc-card__links">
+          <a href="{{ 'library/' | url }}">Browsing the library →</a>
+        </div>
+      </div>
+      <div class="mc-card">
+        <h3>Press space</h3>
+        <p>The picture you have selected, full size over a dimmed library — or
+          the video, playing. The arrow keys step through what you picked and
+          through a book's pages, the wheel zooms, and one key puts the item's
+          tags and captions beside it.</p>
+        <div class="mc-card__links">
+          <a href="{{ 'library/#quicklook-preview' | url }}">Quick Look →</a>
+        </div>
+      </div>
+      <div class="mc-card">
+        <h3>Every change, and the way back</h3>
+        <p>Everything you do is written to a log you can read: what changed, when, and
+          by whom. Almost all of it reverts — one entry, a whole run of them, or straight
+          from an undo bar where you made the change.</p>
+        <div class="mc-card__links">
+          <a href="{{ 'history/' | url }}">History →</a>
+        </div>
+      </div>
+      <div class="mc-card">
+        <h3>Search that reaches everything</h3>
+        <p>A search bar and a visual builder that are the same query bound both ways:
+          type it, or click it together. It reaches tags, people, places, capture dates,
+          captions, links — and every metadata field the files themselves carry, down to
+          the camera and the ISO.</p>
+        <div class="mc-card__links">
+          <a href="{{ 'search/' | url }}">Searching →</a>
+        </div>
+      </div>
+      <div class="mc-card">
+        <h3>Tags that mean something</h3>
+        <p>Tags imply other tags, so a search for <code>dog</code> finds the poodles
+          without anybody tagging both. They carry other spellings as aliases, merge
+          without losing an assignment, live in namespaces like
+          <code>costume:hat</code>, group per picture, and can hold a number to compare
+          against (<code>height:172cm</code>).</p>
+        <div class="mc-card__links">
+          <a href="{{ 'tags/' | url }}">Tags →</a>
+        </div>
+      </div>
+      <div class="mc-card">
+        <h3>Who, where and when</h3>
+        <p>A person, a place or an event is extra data on a tag, so naming somebody is
+          tagging the picture — nothing new to search. Places sit inside one another,
+          events span days and name their venues, and an event can say when an undated
+          picture was taken.</p>
+        <div class="mc-card__links">
+          <a href="{{ 'subjects-and-faces/' | url }}">Subjects and faces →</a>
+          <a href="{{ 'places/' | url }}">Places →</a>
+          <a href="{{ 'events/' | url }}">Events →</a>
+        </div>
+      </div>
+      <div class="mc-card">
+        <h3>A tag scheme you already use</h3>
+        <p>Import one — a booru list, your studio's own — and it describes names
+          wherever you type a tag: autocomplete, a line saying what each one means, and
+          the longer version behind a mark. Nothing is written into your library until
+          you actually assign a tag.</p>
+        <div class="mc-card__links">
+          <a href="{{ 'tag-sets/' | url }}">Tag sets →</a>
+        </div>
+      </div>
+      <div class="mc-card">
+        <h3>Labels on the labels</h3>
+        <p>A meta tag marks a tag, a caption or a link rather than a picture — “never
+          mirror this one”, “this caption is a draft”. Then a search can ask about what
+          things are marked instead of listing them one by one.</p>
+        <div class="mc-card__links">
+          <a href="{{ 'tags/#meta-tags' | url }}">Meta tags →</a>
+        </div>
+      </div>
+      <div class="mc-card">
+        <h3>Captions, and instructions</h3>
+        <p>A caption says what a picture is. An instruction says how it was made from
+          other pictures, and links them in the order they were used — which is what an
+          image-editing model trains on.</p>
+        <div class="mc-card__links">
+          <a href="{{ 'item-properties/' | url }}">The item panel →</a>
+        </div>
+      </div>
+      <div class="mc-card">
+        <h3>Models that run on your machine</h3>
+        <p>Generate tags and captions, read the text off a page, remove a watermark,
+          upscale, colorize, cut a comic into its panels, find faces. Each model
+          downloads its own weights and runs in a process of its own — no account, no API
+          key, and nothing leaves the machine.</p>
+        <div class="mc-card__links">
+          <a href="{{ 'settings/' | url }}">Settings and models →</a>
+        </div>
+      </div>
+      <div class="mc-card">
+        <h3>Tag a pile of pictures fast</h3>
+        <p>Sessions that put one question in front of you at a time and sort the queue
+          by likeness, so the pictures that fit a tag arrive together. A grid of sixteen,
+          pre-sorted into fits / doesn't fit / undecided, is the quickest way through a
+          folder nobody has tagged.</p>
+        <div class="mc-card__links">
+          <a href="{{ 'rankings/#tag-items-one-by-one' | url }}">Tagging sessions →</a>
+        </div>
+      </div>
+      <div class="mc-card">
+        <h3>Rate a few, sort the rest</h3>
+        <p>Rate pictures by comparing two at a time, and the standings are worked out
+          from your answers. Then spend them on the rest of the library: it learns what
+          you rated highly and writes the tags you ask for wherever a picture lands.</p>
+        <div class="mc-card__links">
+          <a href="{{ 'rankings/' | url }}">Rankings →</a>
+        </div>
+      </div>
+      <div class="mc-card">
+        <h3>Draw on it</h3>
+        <p>Draw a box by dragging, or a polygon corner by corner; on a film a tag is a
+          stretch of time instead. Faces and text are found for you — two face detectors,
+          one of them for drawn art, and two text engines — and everything a model
+          suggests waits for your nod.</p>
+        <div class="mc-card__links">
+          <a href="{{ 'annotation-editor/' | url }}">Annotation editor →</a>
+        </div>
+      </div>
+      <div class="mc-card">
+        <h3>Edit the pixels</h3>
+        <p>A raster editor with selections, brushes, transforms and an inpainting tool
+          that paints a region away. For film, a cutlist: trim, split, move, rotate,
+          crop, change the frame rate — and nothing touches the file until you save.</p>
+        <div class="mc-card__links">
+          <a href="{{ 'image-editor/' | url }}">Image editor →</a>
+          <a href="{{ 'video-editor/' | url }}">Video editor →</a>
+        </div>
+      </div>
+      <div class="mc-card">
+        <h3>Train on your own library</h3>
+        <p>Point a LoRA, a LoKr or a full finetune at a search of your library and
+          queue it. Watch the loss and the sample images as they land, keep any
+          checkpoint, and generate test pictures without leaving the app — the weights
+          are written in the layout ComfyUI and the rest read.</p>
+        <div class="mc-card__links">
+          <a href="{{ 'training/' | url }}">Training →</a>
+          <a href="{{ 'evaluate/' | url }}">Evaluate →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Get your files in ------------------------------------------------ -->
+  <section class="mc-section" id="import">
+    <h2 class="mc-h2">Get your files in</h2>
+    <p class="mc-copy mc-copy--wide">
+      Drag files or folders anywhere into the window — or, faster for large
+      datasets, import from the command line. Archives are unpacked, duplicates
+      are detected against the whole library, and folder structure can become
+      groups. Re-importing the same files is safe.
+    </p>
+
+    <div class="mc-panel">
+      <div class="mc-panel__label">Command line</div>
+<pre class="mc-block"><span class="mc-c"># bulk-import a folder — its structure becomes nested groups
+$</span> media-compost import ~/Pictures/dataset <span class="mc-k">--data-dir</span> ./lib <span class="mc-k">--parent-group</span> Scans</pre>
+    </div>
+
+    <div class="mc-panel mc-panel--stacked">
+      <div class="mc-panel__label">Python</div>
+<pre class="mc-block"><span class="mc-c"># one run: one commit rhythm, one History entry, a URL recorded per file</span>
+<span class="mc-k">from</span> media_compost <span class="mc-k">import</span> ImportBytes, open_library
+
+<span class="mc-k">with</span> open_library(<span class="mc-s">"/path/to/library"</span>, user=<span class="mc-s">"scraper"</span>) <span class="mc-k">as</span> lib:
+    <span class="mc-k">with</span> lib.importing() <span class="mc-k">as</span> run:
+        <span class="mc-k">for</span> data, url, when, name <span class="mc-k">in</span> downloads():
+            got = run.add(ImportBytes(data=data, name=name))
+            <span class="mc-k">if</span> got.file:
+                got.file.add_url(url, accessed_at=when)
+            <span class="mc-k">if</span> got.item:
+                got.item.tags.add(<span class="mc-s">"scraped"</span>)</pre>
+    </div>
+
+    <div class="mc-links">
+      <a href="{{ 'import/' | url }}">Importing files →</a>
+      <a href="{{ 'cli/' | url }}">Command line →</a>
+    </div>
+  </section>
+
+  <!-- 5. Say what they are ------------------------------------------------ -->
+  <section class="mc-section" id="edit">
+    <h2 class="mc-h2">Then say what they are</h2>
+    <p class="mc-copy mc-copy--wide">
+      Everything the interface writes, a script writes the same way — through
+      the same service layer, so a tag, a box, a caption or a date lands in the
+      History log as its own entry and comes back out of it. One picture, or
+      everything a search matches, in one transaction.
+    </p>
+
+    <div class="mc-panel">
+      <div class="mc-panel__label">One item</div>
+<pre class="mc-block"><span class="mc-k">from</span> media_compost <span class="mc-k">import</span> open_library
+
+<span class="mc-k">with</span> open_library(<span class="mc-s">"/path/to/library"</span>, user=<span class="mc-s">"my-script"</span>) <span class="mc-k">as</span> lib:
+    item = lib.items[<span class="mc-s">"9f3c…"</span>]                    <span class="mc-c"># by uid, or by id</span>
+    item.tags.add(<span class="mc-s">"temple"</span>, box=(<span class="mc-s">0.31</span>, <span class="mc-s">0.12</span>, <span class="mc-s">0.40</span>, <span class="mc-s">0.55</span>))
+    item.tags.negative.add(<span class="mc-s">"blurry"</span>)             <span class="mc-c"># pointedly NOT blurry</span>
+    item.groups.add(lib.groups[<span class="mc-s">"Trips/2019/Japan"</span>])
+    item.add_caption(<span class="mc-s">"A five-storey pagoda in the rain."</span>)
+    item.taken = <span class="mc-s">"2019-04"</span>                        <span class="mc-c"># a month is a date too</span></pre>
+    </div>
+
+    <div class="mc-panel mc-panel--stacked">
+      <div class="mc-panel__label">Or a whole search — logged, and revertible</div>
+<pre class="mc-block"><span class="mc-k">with</span> open_library(<span class="mc-s">"/path/to/library"</span>, user=<span class="mc-s">"my-script"</span>) <span class="mc-k">as</span> lib:
+    mark = lib.history[<span class="mc-s">0</span>].id             <span class="mc-c"># note where the log stands</span>
+
+    small = lib.query(<span class="mc-s">"INFO:width&lt;800 !lowres"</span>)
+    small.add_tags(<span class="mc-s">"lowres"</span>)              <span class="mc-c"># one transaction, not one per item</span>
+    small.add_to(lib.groups[<span class="mc-s">"Needs work"</span>])
+
+    lib.history.revert(lib.history.since(mark))       <span class="mc-c"># …if that was a mistake</span></pre>
+    </div>
+
+    <div class="mc-links">
+      <a href="{{ 'python-api/' | url }}">Python API →</a>
+      <a href="{{ 'history/' | url }}">History →</a>
+    </div>
+  </section>
+
+  <!-- 6. And back out again ----------------------------------------------- -->
+  <section class="mc-section" id="api">
+    <h2 class="mc-h2">And back out again</h2>
+    <p class="mc-copy mc-copy--wide">
+      There is no export step. The library is a Python package as well as a web
+      app, so a script reads everything the interface shows — what a picture is
+      tagged, who is in it, what its own file says about itself — and asks an
+      item where its bytes are instead of writing a copy of them somewhere.
+      Queries take the same string the search bar takes.
+    </p>
+
+    <div class="mc-panel">
+      <div class="mc-panel__label">What the library knows</div>
+<pre class="mc-block"><span class="mc-c"># mode="r" refuses every write before touching the database</span>
+<span class="mc-k">with</span> open_library(<span class="mc-s">"/path/to/library"</span>, mode=<span class="mc-s">"r"</span>) <span class="mc-k">as</span> lib:
+    <span class="mc-k">for</span> item <span class="mc-k">in</span> lib.query(<span class="mc-s">"portrait TAKEN:@2019"</span>).prefetch(<span class="mc-s">"tags"</span>, <span class="mc-s">"subjects"</span>):
+        meta = item.metadata                  <span class="mc-c"># intrinsics, EXIF, IPTC, pins</span>
+        <span class="mc-k">print</span>(item.uid, item.width, item.height,
+              meta.get(<span class="mc-s">"camera_model"</span>), meta.get(<span class="mc-s">"iso"</span>), meta.get(<span class="mc-s">"location"</span>),
+              item.taken_effective,           <span class="mc-c"># typed, else EXIF, else its events</span>
+              [who.display_name <span class="mc-k">for</span> who <span class="mc-k">in</span> item.subjects],
+              <span class="mc-k">sorted</span>(item.effective_tags))    <span class="mc-c"># direct + inherited + implied</span></pre>
+    </div>
+
+    <div class="mc-panel mc-panel--stacked">
+      <div class="mc-panel__label">Where the files are</div>
+<pre class="mc-block"><span class="mc-k">with</span> open_library(<span class="mc-s">"/path/to/library"</span>, mode=<span class="mc-s">"r"</span>) <span class="mc-k">as</span> lib:
+    <span class="mc-k">for</span> item <span class="mc-k">in</span> lib.query(<span class="mc-s">"scan INFO:width&gt;=3000"</span>, kind=<span class="mc-s">"image"</span>):
+        <span class="mc-k">print</span>(item.path)                  <span class="mc-c"># the bytes where they lie — no copy</span>
+        item.image().convert(<span class="mc-s">"L"</span>).save(out / <span class="mc-s">f"{item.uid}.png"</span>)
+
+    <span class="mc-c"># a film hands over its frames without storing any of them</span>
+    <span class="mc-k">for</span> index, seconds, frame <span class="mc-k">in</span> lib.items[<span class="mc-s">"9f3c…"</span>].frames(fps=<span class="mc-s">1.0</span>, max_dim=<span class="mc-s">1024</span>):
+        frame.save(out / <span class="mc-s">f"{index:05d}.png"</span>)</pre>
+    </div>
+
+    <div class="mc-links">
+      <a href="{{ 'python-api/' | url }}">Python API →</a>
+      <a href="{{ 'search/' | url }}">Searching →</a>
+    </div>
+  </section>
+
+  <!-- 7. Training ---------------------------------------------------------- -->
+  <section class="mc-section" id="train">
+    <h2 class="mc-h2">And when it's time to train</h2>
+    <p class="mc-copy mc-copy--wide">
+      Everything above is what a training run reads — the tags with their
+      boxes, the captions, the people — whether the trainer is the built-in
+      one or your own script reading the library through the Python API.
+    </p>
+
+    <div class="mc-split">
+      <div class="mc-card">
+        <h3>In the app</h3>
+        <p>The Train tab queues LoRA, LoKr or full-finetune runs against a
+          search of the library — SD 1.5, SDXL, FLUX, Chroma, Qwen-Image,
+          Z-Image and your own weights — with the memory a run will need
+          worked out as you edit it. Watch the loss and sample images live,
+          pause and resume across restarts, and keep any checkpoint: the
+          weights are written in the layout other tools load. The Evaluate
+          tab generates test images from any checkpoint without leaving the
+          app — and on a machine that will never train, one switch removes
+          all of it.</p>
+        <a href="{{ 'training/' | url }}">Training →</a>
+      </div>
+      <div class="mc-panel">
+        <div class="mc-panel__label">In your own pipeline</div>
+<pre class="mc-block"><span class="mc-c"># images beside .txt caption files — the layout most trainers read</span>
+<span class="mc-k">with</span> open_library(<span class="mc-s">"/path/to/library"</span>, mode=<span class="mc-s">"r"</span>) <span class="mc-k">as</span> lib:
+    q = lib.query(<span class="mc-s">"portrait !lowres INFO:resolution&gt;=1.0"</span>, kind=<span class="mc-s">"image"</span>)
+    <span class="mc-k">for</span> item <span class="mc-k">in</span> q.prefetch(<span class="mc-s">"tags"</span>, <span class="mc-s">"files"</span>):
+        dest = out / <span class="mc-s">f"{item.uid}{item.path.suffix}"</span>
+        shutil.copy2(item.path, dest)
+        dest.with_suffix(<span class="mc-s">".txt"</span>).write_text(<span class="mc-s">", "</span>.join(<span class="mc-k">sorted</span>(item.effective_tags)))</pre>
+      </div>
+    </div>
+
+    <div class="mc-links">
+      <a href="{{ 'evaluate/' | url }}">Evaluate →</a>
+      <a href="{{ 'python-api/' | url }}">Python API →</a>
+    </div>
+  </section>
+
+  <!-- Lightbox ------------------------------------------------------------ -->
+  <div class="mc-lightbox" data-mc-lightbox hidden>
+    <div class="mc-lightbox__content" data-mc-lightbox-content>
+      <img alt="" data-mc-lightbox-image>
+      <div class="mc-lightbox__meta">
+        <div>
+          <p class="mc-lightbox__title" data-mc-lightbox-title></p>
+          <p class="mc-lightbox__caption" data-mc-lightbox-caption></p>
+        </div>
+        <p class="mc-lightbox__counter" data-mc-lightbox-counter></p>
+      </div>
+    </div>
+    <button class="mc-lightbox__nav mc-lightbox__nav--prev" type="button" aria-label="Previous" data-mc-prev>‹</button>
+    <button class="mc-lightbox__nav mc-lightbox__nav--next" type="button" aria-label="Next" data-mc-next>›</button>
+    <button class="mc-lightbox__nav mc-lightbox__nav--close" type="button" aria-label="Close" data-mc-close>✕</button>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block footer %}
+  <footer class="mc-footer">
+    <div class="mc-footer__inner">
+      <div>
+        <div class="mc-brand mc-brand--footer">
+          <span class="mc-mark">{% include ".icons/material/compost.svg" %}</span>
+          <span class="mc-brand__name">{{ config.site_name }}</span>
+        </div>
+        <p class="mc-footer__tagline">Runs on your own machine. The library is a folder you can back up and read without the app.</p>
+      </div>
+      <div>
+        <p class="mc-footer__head">Use it</p>
+        <div class="mc-footer__links">
+          <a href="{{ 'getting-started/' | url }}">Getting started</a>
+          <a href="{{ 'import/' | url }}">Importing files</a>
+          <a href="{{ 'library/' | url }}">Browsing the library</a>
+          <a href="{{ 'search/' | url }}">Searching</a>
+        </div>
+      </div>
+      <div>
+        <p class="mc-footer__head">Annotate</p>
+        <div class="mc-footer__links">
+          <a href="{{ 'image-editor/' | url }}">Image editor</a>
+          <a href="{{ 'annotation-editor/' | url }}">Annotation editor</a>
+          <a href="{{ 'tags/' | url }}">Tags</a>
+          <a href="{{ 'subjects-and-faces/' | url }}">Subjects and faces</a>
+        </div>
+      </div>
+      <div>
+        <p class="mc-footer__head">Automate</p>
+        <div class="mc-footer__links">
+          <a href="{{ 'cli/' | url }}">Command line</a>
+          <a href="{{ 'python-api/' | url }}">Python API</a>
+          <a href="{{ 'installation/#deployment' | url }}">Deployment</a>
+          {% if config.repo_url %}<a href="{{ config.repo_url }}">GitHub</a>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="mc-footer__bar">
+      <div class="mc-footer__bar-inner">
+        <span>{{ config.site_name }} {{ config.extra.version_number | d('1.0.0', true) }}</span>
+        <span>Built with MkDocs Material</span>
+      </div>
+    </div>
+  </footer>
+{% endblock %}

@@ -1,0 +1,2015 @@
+{
+  "rows": [
+    {
+      "query": "portrait",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "portrait",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "portrait"
+    },
+    {
+      "query": "!portrait",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "portrait",
+            "have": false,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "!portrait"
+    },
+    {
+      "query": "-blurry",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "blurry",
+            "have": true,
+            "sign": "neg",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "-blurry"
+    },
+    {
+      "query": ":o",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": ":o",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": ":o"
+    },
+    {
+      "query": "!:o",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": ":o",
+            "have": false,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "!:o"
+    },
+    {
+      "query": "-:d",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": ":d",
+            "have": true,
+            "sign": "neg",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "-:d"
+    },
+    {
+      "query": "d:",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "d:",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "d:"
+    },
+    {
+      "query": "!3:",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "3:",
+            "have": false,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "!3:"
+    },
+    {
+      "query": "-c:",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "c:",
+            "have": true,
+            "sign": "neg",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "-c:"
+    },
+    {
+      "query": "place:",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "place:",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "place:"
+    },
+    {
+      "query": "!-blurry",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "blurry",
+            "have": false,
+            "sign": "neg",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "!-blurry"
+    },
+    {
+      "query": "a b",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "a",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          },
+          {
+            "type": "tag",
+            "name": "b",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "a b"
+    },
+    {
+      "query": "a|b",
+      "tree": {
+        "type": "group",
+        "op": "or",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "a",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          },
+          {
+            "type": "tag",
+            "name": "b",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "a|b"
+    },
+    {
+      "query": "a b|c",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "a",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          },
+          {
+            "type": "group",
+            "op": "or",
+            "neg": false,
+            "children": [
+              {
+                "type": "tag",
+                "name": "b",
+                "have": true,
+                "sign": "pos",
+                "meta_tags": []
+              },
+              {
+                "type": "tag",
+                "name": "c",
+                "have": true,
+                "sign": "pos",
+                "meta_tags": []
+              }
+            ]
+          }
+        ]
+      },
+      "canonical": "a (b|c)"
+    },
+    {
+      "query": "(a b)|c",
+      "tree": {
+        "type": "group",
+        "op": "or",
+        "neg": false,
+        "children": [
+          {
+            "type": "group",
+            "op": "and",
+            "neg": false,
+            "children": [
+              {
+                "type": "tag",
+                "name": "a",
+                "have": true,
+                "sign": "pos",
+                "meta_tags": []
+              },
+              {
+                "type": "tag",
+                "name": "b",
+                "have": true,
+                "sign": "pos",
+                "meta_tags": []
+              }
+            ]
+          },
+          {
+            "type": "tag",
+            "name": "c",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "(a b)|c"
+    },
+    {
+      "query": "!(a b)",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": true,
+        "children": [
+          {
+            "type": "tag",
+            "name": "a",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          },
+          {
+            "type": "tag",
+            "name": "b",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "!(a b)"
+    },
+    {
+      "query": "!(a|b)",
+      "tree": {
+        "type": "group",
+        "op": "or",
+        "neg": true,
+        "children": [
+          {
+            "type": "tag",
+            "name": "a",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          },
+          {
+            "type": "tag",
+            "name": "b",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "!(a|b)"
+    },
+    {
+      "query": "",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": []
+      },
+      "canonical": ""
+    },
+    {
+      "query": "\\!literal",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "!literal",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "\\!literal"
+    },
+    {
+      "query": "\\-literal",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "-literal",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "\\-literal"
+    },
+    {
+      "query": "comma\\,name",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "comma,name",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "comma\\,name"
+    },
+    {
+      "query": "TAG:noflip",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": [
+              {
+                "name": "noflip",
+                "exclude": false
+              }
+            ]
+          }
+        ]
+      },
+      "canonical": "TAG:noflip"
+    },
+    {
+      "query": "TAG:noflip,!draft",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": [
+              {
+                "name": "noflip",
+                "exclude": false
+              },
+              {
+                "name": "draft",
+                "exclude": true
+              }
+            ]
+          }
+        ]
+      },
+      "canonical": "TAG:noflip,!draft"
+    },
+    {
+      "query": "!TAG:noflip",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "",
+            "have": false,
+            "sign": "pos",
+            "meta_tags": [
+              {
+                "name": "noflip",
+                "exclude": false
+              }
+            ]
+          }
+        ]
+      },
+      "canonical": "!TAG:noflip"
+    },
+    {
+      "query": "-TAG:noflip",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "",
+            "have": true,
+            "sign": "neg",
+            "meta_tags": [
+              {
+                "name": "noflip",
+                "exclude": false
+              }
+            ]
+          }
+        ]
+      },
+      "canonical": "-TAG:noflip"
+    },
+    {
+      "query": "!-TAG:noflip",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "",
+            "have": false,
+            "sign": "neg",
+            "meta_tags": [
+              {
+                "name": "noflip",
+                "exclude": false
+              }
+            ]
+          }
+        ]
+      },
+      "canonical": "!-TAG:noflip"
+    },
+    {
+      "query": "INFO:width>=800",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "meta",
+            "name": "width",
+            "mtype": "numeric",
+            "op": ">=",
+            "value": 800.0,
+            "tol": 0.5
+          }
+        ]
+      },
+      "canonical": "INFO:width>=800"
+    },
+    {
+      "query": "INFO:width<800",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "meta",
+            "name": "width",
+            "mtype": "numeric",
+            "op": "<",
+            "value": 800.0,
+            "tol": 0.5
+          }
+        ]
+      },
+      "canonical": "INFO:width<800"
+    },
+    {
+      "query": "INFO:width!=800",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "meta",
+            "name": "width",
+            "mtype": "numeric",
+            "op": "!=",
+            "value": 800.0,
+            "tol": 0.5
+          }
+        ]
+      },
+      "canonical": "INFO:width!=800"
+    },
+    {
+      "query": "INFO:resolution=0.7",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "meta",
+            "name": "resolution",
+            "mtype": "numeric",
+            "op": "=",
+            "value": 0.7,
+            "tol": 0.05
+          }
+        ]
+      },
+      "canonical": "INFO:resolution=0.7"
+    },
+    {
+      "query": "INFO:resolution=0.70",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "meta",
+            "name": "resolution",
+            "mtype": "numeric",
+            "op": "=",
+            "value": 0.7,
+            "tol": 0.005
+          }
+        ]
+      },
+      "canonical": "INFO:resolution=0.70"
+    },
+    {
+      "query": "INFO:resolution=0.750",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "meta",
+            "name": "resolution",
+            "mtype": "numeric",
+            "op": "=",
+            "value": 0.75,
+            "tol": 0.0005
+          }
+        ]
+      },
+      "canonical": "INFO:resolution=0.750"
+    },
+    {
+      "query": "INFO:camera_make~canon",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "meta",
+            "name": "camera_make",
+            "mtype": "text",
+            "op": "~",
+            "value": "canon",
+            "tol": 0.0
+          }
+        ]
+      },
+      "canonical": "INFO:camera_make~canon"
+    },
+    {
+      "query": "INFO:camera_make!~canon",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "meta",
+            "name": "camera_make",
+            "mtype": "text",
+            "op": "!~",
+            "value": "canon",
+            "tol": 0.0
+          }
+        ]
+      },
+      "canonical": "INFO:camera_make!~canon"
+    },
+    {
+      "query": "INFO:format=jpeg",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "meta",
+            "name": "format",
+            "mtype": "text",
+            "op": "=",
+            "value": "jpeg",
+            "tol": 0.0
+          }
+        ]
+      },
+      "canonical": "INFO:format=jpeg"
+    },
+    {
+      "query": "GROUP:Trips",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "ingroup",
+            "name": "Trips",
+            "mode": "has"
+          }
+        ]
+      },
+      "canonical": "GROUP:Trips"
+    },
+    {
+      "query": "!GROUP:Trips",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "ingroup",
+            "name": "Trips",
+            "mode": "hasnot"
+          }
+        ]
+      },
+      "canonical": "!GROUP:Trips"
+    },
+    {
+      "query": "GROUPONLY:Trips",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "ingroup",
+            "name": "Trips",
+            "mode": "only"
+          }
+        ]
+      },
+      "canonical": "GROUPONLY:Trips"
+    },
+    {
+      "query": "!GROUPONLY:Trips",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "ingroup",
+            "name": "Trips",
+            "mode": "notonly"
+          }
+        ]
+      },
+      "canonical": "!GROUPONLY:Trips"
+    },
+    {
+      "query": "PLACE:Tokyo",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "place",
+            "op": "~",
+            "value": "Tokyo",
+            "have": true
+          }
+        ]
+      },
+      "canonical": "PLACE:Tokyo"
+    },
+    {
+      "query": "PLACE=Tokyo",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "place",
+            "op": "=",
+            "value": "Tokyo",
+            "have": true
+          }
+        ]
+      },
+      "canonical": "PLACE=Tokyo"
+    },
+    {
+      "query": "!PLACE:",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "place",
+            "op": "~",
+            "value": "",
+            "have": false
+          }
+        ]
+      },
+      "canonical": "!PLACE:"
+    },
+    {
+      "query": "SUBJECT:alice",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "subject",
+            "name": "alice",
+            "have": true,
+            "date_from": null,
+            "date_to": null,
+            "age_from": null,
+            "age_to": null
+          }
+        ]
+      },
+      "canonical": "SUBJECT:alice"
+    },
+    {
+      "query": "SUBJECT:alice@1921",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "subject",
+            "name": "alice",
+            "have": true,
+            "date_from": 19210000,
+            "date_to": 19210000,
+            "age_from": null,
+            "age_to": null
+          }
+        ]
+      },
+      "canonical": "SUBJECT:alice@1921"
+    },
+    {
+      "query": "SUBJECT:alice@192104",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "subject",
+            "name": "alice",
+            "have": true,
+            "date_from": 19210400,
+            "date_to": 19210400,
+            "age_from": null,
+            "age_to": null
+          }
+        ]
+      },
+      "canonical": "SUBJECT:alice@192104"
+    },
+    {
+      "query": "SUBJECT:alice@19210408",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "subject",
+            "name": "alice",
+            "have": true,
+            "date_from": 19210408,
+            "date_to": 19210408,
+            "age_from": null,
+            "age_to": null
+          }
+        ]
+      },
+      "canonical": "SUBJECT:alice@19210408"
+    },
+    {
+      "query": "SUBJECT:@1910..1920",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "subject",
+            "name": "",
+            "have": true,
+            "date_from": 19100000,
+            "date_to": 19200000,
+            "age_from": null,
+            "age_to": null
+          }
+        ]
+      },
+      "canonical": "SUBJECT:@1910..1920"
+    },
+    {
+      "query": "SUBJECT:alice#12",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "subject",
+            "name": "alice",
+            "have": true,
+            "date_from": null,
+            "date_to": null,
+            "age_from": 12,
+            "age_to": 12
+          }
+        ]
+      },
+      "canonical": "SUBJECT:alice#12"
+    },
+    {
+      "query": "SUBJECT:alice#10..14",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "subject",
+            "name": "alice",
+            "have": true,
+            "date_from": null,
+            "date_to": null,
+            "age_from": 10,
+            "age_to": 14
+          }
+        ]
+      },
+      "canonical": "SUBJECT:alice#10..14"
+    },
+    {
+      "query": "SUBJECT:alice@1921#12",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "subject",
+            "name": "alice",
+            "have": true,
+            "date_from": 19210000,
+            "date_to": 19210000,
+            "age_from": 12,
+            "age_to": 12
+          }
+        ]
+      },
+      "canonical": "SUBJECT:alice@1921#12"
+    },
+    {
+      "query": "!SUBJECT:",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "subject",
+            "name": "",
+            "have": false,
+            "date_from": null,
+            "date_to": null,
+            "age_from": null,
+            "age_to": null
+          }
+        ]
+      },
+      "canonical": "!SUBJECT:"
+    },
+    {
+      "query": "EVENT:sdcc",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "event",
+            "name": "sdcc",
+            "have": true,
+            "date_from": null,
+            "date_to": null
+          }
+        ]
+      },
+      "canonical": "EVENT:sdcc"
+    },
+    {
+      "query": "EVENT:sdcc@2014",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "event",
+            "name": "sdcc",
+            "have": true,
+            "date_from": 20140000,
+            "date_to": 20140000
+          }
+        ]
+      },
+      "canonical": "EVENT:sdcc@2014"
+    },
+    {
+      "query": "EVENT:sdcc@2014..2016",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "event",
+            "name": "sdcc",
+            "have": true,
+            "date_from": 20140000,
+            "date_to": 20160000
+          }
+        ]
+      },
+      "canonical": "EVENT:sdcc@2014..2016"
+    },
+    {
+      "query": "!EVENT:",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "event",
+            "name": "",
+            "have": false,
+            "date_from": null,
+            "date_to": null
+          }
+        ]
+      },
+      "canonical": "!EVENT:"
+    },
+    {
+      "query": "TAKEN:@2020",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "taken",
+            "have": true,
+            "date_from": 20200000000000,
+            "date_to": 20200000000000
+          }
+        ]
+      },
+      "canonical": "TAKEN:@2020"
+    },
+    {
+      "query": "TAKEN:@2020-01",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "taken",
+            "have": true,
+            "date_from": 20200100000000,
+            "date_to": 20200100000000
+          }
+        ]
+      },
+      "canonical": "TAKEN:@2020-01"
+    },
+    {
+      "query": "TAKEN:@2020-01-07",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "taken",
+            "have": true,
+            "date_from": 20200107000000,
+            "date_to": 20200107000000
+          }
+        ]
+      },
+      "canonical": "TAKEN:@2020-01-07"
+    },
+    {
+      "query": "TAKEN:@2020-01-01..2020-01-07",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "taken",
+            "have": true,
+            "date_from": 20200101000000,
+            "date_to": 20200107000000
+          }
+        ]
+      },
+      "canonical": "TAKEN:@2020-01-01..2020-01-07"
+    },
+    {
+      "query": "!TAKEN:",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "taken",
+            "have": false,
+            "date_from": null,
+            "date_to": null
+          }
+        ]
+      },
+      "canonical": "!TAKEN:"
+    },
+    {
+      "query": "COLORLIKE:a1b2c3d4",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "similar",
+            "by": "color",
+            "uid": "a1b2c3d4",
+            "tol": null,
+            "have": true
+          }
+        ]
+      },
+      "canonical": "COLORLIKE:a1b2c3d4"
+    },
+    {
+      "query": "COLORLIKE:a1b2c3d4~4",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "similar",
+            "by": "color",
+            "uid": "a1b2c3d4",
+            "tol": 4,
+            "have": true
+          }
+        ]
+      },
+      "canonical": "COLORLIKE:a1b2c3d4~4"
+    },
+    {
+      "query": "COLORLIKE:a1b2c3d4~0",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "similar",
+            "by": "color",
+            "uid": "a1b2c3d4",
+            "tol": 0,
+            "have": true
+          }
+        ]
+      },
+      "canonical": "COLORLIKE:a1b2c3d4~0"
+    },
+    {
+      "query": "!COLORLIKE:a1b2c3d4",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "similar",
+            "by": "color",
+            "uid": "a1b2c3d4",
+            "tol": null,
+            "have": false
+          }
+        ]
+      },
+      "canonical": "!COLORLIKE:a1b2c3d4"
+    },
+    {
+      "query": "COLORLIKE:a1b2c3d4~6",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "similar",
+            "by": "color",
+            "uid": "a1b2c3d4",
+            "tol": 6,
+            "have": true
+          }
+        ]
+      },
+      "canonical": "COLORLIKE:a1b2c3d4~6"
+    },
+    {
+      "query": "!COLORLIKE:a1b2c3d4~6",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "similar",
+            "by": "color",
+            "uid": "a1b2c3d4",
+            "tol": 6,
+            "have": false
+          }
+        ]
+      },
+      "canonical": "!COLORLIKE:a1b2c3d4~6"
+    },
+    {
+      "query": "similar:a1b2c3d4",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "similar:a1b2c3d4",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "similar:a1b2c3d4"
+    },
+    {
+      "query": "VALUE:height>190cm",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "value",
+            "name": "height",
+            "op": ">",
+            "value": 190.0,
+            "unit": "cm",
+            "tol": 0.5,
+            "have": true
+          }
+        ]
+      },
+      "canonical": "VALUE:height>190cm"
+    },
+    {
+      "query": "VALUE:quality>=8",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "value",
+            "name": "quality",
+            "op": ">=",
+            "value": 8.0,
+            "unit": "",
+            "tol": 0.5,
+            "have": true
+          }
+        ]
+      },
+      "canonical": "VALUE:quality>=8"
+    },
+    {
+      "query": "VALUE:height=1.70m",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "value",
+            "name": "height",
+            "op": "=",
+            "value": 1.7,
+            "unit": "m",
+            "tol": 0.005,
+            "have": true
+          }
+        ]
+      },
+      "canonical": "VALUE:height=1.70m"
+    },
+    {
+      "query": "VALUE:height=1.7m",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "value",
+            "name": "height",
+            "op": "=",
+            "value": 1.7,
+            "unit": "m",
+            "tol": 0.05,
+            "have": true
+          }
+        ]
+      },
+      "canonical": "VALUE:height=1.7m"
+    },
+    {
+      "query": "!VALUE:people=3",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "value",
+            "name": "people",
+            "op": "=",
+            "value": 3.0,
+            "unit": "",
+            "tol": 0.5,
+            "have": false
+          }
+        ]
+      },
+      "canonical": "!VALUE:people=3"
+    },
+    {
+      "query": "VALUE:weight<=60kg",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "value",
+            "name": "weight",
+            "op": "<=",
+            "value": 60.0,
+            "unit": "kg",
+            "tol": 0.5,
+            "have": true
+          }
+        ]
+      },
+      "canonical": "VALUE:weight<=60kg"
+    },
+    {
+      "query": "VALUE:pages!=12",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "value",
+            "name": "pages",
+            "op": "!=",
+            "value": 12.0,
+            "unit": "",
+            "tol": 0.5,
+            "have": true
+          }
+        ]
+      },
+      "canonical": "VALUE:pages!=12"
+    },
+    {
+      "query": "VALUE:height>1,5m",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "value",
+            "name": "height",
+            "op": ">",
+            "value": 1.5,
+            "unit": "m",
+            "tol": 0.05,
+            "have": true
+          }
+        ]
+      },
+      "canonical": "VALUE:height>1.5m"
+    },
+    {
+      "query": "VALUE:size>300px",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "value",
+            "name": "size",
+            "op": ">",
+            "value": 300.0,
+            "unit": "px",
+            "tol": 0.5,
+            "have": true
+          }
+        ]
+      },
+      "canonical": "VALUE:size>300px"
+    },
+    {
+      "query": "value:height",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "value:height",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "value:height"
+    },
+    {
+      "query": "CAPTION:",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "caption",
+            "mode": "has",
+            "caption_kind": "caption",
+            "caption_tags": []
+          }
+        ]
+      },
+      "canonical": "CAPTION:"
+    },
+    {
+      "query": "CAPTION:en",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "caption",
+            "mode": "has",
+            "caption_kind": "caption",
+            "caption_tags": [
+              {
+                "name": "en",
+                "exclude": false
+              }
+            ]
+          }
+        ]
+      },
+      "canonical": "CAPTION:en"
+    },
+    {
+      "query": "CAPTION:en,!draft",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "caption",
+            "mode": "has",
+            "caption_kind": "caption",
+            "caption_tags": [
+              {
+                "name": "en",
+                "exclude": false
+              },
+              {
+                "name": "draft",
+                "exclude": true
+              }
+            ]
+          }
+        ]
+      },
+      "canonical": "CAPTION:en,!draft"
+    },
+    {
+      "query": "!CAPTION:",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "caption",
+            "mode": "hasnot",
+            "caption_kind": "caption",
+            "caption_tags": []
+          }
+        ]
+      },
+      "canonical": "!CAPTION:"
+    },
+    {
+      "query": "INSTRUCTION:",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "caption",
+            "mode": "has",
+            "caption_kind": "instruction",
+            "caption_tags": []
+          }
+        ]
+      },
+      "canonical": "INSTRUCTION:"
+    },
+    {
+      "query": "INSTRUCTION:en",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "caption",
+            "mode": "has",
+            "caption_kind": "instruction",
+            "caption_tags": [
+              {
+                "name": "en",
+                "exclude": false
+              }
+            ]
+          }
+        ]
+      },
+      "canonical": "INSTRUCTION:en"
+    },
+    {
+      "query": "INSTRUCTION:en,!draft",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "caption",
+            "mode": "has",
+            "caption_kind": "instruction",
+            "caption_tags": [
+              {
+                "name": "en",
+                "exclude": false
+              },
+              {
+                "name": "draft",
+                "exclude": true
+              }
+            ]
+          }
+        ]
+      },
+      "canonical": "INSTRUCTION:en,!draft"
+    },
+    {
+      "query": "!INSTRUCTION:",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "caption",
+            "mode": "hasnot",
+            "caption_kind": "instruction",
+            "caption_tags": []
+          }
+        ]
+      },
+      "canonical": "!INSTRUCTION:"
+    },
+    {
+      "query": "LINK:",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "link",
+            "direction": "has",
+            "link_tags": []
+          }
+        ]
+      },
+      "canonical": "LINK:"
+    },
+    {
+      "query": "LINK:edit",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "link",
+            "direction": "has",
+            "link_tags": [
+              {
+                "name": "edit",
+                "exclude": false
+              }
+            ]
+          }
+        ]
+      },
+      "canonical": "LINK:edit"
+    },
+    {
+      "query": "LINK:edit,!manual",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "link",
+            "direction": "has",
+            "link_tags": [
+              {
+                "name": "edit",
+                "exclude": false
+              },
+              {
+                "name": "manual",
+                "exclude": true
+              }
+            ]
+          }
+        ]
+      },
+      "canonical": "LINK:edit,!manual"
+    },
+    {
+      "query": "LINKEDBY:edit",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "link",
+            "direction": "linkedby",
+            "link_tags": [
+              {
+                "name": "edit",
+                "exclude": false
+              }
+            ]
+          }
+        ]
+      },
+      "canonical": "LINKEDBY:edit"
+    },
+    {
+      "query": "!LINK:",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "link",
+            "direction": "hasnot",
+            "link_tags": []
+          }
+        ]
+      },
+      "canonical": "!LINK:"
+    },
+    {
+      "query": "!LINKEDBY:",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "link",
+            "direction": "notlinkedby",
+            "link_tags": []
+          }
+        ]
+      },
+      "canonical": "!LINKEDBY:"
+    },
+    {
+      "query": "place:berlin",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "place:berlin",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "place:berlin"
+    },
+    {
+      "query": "Place:Berlin",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "place:berlin",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "place:berlin"
+    },
+    {
+      "query": "subject:alice",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "subject:alice",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "subject:alice"
+    },
+    {
+      "query": "meta:width",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "meta:width",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "meta:width"
+    },
+    {
+      "query": "info:width",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "info:width",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "info:width"
+    },
+    {
+      "query": "tag:noflip",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "tag:noflip",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "tag:noflip"
+    },
+    {
+      "query": "instruction:redraw",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "instruction:redraw",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "instruction:redraw"
+    },
+    {
+      "query": "portrait INFO:width>=800 !blurry",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "tag",
+            "name": "portrait",
+            "have": true,
+            "sign": "pos",
+            "meta_tags": []
+          },
+          {
+            "type": "meta",
+            "name": "width",
+            "mtype": "numeric",
+            "op": ">=",
+            "value": 800.0,
+            "tol": 0.5
+          },
+          {
+            "type": "tag",
+            "name": "blurry",
+            "have": false,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "portrait INFO:width>=800 !blurry"
+    },
+    {
+      "query": "(SUBJECT:alice|SUBJECT:bob) TAKEN:@2020",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "group",
+            "op": "or",
+            "neg": false,
+            "children": [
+              {
+                "type": "subject",
+                "name": "alice",
+                "have": true,
+                "date_from": null,
+                "date_to": null,
+                "age_from": null,
+                "age_to": null
+              },
+              {
+                "type": "subject",
+                "name": "bob",
+                "have": true,
+                "date_from": null,
+                "date_to": null,
+                "age_from": null,
+                "age_to": null
+              }
+            ]
+          },
+          {
+            "type": "taken",
+            "have": true,
+            "date_from": 20200000000000,
+            "date_to": 20200000000000
+          }
+        ]
+      },
+      "canonical": "(SUBJECT:alice|SUBJECT:bob) TAKEN:@2020"
+    },
+    {
+      "query": "COLORLIKE:a1b2c3d4~8 !portrait",
+      "tree": {
+        "type": "group",
+        "op": "and",
+        "neg": false,
+        "children": [
+          {
+            "type": "similar",
+            "by": "color",
+            "uid": "a1b2c3d4",
+            "tol": 8,
+            "have": true
+          },
+          {
+            "type": "tag",
+            "name": "portrait",
+            "have": false,
+            "sign": "pos",
+            "meta_tags": []
+          }
+        ]
+      },
+      "canonical": "COLORLIKE:a1b2c3d4~8 !portrait"
+    }
+  ]
+}

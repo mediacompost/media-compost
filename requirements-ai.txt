@@ -1,0 +1,111 @@
+# Media Compost — optional AI-model dependencies for the MAIN environment
+# (the same venv the server runs in). Everything here is optional: the app
+# runs fine without any of it, and each model action simply shows as
+# "needs setup" in the UI until its packages are present.
+#
+# This is the optional HALF. `requirements.txt` is this file plus the app
+# itself (`pip install -e ".[full]"`), which runs with none of it. Install the whole
+# file for every model, or cherry-pick the lines for the models you want —
+# the comments say which models need what. The app's "Run setup" button
+# (in a model's setup instructions) installs the same packages one model at
+# a time, so this file is only a convenience for provisioning everything
+# up front.
+#
+# Two models run in DEDICATED environments instead (their bundled model code
+# needs an older transformers): Florence-2 and Magi v3 — see
+# media_compost/hub/requirements-<env>-env.txt, or just run
+# `python -m media_compost.hub.setup_env florence` / `... magi`.
+#
+# Model weights are NOT pip packages — download them from the app's
+# Settings → Models panel (they land in the shared Hugging Face cache).
+#
+# WINDOWS + NVIDIA: PyPI's Windows torch wheel is CPU-ONLY — the CUDA builds
+# live on download.pytorch.org, and a requirements file cannot name an index
+# for one package — so install the torch PAIR first, from the CUDA index,
+# and only then this file:
+#
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+#   pip install -r requirements-ai.txt
+#
+# Both of the pair, not torch alone: with torchvision missing, a later
+# dependency (ultralytics) fetches it from PyPI, and ITS pinned torch
+# dependency drags the CPU build back in over the CUDA one. If
+#   python -c "import torch; print(torch.cuda.is_available())"
+# still says False afterwards, repair with
+#   python -m media_compost.hub.setup_env torch
+# which force-reinstalls the pair from the index this machine needs (override
+# with MEDIA_COMPOST_TORCH_INDEX) — the same step the app's "Run setup"
+# buttons run after installing a torch model's packages.
+# On Linux PyPI's torch already carries CUDA, and macOS has no CUDA build:
+# both install this file as-is.
+#
+# LINUX + AMD (ROCm): the same trap in a different spelling — PyPI's Linux
+# torch is the CUDA build, which installs fine and runs on the CPU. Install
+# the pair from the ROCm index first (or run `python -m media_compost.hub.setup_env
+# torch`, which picks it when a ROCm stack and no NVIDIA driver is present):
+#
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/rocm7.1
+#   pip install -r requirements-ai.txt
+#
+# macOS: after a HAND install of this file, run
+#   python -m media_compost.hub.setup_env torch
+# once anyway — beside the index repair it points faiss's bundled
+# libomp.dylib at torch's. torch and faiss-cpu each ship their own LLVM
+# OpenMP runtime, two of them in one process crash it at the first parallel
+# region (KMP_DUPLICATE_LIB_OK only turns the abort into a segfault), and the
+# app loads both in-process — measured as one editor Inpaint call taking the
+# whole server down. The in-app "Run setup" buttons run this step themselves.
+
+# -- shared ML stack (background removal, upscaling, captioning, tagging,
+#    depth estimation: Swin2SR, JoyCaption, JoyTag, BLIP-2,
+#    Qwen2.5-VL, RAM++, Depth Anything/MiDaS/ZoeDepth) --
+torch
+torchvision
+transformers
+accelerate            # JoyCaption, Qwen2.5-VL
+timm                  # JoyTag
+einops                # JoyTag
+safetensors           # JoyTag
+
+# -- ONNX models (withoutBG background removal, WD Tagger, InsightFace) --
+onnxruntime
+
+# -- photographic face detection + descriptors (buffalo_l on onnxruntime,
+#    no torch; it fetches its own weight pack on first use) --
+insightface
+
+# -- neural screentone removal (OpenComic's NCNN graphs; no torch) --
+ncnn
+
+# -- YOLO-based models (watermark detection, OpenPose-style pose) --
+ultralytics
+
+# -- upscaling / JPEG-artifact removal (Real-ESRGAN anime, FBCNN) --
+spandrel
+
+# -- text removal (EasyOCR/CRAFT detection; LaMa inpainting ships with torch) --
+easyocr
+
+# -- ControlNet annotators (LeReS depth, OpenPose full, line art) --
+controlnet_aux
+
+# -- Canny edges (no model download needed) --
+opencv-python-headless
+
+# -- RAM++ (Recognize Anything Plus) tagging --
+# The DISTRIBUTION is called `ram`, though the repository is
+# "recognize-anything" and the import is `ram`. Naming the requirement after
+# the repo makes modern pip refuse the install outright — it checks the name
+# it was promised against the metadata it built and reports "has inconsistent
+# name: expected 'recognize-anything', but metadata has 'ram'", so the whole
+# requirements file fails rather than just this line.
+fairscale
+ram @ git+https://github.com/xinyu1205/recognize-anything.git
+
+# -- Qwen2.5-VL captioning --
+qwen-vl-utils
+
+# -- fetching model weights (Settings → Models, and every plugin that pulls
+#    its own files). It arrives with transformers anyway, so it only really
+#    matters for the torch-free models above. --
+huggingface_hub

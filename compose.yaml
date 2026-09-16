@@ -1,0 +1,40 @@
+# Media Compost via Docker Compose / podman-compose.
+#
+#   docker compose up -d        # build + run on http://localhost:8000
+#
+# The `library` volume is the data directory (items, thumbnails, database);
+# `models` keeps downloaded AI model weights across image updates. To use an
+# existing library on the host, replace the volume with a bind mount:
+#   - /path/to/library:/data
+services:
+  media-compost:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - library:/data
+      - models:/models
+    restart: unless-stopped
+    # The app itself does not authenticate — see docs/installation.md's
+    # exposing it beyond localhost. Common knobs:
+    # environment:
+    #   MEDIA_COMPOST_REQUIRE_AUTH: "1"
+    #   MEDIA_COMPOST_USER_HEADER: X-Remote-User
+    #   MEDIA_COMPOST_TRAINING: "0"
+    #
+    # AN NVIDIA GPU, for the AI actions and the trainer. `--gpus all` is the
+    # `docker run` spelling; under Compose it is this block. Needs the NVIDIA
+    # Container Toolkit on the host — the `nvidia-docker` wrapper commands are
+    # obsolete. Nothing changes inside the image: on Linux the torch its setup
+    # installs is the CUDA build already.
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+volumes:
+  library:
+  models:

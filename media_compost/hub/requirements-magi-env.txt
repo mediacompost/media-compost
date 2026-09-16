@@ -1,0 +1,37 @@
+# Media Compost — the dedicated Magi v3 (comic panel detection) environment
+# (optional).
+#
+# Magi v3 is Florence-2-based, so like Florence-2 it needs an older pinned
+# transformers and runs out-of-process in its own venv. The easiest way to
+# build it is the command the UI runs:
+#
+#   python -m media_compost.hub.setup_env magi [PYTHON]
+#
+# That command INSTALLS THIS
+# FILE, so this list is the definition of the env rather than a copy of one —
+# they used to be two lists and had already drifted: ultralytics below was in
+# the script only, and it is the detector half of the "Illustrated faces"
+# model, so an env built from this file could not run that plugin at all.
+#
+# Manual equivalent:
+#
+#   python3 -m venv .venv-magi
+#   .venv-magi/bin/pip install -r media_compost/hub/requirements-magi-env.txt
+#   (Windows: .venv-magi\Scripts\pip install -r ...)
+#
+# The app auto-detects .venv-magi at the REPO ROOT (override with
+# MEDIA_COMPOST_MAGI_PYTHON). Weights are downloaded from the app's
+# Settings → Models panel into the shared Hugging Face cache.
+
+torch
+transformers==4.49.0   # pinned: must match Magi's bundled Florence-2 code
+timm
+einops
+pillow
+pytorch_metric_learning
+shapely
+matplotlib
+# The anime-face DETECTOR half of the "Illustrated faces (YOLOv8 + Magi)"
+# model: its boxes are what the Magi crop embedder describes, and both halves
+# run in this one process as a single plugin.
+ultralytics

@@ -1,0 +1,158 @@
+# Publish a release to PyPI.
+#
+# A file of its own, beside ci.yml, because the two differ in everything
+# that matters: CI runs on every push and builds a wheel WITHOUT the
+# frontend (its extras matrix is about imports), where a release must run
+# once, on a tag, and ship the wheel `scripts/package.sh` makes — frontend
+# bundled, and refused outright when the bundle is missing, since such a
+# wheel installs, starts and serves a blank page. And the OIDC permission
+# below belongs on a workflow that never runs for a pull request.
+#
+# Trusted publishing: no API token anywhere. On pypi.org the project names
+# this repository (mediacompost/media-compost), this file (publish.yml)
+# and the environment (pypi) as its publisher, and the `id-token: write`
+# permission is what lets the job prove it is that workflow.
+#
+# Draft a GitHub Release with tag `vX.Y.Z` and publish it; the version is
+# held to the tag first, so a mistagged release fails here rather than
+# uploading under the wrong number.
+
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          # The same Node the CI build uses: `npm test` is not run here, but
+          # the build is the same script, and one version means one bundle.
+          node-version: "24"
+      - name: The release tag names the version the package declares
+        run: |
+          python - "${{ github.event.release.tag_name }}" <<'EOF'
+          import re, sys, tomllib
+          tag = sys.argv[1]
+          m = re.fullmatch(r"v?(\d+\.\d+\.\d+(?:[a-z0-9.+-]*)?)", tag)
+          if not m:
+              sys.exit(f"tag {tag!r} is not a version tag (vX.Y.Z)")
+          want = m.group(1)
+          with open("pyproject.toml", "rb") as f:
+              declared = tomllib.load(f)["project"]["version"]
+          src = open("media_compost/__init__.py").read()
+          init = re.search(r'__version__\s*=\s*"([^"]+)"', src).group(1)
+          bad = {k: v for k, v in
+                 {"pyproject.toml": declared, "__init__.py": init}.items()
+                 if v != want}
+          if bad:
+              sys.exit(f"release tag {tag} but " + ", ".join(
+                  f"{k} says {v}" for k, v in bad.items()))
+          print(f"version {want}")
+          EOF
+      # Before anything is built, because this is the last moment a release
+      # can be taken back: PyPI does not allow a version to be replaced, so a
+      # release published with no entry for itself would carry that silence
+      # for good. `bump_version.py` owns what a changelog section is — the
+      # same parser that renames `## Unreleased` on release day.
+      - name: The changelog has an entry for this version, and it becomes the notes
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          mkdir -p _notes
+          python scripts/bump_version.py --section "${TAG#v}" | tee _notes/notes.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: notes
+          path: _notes/notes.md
+          if-no-files-found: error
+
+      - name: Build tools
+        run: python -m pip install build
+      - name: Frontend + wheel (refuses a wheel with no frontend in it)
+        run: bash scripts/package.sh
+      - name: Source distribution (MANIFEST.in carries the bundle into it)
+        run: python -m build --sdist --outdir _dist
+      - name: The sdist carries the frontend too
+        run: |
+          python - <<'EOF'
+          import glob, tarfile
+          [path] = glob.glob("_dist/*.tar.gz")
+          names = tarfile.open(path).getnames()
+          assert any(n.endswith("_web_dist/index.html") for n in names), \
+              "sdist has no frontend in it — check MANIFEST.in"
+          EOF
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: |
+            _dist/*.whl
+            _dist/*.tar.gz
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/media-compost/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: _dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: _dist
+
+  # The same files on the release page, for somebody who downloads rather than
+  # installs. They are the artifact the build job made — not a second build,
+  # which would be a different file with the same version on it.
+  #
+  # Its own job for two reasons: it runs only once PyPI has taken them, so the
+  # release never advertises a wheel that is not on the index; and `contents:
+  # write` stays off the job holding `id-token: write`, which is the one
+  # permission in this repository that can speak for the project on PyPI.
+  #
+  # `gh` is on the runner, so this needs no action and no checkout — `--repo`
+  # is what replaces the latter. Uploading an asset does not raise a `release`
+  # event of the kind either workflow here listens for (`published` alone), so
+  # there is nothing to loop.
+  attach:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: _dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: notes
+          path: _notes
+      # The release body is the changelog's entry, so the two cannot drift and
+      # nobody pastes anything. Editing a release raises `release: edited`,
+      # which neither workflow here listens for.
+      - name: The release says what the changelog says
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: gh release edit "$TAG" --notes-file _notes/notes.md --repo "${{ github.repository }}"
+      - name: Attach the wheel and the sdist to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        # --clobber so re-running a failed publish replaces the assets rather
+        # than failing on the ones the first attempt already uploaded.
+        run: gh release upload "$TAG" _dist/* --clobber --repo "${{ github.repository }}"

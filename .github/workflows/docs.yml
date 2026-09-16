@@ -1,0 +1,98 @@
+# Publishes the website (website/mkdocs.yml + docs/) to GitHub Pages.
+#
+# EVERY mkdocs AND mike CALL HERE NEEDS THE CONFIG PATH. mike shells out to
+# mkdocs rather than importing it, so it does not inherit one — and with no
+# `mkdocs.yml` in the working directory it fails on the spot rather than
+# publishing something wrong, which is the good half of this trap.
+#
+# Versions are kept side by side by `mike`, which writes one directory per
+# version into the `gh-pages` branch and maintains the switcher's version
+# index — so the Python API page from 0.3 stays readable after 0.4 changes it.
+# Set Pages to "Deploy from a branch → gh-pages / (root)" once; nothing else
+# here needs configuring, and the site answers at the project address,
+# `mediacompost.github.io/media-compost/`.
+#
+# A CUSTOM DOMAIN is one more setting in the same place, and `site_url` in
+# `website/mkdocs.yml` has to move with it. That setting is what writes
+# `CNAME` to the branch root, and mike leaves it there — a deploy deletes only
+# the version directories it replaces. A `CNAME` committed to `docs/` would
+# NOT do the job either way: it would land inside the version directory rather
+# than at the root where Pages looks for it.
+#
+#   a published release  ->  /1.2.3/, and `latest` starts pointing at it
+#   run by hand          ->  /dev/, from whatever branch you pick
+#
+# RELEASES ONLY (owner 2026-09). This used to run on every push to main, which
+# republished the whole site for a typo in a docstring and put a second job in
+# the queue behind every commit. What the site is for is the version people
+# install, and that changes when a release does — so `/dev/` is now something
+# you ask for (Actions -> Docs -> Run workflow, on any branch) rather than
+# something every push pays for. The cost is that `/dev/` is as old as the
+# last manual run, which is the honest state of unreleased documentation
+# anyway.
+#
+# The trigger is the RELEASE rather than the tag push, for the same reason
+# `publish.yml` uses it: a tag usually points at a commit that is already
+# pushed, so the event carries no file changes and any `paths:` economy would
+# silently skip the publish that matters. Both workflows then fire once, from
+# one gesture — PyPI and the site.
+name: Docs
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+# `mike` pushes the built site to gh-pages, so this needs write access to the
+# repository rather than the Pages deploy token.
+permissions:
+  contents: write
+
+concurrency:
+  group: docs
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # mike reads and rewrites the gh-pages branch; a shallow clone has
+          # neither it nor the history it appends to.
+          fetch-depth: 0
+          # A release is about its TAG. The default checkout for the event is
+          # the same commit today, and naming it is what keeps that true after
+          # somebody edits a release, or re-runs this job a week later.
+          ref: ${{ github.event.release.tag_name || github.ref }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r website/requirements.txt
+
+      - name: Build the site once, strictly
+        # Before anything is published: --strict turns a broken cross-link or
+        # a page missing from the nav into a failed build rather than a
+        # deployed 404.
+        run: mkdocs build --strict -f website/mkdocs.yml
+
+      - name: Identify as the bot
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Publish the released version
+        if: github.event_name == 'release'
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version="${TAG#v}"
+          mike deploy -F website/mkdocs.yml --push --update-aliases "$version" latest
+          mike set-default -F website/mkdocs.yml --push latest
+
+      - name: Publish the unreleased docs (a hand-started run, and only that)
+        if: github.event_name == 'workflow_dispatch'
+        run: mike deploy -F website/mkdocs.yml --push dev
