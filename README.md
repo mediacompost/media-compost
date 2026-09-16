@@ -18,8 +18,9 @@ media-compost-venv/bin/media-compost serve --open
 ## Requirements
 
 - **Python 3.11+**
-- **Node 18+** — only to build the frontend yourself. A release wheel already
-  contains it, so installing that way needs no Node.
+- **Node 24** — only to build the frontend yourself, and it is the version
+  this project is tested on. A release wheel already contains the built app,
+  so installing that way needs no Node.
 - The AI model actions are **optional** and need extra packages/weights — see
   [AI models](#ai-models-optional).
 

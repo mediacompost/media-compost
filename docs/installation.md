@@ -56,7 +56,8 @@ all, the explicit switch is `MEDIA_COMPOST_TRAINING=0` — see
 ## Requirements
 
 - **Python 3.11 or newer**
-- **Node 20.19 or newer** (or 22.12+) — only to build the frontend yourself.
+- **Node 24** — only to build the frontend yourself, and the version
+  everything here is tested on.
   A released wheel already contains it, so installing that way needs no Node
   at all.
 - No ML packages are required to run the app.

@@ -105,9 +105,10 @@ Frontend:
 cd frontend
 npm ci
 npx tsc -b
-npm test          # node --test; needs Node >= 23.6 for TypeScript type
-                  # stripping. CI uses 24. Node 20 fails with a confusing
-                  # "could not find src/**/*.test.ts".
+npm test          # node --test, on Node 24 — the TypeScript type stripping
+                  # it needs landed in 23.6 and the glob in 21, so an older
+                  # Node fails with a confusing "could not find
+                  # src/**/*.test.ts".
 ```
 
 ## Golden files
