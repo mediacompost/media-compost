@@ -287,10 +287,10 @@ git commit -am "Release X.Y.Z"
 git tag -a vX.Y.Z -m "X.Y.Z"
 git push && git push --tags
 
-# 5. Watch Actions -> Draft. It holds the version to the tag and reads
-#    CHANGELOG.md's `## X.Y.Z` section BEFORE it builds anything — a version
-#    with no entry fails there — then builds the wheel and the sdist and
-#    leaves them on a DRAFT release with that section as its notes. Nothing
+# 5. Watch Actions -> Draft Release. It holds the version to the tag and
+#    reads CHANGELOG.md's `## X.Y.Z` section BEFORE it builds anything — a
+#    version with no entry fails there — then builds the wheel and the sdist
+#    and leaves them on a DRAFT release with that section as its notes. Nothing
 #    so far is permanent: deleting the draft and the tag undoes all of it.
 
 # 6. Test the draft's wheel, which is the file PyPI will get rather than a
