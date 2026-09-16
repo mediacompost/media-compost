@@ -45,9 +45,12 @@ The wheel carries the built web app inside it, so there is nothing to compile:
 
 ```bash
 python3 -m venv media-compost-venv
-media-compost-venv/bin/pip install "<path-or-url-to-the-wheel>[full]"
+media-compost-venv/bin/pip install "media-compost[full]"
 media-compost-venv/bin/media-compost serve     # http://127.0.0.1:8000 (--open opens a tab)
 ```
+
+A wheel downloaded from the [releases page](https://github.com/mediacompost/media-compost/releases) installs the same way,
+by path or URL instead of the name.
 
 ## Install from source
 

@@ -1,7 +1,7 @@
 # Installation
 
-This page walks you through installing Media Compost — as a release wheel or
-from source — and running it on your own machine.
+This page walks you through installing Media Compost — from PyPI or from
+source — and running it on your own machine.
 
 ## One distribution, three parts
 
@@ -63,16 +63,23 @@ all, the explicit switch is `MEDIA_COMPOST_TRAINING=0` — see
 
 ## Install a release (no Node)
 
-A release wheel carries the built web app inside it, so this is everything:
+The wheel on PyPI carries the built web app inside it, so this is everything:
 
 ```bash
 python3 -m venv media-compost-venv
-media-compost-venv/bin/pip install "<path-or-url-to-the-wheel>[full]"
+media-compost-venv/bin/pip install "media-compost[full]"
 media-compost-venv/bin/media-compost serve --open
 ```
 
 That starts the server on `http://127.0.0.1:8000` and, with `--open`, opens your browser on it.
 Skip to [Choosing the data directory](#choosing-the-data-directory).
+
+A wheel from the [releases page](https://github.com/mediacompost/media-compost/releases) installs the same way — give pip
+the path or URL in place of the name, and keep the extra on the end:
+
+```bash
+media-compost-venv/bin/pip install "<path-or-url-to-the-wheel>[full]"
+```
 
 Install from source instead if you want to change the app — the rest of this
 page covers that.
