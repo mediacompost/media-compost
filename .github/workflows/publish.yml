@@ -19,7 +19,7 @@
 # the job prove it is that workflow. Renaming this file breaks the upload
 # with an error about the publisher, so the tag half is `draft.yml`.
 
-name: Publish Release
+name: Release Publish
 
 on:
   workflow_dispatch:

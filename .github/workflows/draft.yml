@@ -16,7 +16,7 @@
 # the upload has to live in `publish.yml` and nothing else may, so the tag's
 # half is this one.
 
-name: Draft Release
+name: Release Draft
 
 on:
   push:
