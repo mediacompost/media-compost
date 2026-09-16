@@ -1,27 +1,19 @@
+<img src="https://raw.githubusercontent.com/mediacompost/media-compost/main/docs/assets/icon.svg" alt="" width="96">
+
 # Media Compost
 
-A local web app to **organize, deduplicate and annotate image datasets for AI
-training** — plus a CLI for bulk import and a small Python API for getting the
-data back out of it.
+**Compost, for media.** A local web app that turns a pile of images and
+videos into datasets: import without duplicates, tag and caption at scale,
+search and organize, and train a model on the result — or read the library
+from your own Python scripts.
 
-Import folders, archives and PDFs of images (and videos), let the
-near-duplicate detector fold repeats together, then organize everything with
-hierarchical groups, tags that imply other tags (with bounding boxes),
-captions, links between items and ordered sequences. Optional local AI models
-help out: background / watermark / text removal, upscaling, JPEG-artifact
-removal, colorization, captioning, tagging, face detection, text reading
-(OCR), ControlNet-style control images (depth / pose / edges) and comic panel
-detection. Everything runs offline on your machine.
+## Install
 
-- **A library you can read** — every item owns a folder named after the item,
-  holding its own files: no database ids in a path, no opaque blob store. A
-  backup is a copy of a directory, and another library folds into this one
-  with a single command.
-- **Single user first** — no accounts, no cloud. It also supports a shared
-  library for a small team behind an authenticating reverse proxy (see
-  `SETUP.md`).
-- **Python + React** — FastAPI backend and Vite/React SPA, with one shared
-  core package (`media_compost`) used by the server, the CLI and your scripts.
+```bash
+python3 -m venv media-compost-venv
+media-compost-venv/bin/pip install "media-compost[full]"
+media-compost-venv/bin/media-compost serve --open
+```
 
 ## Requirements
 
@@ -30,6 +22,10 @@ detection. Everything runs offline on your machine.
   contains it, so installing that way needs no Node.
 - The AI model actions are **optional** and need extra packages/weights — see
   [AI models](#ai-models-optional).
+
+## Screenshots
+
+<p><a href="https://raw.githubusercontent.com/mediacompost/media-compost/main/docs/assets/screenshots/search.webp"><img src="https://raw.githubusercontent.com/mediacompost/media-compost/main/docs/assets/screenshots/search-thumb.webp" alt="The query builder" width="32%"></a> <a href="https://raw.githubusercontent.com/mediacompost/media-compost/main/docs/assets/screenshots/annotator.webp"><img src="https://raw.githubusercontent.com/mediacompost/media-compost/main/docs/assets/screenshots/annotator-thumb.webp" alt="The annotation editor" width="32%"></a> <a href="https://raw.githubusercontent.com/mediacompost/media-compost/main/docs/assets/screenshots/training.webp"><img src="https://raw.githubusercontent.com/mediacompost/media-compost/main/docs/assets/screenshots/training-thumb.webp" alt="The Train tab" width="32%"></a></p>
 
 ## Install a release
 
@@ -41,16 +37,14 @@ One distribution, extras deciding what an install can do:
 | headless training | `pip install "media-compost[train]"` | `media-compost-train` (its torch venv comes later, via `media-compost-train setup`) |
 | the web app, and everything else | `pip install "media-compost[full]"` | `media-compost serve` + all of the above |
 
-The wheel carries the built web app inside it, so there is nothing to compile:
+There are only those two extras, because there are only two questions: does
+this machine train, and does it serve. `[full]` includes `[train]`, so a
+machine running the app can also train on it.
 
-```bash
-python3 -m venv media-compost-venv
-media-compost-venv/bin/pip install "media-compost[full]"
-media-compost-venv/bin/media-compost serve     # http://127.0.0.1:8000 (--open opens a tab)
-```
-
-A wheel downloaded from the [releases page](https://github.com/mediacompost/media-compost/releases) installs the same way,
-by path or URL instead of the name.
+The wheel carries the built web app inside it, so none of them needs Node or
+a build step. A wheel downloaded from the
+[releases page](https://github.com/mediacompost/media-compost/releases)
+installs the same way, by path or URL in place of the name.
 
 ## Install from source
 
