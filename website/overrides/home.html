@@ -156,7 +156,7 @@
       <div class="mc-panel__body">
         <div class="mc-pane" id="mc-pane-macos" role="tabpanel" aria-labelledby="mc-tab-macos" data-mc-pane="macos">
 <pre class="mc-code">python3 -m venv ~/media-compost
-~/media-compost/bin/pip install media_compost-{{ config.extra.version_number | d('1.0.0', true) }}-py3-none-any.whl
+~/media-compost/bin/pip install "media-compost[full]"
 ~/media-compost/bin/media-compost serve</pre>
           <div class="mc-note">
             <p>Videos need <code>ffmpeg</code> for probing and frame extraction:</p>
@@ -166,7 +166,7 @@
 
         <div class="mc-pane" id="mc-pane-linux" role="tabpanel" aria-labelledby="mc-tab-linux" data-mc-pane="linux" hidden>
 <pre class="mc-code">python3 -m venv ~/media-compost
-~/media-compost/bin/pip install media_compost-{{ config.extra.version_number | d('1.0.0', true) }}-py3-none-any.whl
+~/media-compost/bin/pip install "media-compost[full]"
 ~/media-compost/bin/media-compost serve</pre>
           <div class="mc-note">
             <p>Videos need <code>ffmpeg</code> for probing and frame extraction:</p>
@@ -176,7 +176,7 @@
 
         <div class="mc-pane" id="mc-pane-windows" role="tabpanel" aria-labelledby="mc-tab-windows" data-mc-pane="windows" hidden>
 <pre class="mc-code">py -3.11 -m venv %USERPROFILE%\media-compost
-%USERPROFILE%\media-compost\Scripts\pip install media_compost-{{ config.extra.version_number | d('1.0.0', true) }}-py3-none-any.whl
+%USERPROFILE%\media-compost\Scripts\pip install "media-compost[full]"
 %USERPROFILE%\media-compost\Scripts\media-compost serve</pre>
           <div class="mc-note">
             <p>Videos need <code>ffmpeg</code> on your <code>PATH</code>:</p>
