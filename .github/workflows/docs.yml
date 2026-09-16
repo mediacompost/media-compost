@@ -20,7 +20,8 @@
 # than at the root where Pages looks for it.
 #
 #   called by a release    ->  /1.2/, and `latest` starts pointing at it
-#   run by hand, no tag    ->  /dev/, from whatever branch you pick
+#   run by hand, no tag    ->  /dev/, from whatever branch you pick — a URL,
+#                              never an entry in the version picker
 #   run by hand with a tag ->  that tag's series again, rebuilt in place
 #
 # The third is for a series already published: a documentation fix worth
@@ -149,6 +150,12 @@ jobs:
             mike deploy -F website/mkdocs.yml --push "$series"
           fi
 
+      # HIDDEN FROM THE PICKER, always. /dev/ is documentation for code nobody
+      # has installed, so it is a URL to hand somebody rather than a version
+      # to choose — and a switcher entry beside 1.0 invites choosing it.
+      # `properties.hidden` is the one thing Material's switcher filters on
+      # (`versions.filter(v => !v.properties?.hidden)`), and mike's
+      # `--prop-set` is what writes it.
       - name: Publish the unreleased docs (a hand-started run naming no tag)
         if: inputs.ref == ''
-        run: mike deploy -F website/mkdocs.yml --push dev
+        run: mike deploy -F website/mkdocs.yml --push --prop-set hidden=true dev
