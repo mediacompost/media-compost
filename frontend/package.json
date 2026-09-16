@@ -1,7 +1,7 @@
 {
   "name": "media-compost-frontend",
   "private": true,
-  "version": "1.0.1.dev0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",

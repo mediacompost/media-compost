@@ -157,7 +157,7 @@ extra:
   # What the footer's small print says. `extra.version` above is mike's
   # switcher and carries no number, so this is the one place the release is
   # written down for the site.
-  version_number: "1.0.1.dev0"
+  version_number: "1.0.1"
 
 markdown_extensions:
   - admonition
