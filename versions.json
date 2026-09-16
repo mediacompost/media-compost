@@ -1,15 +1,5 @@
 [
   {
-    "version": "dev",
-    "title": "dev",
-    "aliases": []
-  },
-  {
-    "version": "1.0.1",
-    "title": "1.0.1",
-    "aliases": []
-  },
-  {
     "version": "1.0",
     "title": "1.0",
     "aliases": [
