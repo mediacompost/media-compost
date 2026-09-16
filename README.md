@@ -7,6 +7,8 @@ videos into datasets: import without duplicates, tag and caption at scale,
 search and organize, and train a model on the result — or read the library
 from your own Python scripts.
 
+[Website](https://mediacompost.github.io/media-compost/)
+
 ## Install
 
 ```bash
@@ -232,8 +234,9 @@ All commands take `--data-dir` to select the library (default `./_data`).
 
 ## More documentation
 
-- [`docs/README.md`](https://github.com/mediacompost/media-compost/blob/main/docs/README.md) — the user documentation index: guides to
-  every part of the app.
+- [mediacompost.github.io/media-compost](https://mediacompost.github.io/media-compost/) — every guide, for the released version.
+- [`docs/README.md`](https://github.com/mediacompost/media-compost/blob/main/docs/README.md) — the same guides as they stand in
+  this checkout, which is what the site is built from.
 - `SETUP.md` — developer setup: the venv, the frontend dev server, the
   multi-user proxy configuration, the documentation site.
 - `CONTRIBUTING.md` — the process: branches, what CI checks, golden files,
