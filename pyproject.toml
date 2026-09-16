@@ -1,6 +1,6 @@
 [project]
 name = "media-compost"
-version = "1.0.0"
+version = "1.0.1.dev0"
 description = "Organize, deduplicate and annotate images with tags/captions for AI training datasets."
 requires-python = ">=3.11"
 # AGPL because this is a SERVER: the app is something you run and reach over a
