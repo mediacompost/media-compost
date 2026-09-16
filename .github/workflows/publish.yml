@@ -19,7 +19,7 @@
 # the job prove it is that workflow. Renaming this file breaks the upload
 # with an error about the publisher, so the tag half is `draft.yml`.
 
-name: Publish
+name: Publish Release
 
 on:
   workflow_dispatch:
@@ -37,18 +37,26 @@ jobs:
       url: https://pypi.org/project/media-compost/
     permissions:
       id-token: write
-      contents: read
+      # WRITE, to READ. A draft release is only listed to a caller with push
+      # access, so `contents: read` gets a 404 and `gh` says "release not
+      # found" — which reads as a missing draft rather than as a token that
+      # cannot see one.
+      contents: write
     steps:
       - name: Take the files off the draft release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag }}
           REPO: ${{ github.repository }}
-        # A published release here would mean this version has been through
-        # already: PyPI would refuse the upload anyway, and saying so up front
-        # is the difference between a clear stop and a red action nobody reads.
+        # Three answers, and they are not the same problem: no release at all
+        # (the tag was never drafted, or the draft was deleted), a published
+        # one (this version has been through already, and PyPI would refuse
+        # the upload anyway), or a draft, which is the one to take.
         run: |
-          draft=$(gh release view "$TAG" --repo "$REPO" --json isDraft --jq .isDraft)
+          draft=$(gh release view "$TAG" --repo "$REPO" --json isDraft --jq .isDraft 2>&1) || {
+            echo "::error::no release for $TAG: $draft"
+            exit 1
+          }
           if [ "$draft" != "true" ]; then
             echo "::error::$TAG is not a draft release — it has been published already"
             exit 1
