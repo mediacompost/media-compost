@@ -50,7 +50,7 @@ installs the same way, by path or URL in place of the name.
 ## Install from source
 
 ```bash
-git clone <this-repo> media-compost
+git clone https://github.com/mediacompost/media-compost.git media-compost
 cd media-compost
 
 # 1. Backend (the app, no AI-model packages — those are set up from the app)

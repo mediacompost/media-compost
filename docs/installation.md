@@ -91,7 +91,7 @@ Clone the repository, then create a virtual environment at the repo root and
 install the package into it:
 
 ```bash
-git clone <this-repo> media-compost
+git clone https://github.com/mediacompost/media-compost.git media-compost
 cd media-compost
 python3 -m venv .venv
 .venv/bin/pip install -e ".[full]"
