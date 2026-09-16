@@ -19,8 +19,17 @@
 # NOT do the job either way: it would land inside the version directory rather
 # than at the root where Pages looks for it.
 #
-#   a `vX.Y.Z` tag pushed  ->  /1.2/, and `latest` starts pointing at it
-#   run by hand            ->  /dev/, from whatever branch you pick
+#   called by a release    ->  /1.2/, and `latest` starts pointing at it
+#   run by hand, no tag    ->  /dev/, from whatever branch you pick
+#   run by hand with a tag ->  that tag's series again, rebuilt in place
+#
+# The third is for a series already published: a documentation fix worth
+# putting in front of the people running that version, without a release to
+# carry it. It builds the TAG's pages through the workflow as it stands on
+# whatever branch you started it from, which is what makes it a repair — the
+# pipeline's fixes apply, the version's own prose does not move. It leaves
+# `latest` alone unless you tick the box, because the series being rebuilt is
+# often not the newest one.
 #
 # RELEASES ONLY (owner 2026-09). This used to run on every push to main, which
 # republished the whole site for a typo in a docstring and put a second job in
@@ -54,7 +63,23 @@ on:
         description: "The release tag to build, and the version to publish it as"
         required: true
         type: string
+      latest:
+        description: "Move the `latest` alias to it — true for a release"
+        required: false
+        default: true
+        type: boolean
   workflow_dispatch:
+    inputs:
+      ref:
+        description: "A release tag to publish again, e.g. v1.2.3. Empty publishes /dev/ from the branch above."
+        required: false
+        default: ""
+        type: string
+      latest:
+        description: "Move the `latest` alias to it (only for the newest series)"
+        required: false
+        default: false
+        type: boolean
 
 # `mike` pushes the built site to gh-pages, so this needs write access to the
 # repository rather than the Pages deploy token.
@@ -106,13 +131,18 @@ jobs:
         if: inputs.ref != ''
         env:
           TAG: ${{ inputs.ref }}
+          LATEST: ${{ inputs.latest }}
         run: |
           version="${TAG#v}"
           series="${version%.*}"
-          echo "publishing $version as /$series/"
-          mike deploy -F website/mkdocs.yml --push --update-aliases "$series" latest
-          mike set-default -F website/mkdocs.yml --push latest
+          echo "publishing $version as /$series/ (latest: $LATEST)"
+          if [ "$LATEST" = "true" ]; then
+            mike deploy -F website/mkdocs.yml --push --update-aliases "$series" latest
+            mike set-default -F website/mkdocs.yml --push latest
+          else
+            mike deploy -F website/mkdocs.yml --push "$series"
+          fi
 
-      - name: Publish the unreleased docs (a hand-started run, and only that)
+      - name: Publish the unreleased docs (a hand-started run naming no tag)
         if: inputs.ref == ''
         run: mike deploy -F website/mkdocs.yml --push dev

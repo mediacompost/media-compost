@@ -182,7 +182,13 @@ own palette radios, so Material still owns applying and persisting the choice.
 which keeps one directory per MINOR SERIES in the `gh-pages` branch and
 maintains the switcher — publishing `v1.2.3` becomes `/1.2/`, replacing
 whatever `v1.2.0` put there, and takes over the `latest` alias. A patch does
-not change what the app does, so it does not get a site of its own. It runs on RELEASES ONLY (owner 2026-09): `/dev/` is a
+not change what the app does, so it does not get a site of its own.
+
+A series already out can be rebuilt without a release: *Actions → Docs → Run
+workflow*, with the tag in the `ref` box. It builds that tag's pages through
+the workflow as it stands on the branch you start it from, which is what
+makes it a repair rather than a re-release. Leave `latest` unticked unless
+the series is the newest one. It runs on RELEASES ONLY (owner 2026-09): `/dev/` is a
 hand-started run (*Actions → Docs → Run workflow*, on whatever branch you
 pick), because republishing the whole site for a typo in a docstring put a
 job in the queue behind every push and changed nothing anybody had installed.
