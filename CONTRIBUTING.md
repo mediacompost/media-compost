@@ -279,37 +279,32 @@ cd frontend && npx tsc -b && npm test && cd ..
 #    `tests/ui/test_version.py` holds them equal.
 ./.venv/bin/python scripts/bump_version.py --release        # -> X.Y.Z
 
-# 4. Build the artifact HERE FIRST — not because this is the copy that ships
-#    (publish.yml runs this same script on the tag and uploads what IT
-#    builds), but because the script refuses a wheel with no UI inside, and
-#    learning that now beats learning it with a release already published.
-./scripts/package.sh                    # -> _dist/media_compost-X.Y.Z-*.whl
-
-# 5. Check the artifact by installing it somewhere clean and opening the app.
-python3 -m venv /tmp/mc-check
-/tmp/mc-check/bin/pip install _dist/media_compost-X.Y.Z-*.whl
-/tmp/mc-check/bin/media-compost serve --data-dir /tmp/mc-check-lib
-#    The library page must render — a blank page means the bundle is missing.
-
-# 6. Commit and tag on main. PUSHING THE TAG IS THE RELEASE: there is no
+# 4. Commit and tag on main. PUSHING THE TAG IS THE RELEASE: there is no
 #    GitHub form to fill in afterwards, and nothing else to press.
 git commit -am "Release X.Y.Z"
 git tag -a vX.Y.Z -m "X.Y.Z"
 git push && git push --tags
 
-# 7. Watch Actions. publish.yml holds the version to the tag and reads
+# 5. Watch Actions. publish.yml holds the version to the tag and reads
 #    CHANGELOG.md's `## X.Y.Z` section BEFORE it builds anything — a version
-#    with no entry fails there, when deleting the tag is the whole of the
-#    cleanup — then uploads to PyPI (trusted publishing, no token) and drafts
-#    the GitHub Release with that section as its notes and the very files
-#    PyPI took, publishing it once they are on it. The documentation follows
-#    the upload rather than racing it — publish.yml CALLS docs.yml once PyPI
-#    has the files — and goes up as /X.Y.Z/ with `latest` moved to it. (The
-#    files are
-#    deliberately not committed: content-hashed filenames make every rebuild
-#    a new ~1.3 MB blob in a history that is forever.)
+#    with no entry fails there — then builds the wheel and the sdist and
+#    DRAFTS the GitHub Release with that section as its notes and those files
+#    attached.
 
-# 8. Move main past the release AT ONCE, so a build from main never carries
+# 6. Test the draft's wheel, which is the file PyPI is about to get rather
+#    than a local build of the same version. Download it from the draft
+#    release, then:
+python3 -m venv /tmp/mc-check
+/tmp/mc-check/bin/pip install ~/Downloads/media_compost-X.Y.Z-py3-none-any.whl
+/tmp/mc-check/bin/media-compost serve --data-dir /tmp/mc-check-lib
+#    The library page must render — a blank page means the bundle is missing.
+#    Nothing so far is permanent: deleting the draft and the tag undoes all
+#    of it. Approve the `pypi` environment when you are happy, and the run
+#    uploads to PyPI (trusted publishing, no token), publishes the draft, and
+#    calls docs.yml, which puts /X.Y.Z/ up and moves `latest` to it. Past the
+#    upload there is no undo — PyPI will not take a version twice.
+
+# 7. Move main past the release AT ONCE, so a build from main never carries
 #    the released number: pip would refuse to install it over the release.
 #    `X.Y.(Z+1).dev0` sorts between this release and any next one — patch,
 #    minor or major — so every main build upgrades to whatever ships next.
@@ -335,13 +330,14 @@ git push
 - [ ] `docs/` updated for anything a user would notice; `mkdocs build --strict
       -f website/mkdocs.yml` passes (CI runs it before publishing).
 - [ ] Backend and frontend test suites pass.
-- [ ] `./scripts/package.sh` succeeded — it refuses a wheel with no frontend.
-- [ ] The wheel installed into a clean venv serves the app, not a blank page.
+- [ ] The draft release's own wheel, installed into a clean venv, serves the
+      app rather than a blank page — tested before approving the `pypi`
+      environment, since the upload is the step with no undo.
 - [ ] `CHANGELOG.md`'s `Unreleased` section is now headed `X.Y.Z` (the bump
       does it, and refuses to release an empty one).
-- [ ] Tag `vX.Y.Z` pushed — which runs `publish.yml`: PyPI, then the GitHub
-      Release, and `docs.yml` called from it once the upload succeeded
-      (`/X.Y.Z/`, with the `latest` alias moved to it). `/dev/` is a
+- [ ] Tag `vX.Y.Z` pushed — which runs `publish.yml`: the draft release,
+      then PyPI once approved, then the release itself, and `docs.yml` called
+      from it (`/X.Y.Z/`, with the `latest` alias moved to it). `/dev/` is a
       hand-started run of that same workflow and is as old as the last one.
 - [ ] Both workflows green, and the release page carries the changelog's
       entry as its notes with the wheel and the sdist as its files. No

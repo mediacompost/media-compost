@@ -13,9 +13,14 @@
 # and the environment (pypi) as its publisher, and the `id-token: write`
 # permission is what lets the job prove it is that workflow.
 #
-# PUSHING THE TAG IS THE RELEASE. This workflow uploads to PyPI and then
-# creates the GitHub Release itself — as a DRAFT carrying the notes and the
-# files, published only once they are on it.
+# PUSHING THE TAG IS THE RELEASE. This workflow builds, drafts the GitHub
+# Release with the notes and the files, WAITS if the `pypi` environment has a
+# reviewer on it, then uploads to PyPI and publishes that draft.
+#
+# The draft is where a release is looked at: its wheel is the one PyPI will
+# get, so testing it tests the artifact rather than a local rebuild of the
+# same version. Up to the gate everything is disposable — delete the draft
+# and the tag; past it nothing is, since PyPI will not take a version twice.
 #
 # That order is not a preference. Immutable releases are on for this
 # repository, and GitHub's rule is that once a release is published "assets
@@ -112,8 +117,48 @@ jobs:
             _dist/*.tar.gz
           if-no-files-found: error
 
-  publish:
+  # The draft, BEFORE anything irreversible: this is the artifact to test.
+  # Download the wheel from the draft release, install it somewhere clean and
+  # look at the app — it is the file PyPI will get, where a locally built one
+  # is only a file like it.
+  #
+  # A re-run deletes the draft it finds. A published release it will not
+  # touch: that one is immutable, and the way past it is the next version.
+  draft:
     needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: _dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: notes
+          path: _notes
+      - name: Draft the release with its notes and its files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          if gh release view "$TAG" --repo "$REPO" --json isDraft --jq .isDraft 2>/dev/null | grep -qx true; then
+            gh release delete "$TAG" --repo "$REPO" --yes --cleanup-tag=false
+          fi
+          gh release create "$TAG" _dist/* \
+            --repo "$REPO" --draft --title "$TAG" --notes-file _notes/notes.md
+
+  # THE GATE. Put required reviewers on the `pypi` environment and this job
+  # waits for one — which is the whole point: everything above can be thrown
+  # away by deleting the draft and the tag, and nothing below can be undone,
+  # because PyPI does not let a version be replaced or re-uploaded.
+  #
+  # With no reviewer on the environment it does not pause, and a release is
+  # then as automatic as it was before there was a draft to look at.
+  publish:
+    needs: draft
     runs-on: ubuntu-latest
     environment:
       name: pypi
@@ -129,63 +174,20 @@ jobs:
         with:
           packages-dir: _dist
 
-  # The release page itself: the changelog's own words for notes, and the very
-  # files PyPI took rather than a second build of the same version.
-  #
-  # Its own job for two reasons: it runs only once PyPI has taken them, so the
-  # release never advertises a wheel that is not on the index; and `contents:
-  # write` stays off the job holding `id-token: write`, which is the one
-  # permission in this repository that can speak for the project on PyPI.
-  #
-  # `gh` is on the runner, so this needs no action and no checkout — `--repo`
-  # is what replaces the latter.
+  # The draft becomes a release, with the files already on it — after which
+  # nothing can be attached to it ever again.
   release:
     needs: publish
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: _dist
-      - uses: actions/download-artifact@v4
-        with:
-          name: notes
-          path: _notes
-      # Created as a draft WITH its files, then published: after that press
-      # nothing can be attached to it ever again. `--title` is the tag, which
-      # is what an untitled release shows anyway — said explicitly so `gh` is
-      # never left wanting an answer nobody is there to give.
-      #
-      # A re-run deletes the draft it finds first. A published release it will
-      # not touch: that one is immutable, the upload is already on PyPI, and
-      # the way past it is the next version, not another attempt at this one.
-      - name: Draft the release with its notes and its files
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
-          REPO: ${{ github.repository }}
-        run: |
-          if gh release view "$TAG" --repo "$REPO" --json isDraft --jq .isDraft 2>/dev/null | grep -qx true; then
-            gh release delete "$TAG" --repo "$REPO" --yes --cleanup-tag=false
-          fi
-          gh release create "$TAG" _dist/* \
-            --repo "$REPO" --draft --title "$TAG" --notes-file _notes/notes.md
       - name: Publish it
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: gh release edit "$TAG" --draft=false --repo "${{ github.repository }}"
 
-  # The site, only for a version that reached the index. It hangs off the
-  # UPLOAD rather than off the release job beside it: PyPI is what somebody
-  # installs from, and a hiccup writing the GitHub release should not leave
-  # the documentation a version behind.
-  #
-  # `uses:` rather than a copy of docs.yml's steps — one definition of how the
-  # site is built, called here and startable by hand for /dev/. The called
-  # workflow sees this run's own ref, so it needs no input to know the tag.
   docs:
     needs: publish
     permissions:
