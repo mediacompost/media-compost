@@ -1,175 +1,62 @@
-# Publish a release to PyPI.
+# Upload a drafted release to PyPI and publish it. STARTED BY HAND —
+# Actions -> Publish -> Run workflow, with the tag as its input.
 #
-# A file of its own, beside ci.yml, because the two differ in everything
-# that matters: CI runs on every push and builds a wheel WITHOUT the
-# frontend (its extras matrix is about imports), where a release must run
-# once, on a tag, and ship the wheel `scripts/package.sh` makes — frontend
-# bundled, and refused outright when the bundle is missing, since such a
-# wheel installs, starts and serves a blank page. And the OIDC permission
-# below belongs on a workflow that never runs for a pull request.
+# This is the half that cannot be undone: PyPI does not let a version be
+# replaced or re-uploaded, and a published release is immutable. Everything
+# `draft.yml` did before it is disposable, which is why the split falls here
+# and why this workflow has no trigger of its own. A manual run needs write
+# access to the repository and nothing else — no reviewers to nominate, no
+# environment rule anybody has to remember to add.
+#
+# It takes the files OFF THE DRAFT rather than rebuilding them or fetching a
+# build artifact. The wheel somebody downloaded and tested is then the wheel
+# PyPI receives, as a matter of where the bytes came from rather than of the
+# plumbing being right.
 #
 # Trusted publishing: no API token anywhere. On pypi.org the project names
-# this repository (mediacompost/media-compost), this file (publish.yml)
-# and the environment (pypi) as its publisher, and the `id-token: write`
-# permission is what lets the job prove it is that workflow.
-#
-# PUSHING THE TAG IS THE RELEASE. This workflow builds, drafts the GitHub
-# Release with the notes and the files, WAITS if the `pypi` environment has a
-# reviewer on it, then uploads to PyPI and publishes that draft.
-#
-# The draft is where a release is looked at: its wheel is the one PyPI will
-# get, so testing it tests the artifact rather than a local rebuild of the
-# same version. Up to the gate everything is disposable — delete the draft
-# and the tag; past it nothing is, since PyPI will not take a version twice.
-#
-# That order is not a preference. Immutable releases are on for this
-# repository, and GitHub's rule is that once a release is published "assets
-# can't be added, modified, or deleted" (the tag is frozen to its commit
-# too); the title and the notes stay editable, which is the only reason the
-# earlier shape — publish by hand, attach afterwards — got as far as writing
-# the notes before failing. Draft, attach, publish is the order the feature
-# documents, and a workflow can only take it by owning the publish.
-#
-# So nothing here waits for a person, and one consequence is worth knowing:
-# a release published by GITHUB_TOKEN raises no event other workflows can
-# see, which is why docs.yml watches the same tag rather than the release.
-#
-# The version is held to the tag before anything is built, so a mistagged
-# release fails while deleting the tag is the whole of the cleanup.
+# this repository (mediacompost/media-compost), THIS FILE (publish.yml) and
+# the environment (pypi) as its publisher, and `id-token: write` is what lets
+# the job prove it is that workflow. Renaming this file breaks the upload
+# with an error about the publisher, so the tag half is `draft.yml`.
 
 name: Publish
 
 on:
-  push:
-    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "The release tag to publish, e.g. v1.2.3"
+        required: true
+        type: string
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - uses: actions/setup-node@v4
-        with:
-          # The same Node the CI build uses: `npm test` is not run here, but
-          # the build is the same script, and one version means one bundle.
-          node-version: "24"
-      - name: The release tag names the version the package declares
-        run: |
-          python - "${{ github.ref_name }}" <<'EOF'
-          import re, sys, tomllib
-          tag = sys.argv[1]
-          m = re.fullmatch(r"v?(\d+\.\d+\.\d+(?:[a-z0-9.+-]*)?)", tag)
-          if not m:
-              sys.exit(f"tag {tag!r} is not a version tag (vX.Y.Z)")
-          want = m.group(1)
-          with open("pyproject.toml", "rb") as f:
-              declared = tomllib.load(f)["project"]["version"]
-          src = open("media_compost/__init__.py").read()
-          init = re.search(r'__version__\s*=\s*"([^"]+)"', src).group(1)
-          bad = {k: v for k, v in
-                 {"pyproject.toml": declared, "__init__.py": init}.items()
-                 if v != want}
-          if bad:
-              sys.exit(f"release tag {tag} but " + ", ".join(
-                  f"{k} says {v}" for k, v in bad.items()))
-          print(f"version {want}")
-          EOF
-      # Before anything is built, because this is the last moment a release
-      # can be taken back: PyPI does not allow a version to be replaced, so a
-      # release published with no entry for itself would carry that silence
-      # for good. `bump_version.py` owns what a changelog section is — the
-      # same parser that renames `## Unreleased` on release day.
-      - name: The changelog has an entry for this version, and it becomes the notes
-        env:
-          TAG: ${{ github.ref_name }}
-        run: |
-          mkdir -p _notes
-          python scripts/bump_version.py --section "${TAG#v}" | tee _notes/notes.md
-      - uses: actions/upload-artifact@v4
-        with:
-          name: notes
-          path: _notes/notes.md
-          if-no-files-found: error
-
-      - name: Build tools
-        run: python -m pip install build
-      - name: Frontend + wheel (refuses a wheel with no frontend in it)
-        run: bash scripts/package.sh
-      - name: Source distribution (MANIFEST.in carries the bundle into it)
-        run: python -m build --sdist --outdir _dist
-      - name: The sdist carries the frontend too
-        run: |
-          python - <<'EOF'
-          import glob, tarfile
-          [path] = glob.glob("_dist/*.tar.gz")
-          names = tarfile.open(path).getnames()
-          assert any(n.endswith("_web_dist/index.html") for n in names), \
-              "sdist has no frontend in it — check MANIFEST.in"
-          EOF
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: |
-            _dist/*.whl
-            _dist/*.tar.gz
-          if-no-files-found: error
-
-  # The draft, BEFORE anything irreversible: this is the artifact to test.
-  # Download the wheel from the draft release, install it somewhere clean and
-  # look at the app — it is the file PyPI will get, where a locally built one
-  # is only a file like it.
-  #
-  # A re-run deletes the draft it finds. A published release it will not
-  # touch: that one is immutable, and the way past it is the next version.
-  draft:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: _dist
-      - uses: actions/download-artifact@v4
-        with:
-          name: notes
-          path: _notes
-      - name: Draft the release with its notes and its files
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
-          REPO: ${{ github.repository }}
-        run: |
-          if gh release view "$TAG" --repo "$REPO" --json isDraft --jq .isDraft 2>/dev/null | grep -qx true; then
-            gh release delete "$TAG" --repo "$REPO" --yes --cleanup-tag=false
-          fi
-          gh release create "$TAG" _dist/* \
-            --repo "$REPO" --draft --title "$TAG" --notes-file _notes/notes.md
-
-  # THE GATE. Put required reviewers on the `pypi` environment and this job
-  # waits for one — which is the whole point: everything above can be thrown
-  # away by deleting the draft and the tag, and nothing below can be undone,
-  # because PyPI does not let a version be replaced or re-uploaded.
-  #
-  # With no reviewer on the environment it does not pause, and a release is
-  # then as automatic as it was before there was a draft to look at.
   publish:
-    needs: draft
     runs-on: ubuntu-latest
     environment:
       name: pypi
       url: https://pypi.org/project/media-compost/
     permissions:
       id-token: write
+      contents: read
     steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: _dist
+      - name: Take the files off the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+          REPO: ${{ github.repository }}
+        # A published release here would mean this version has been through
+        # already: PyPI would refuse the upload anyway, and saying so up front
+        # is the difference between a clear stop and a red action nobody reads.
+        run: |
+          draft=$(gh release view "$TAG" --repo "$REPO" --json isDraft --jq .isDraft)
+          if [ "$draft" != "true" ]; then
+            echo "::error::$TAG is not a draft release — it has been published already"
+            exit 1
+          fi
+          mkdir -p _dist
+          gh release download "$TAG" --repo "$REPO" --dir _dist \
+            --pattern "*.whl" --pattern "*.tar.gz"
+          ls -l _dist
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: _dist
@@ -185,11 +72,17 @@ jobs:
       - name: Publish it
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ inputs.tag }}
         run: gh release edit "$TAG" --draft=false --repo "${{ github.repository }}"
 
+  # The site, only for a version that reached the index. It hangs off the
+  # UPLOAD rather than off the release job beside it: PyPI is what somebody
+  # installs from, and a hiccup writing the GitHub release should not leave
+  # the documentation a version behind.
   docs:
     needs: publish
     permissions:
       contents: write
     uses: ./.github/workflows/docs.yml
+    with:
+      ref: ${{ inputs.tag }}

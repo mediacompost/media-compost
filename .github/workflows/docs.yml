@@ -40,14 +40,20 @@
 # release with GITHUB_TOKEN and a token-made release raises no event another
 # workflow can see.
 #
-# A called workflow runs with the CALLER's context — `github.ref` is the tag
-# that started the whole thing and `github.event_name` is `push` — which is
-# why the two steps at the bottom can tell a release from a hand-started run
-# without being told.
+# The tag is an INPUT rather than something read off the context: publish.yml
+# is started by hand, so its `github.ref` is whatever branch the run was
+# launched from and never the tag. `inputs.ref` being set is also what tells
+# the two steps at the bottom apart — a release build from a hand-started one
+# — which is a fact about the call rather than about the event that caused it.
 name: Docs
 
 on:
   workflow_call:
+    inputs:
+      ref:
+        description: "The release tag to build, and the version to publish it as"
+        required: true
+        type: string
   workflow_dispatch:
 
 # `mike` pushes the built site to gh-pages, so this needs write access to the
@@ -69,9 +75,8 @@ jobs:
           # neither it nor the history it appends to.
           fetch-depth: 0
           # The tag for a release run, the chosen branch for a hand-started
-          # one — `github.ref` is both, and naming it keeps a re-run a week
-          # later building what it built the first time.
-          ref: ${{ github.ref }}
+          # one.
+          ref: ${{ inputs.ref || github.ref }}
 
       - uses: actions/setup-python@v5
         with:
@@ -92,14 +97,14 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Publish the released version
-        if: github.event_name == 'push'
+        if: inputs.ref != ''
         env:
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ inputs.ref }}
         run: |
           version="${TAG#v}"
           mike deploy -F website/mkdocs.yml --push --update-aliases "$version" latest
           mike set-default -F website/mkdocs.yml --push latest
 
       - name: Publish the unreleased docs (a hand-started run, and only that)
-        if: github.event_name == 'workflow_dispatch'
+        if: inputs.ref == ''
         run: mike deploy -F website/mkdocs.yml --push dev

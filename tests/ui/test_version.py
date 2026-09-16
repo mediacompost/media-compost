@@ -213,7 +213,7 @@ def test_one_version_s_entry_is_what_the_release_says():
     ],
 )
 def test_a_release_with_nothing_written_about_it_is_refused(version, text):
-    """publish.yml asks this before it builds, because past the upload it is
+    """draft.yml asks this before it builds, because past the upload it is
     not a mistake anybody can take back — PyPI will not replace a version."""
     with pytest.raises(SystemExit):
         _script().section_of(text, version)
@@ -222,6 +222,6 @@ def test_a_release_with_nothing_written_about_it_is_refused(version, text):
 def test_the_release_workflow_asks_this_script_for_the_notes():
     """The flag is load-bearing for a workflow that runs a few times a year:
     renamed here, it would fail on release day and nowhere else."""
-    workflow = (REPO / ".github" / "workflows" / "publish.yml").read_text(encoding="utf-8")
+    workflow = (REPO / ".github" / "workflows" / "draft.yml").read_text(encoding="utf-8")
     assert "bump_version.py --section" in workflow
 

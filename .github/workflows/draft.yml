@@ -1,0 +1,130 @@
+# Everything a release does that can still be taken back.
+#
+# Pushing `vX.Y.Z` holds the version to the tag, refuses a version the
+# changelog says nothing about, builds the wheel and the sdist, and leaves
+# them on a DRAFT release with the changelog's section as its notes. Then it
+# stops. Nothing here reaches anybody: delete the draft and the tag and the
+# release never happened.
+#
+# What happens next is `publish.yml`, started by hand — which is the gate,
+# and is a gate you can see from the repository rather than a setting
+# somebody has to know is there. The file to test is the wheel ON THE DRAFT:
+# publish.yml uploads that exact file, so testing it is testing what ships,
+# where a locally built wheel of the same version is only a file like it.
+#
+# The two halves are two files because PyPI's trusted publisher names one:
+# the upload has to live in `publish.yml` and nothing else may, so the tag's
+# half is this one.
+
+name: Draft
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          # The same Node the CI build uses: `npm test` is not run here, but
+          # the build is the same script, and one version means one bundle.
+          node-version: "24"
+      - name: The release tag names the version the package declares
+        run: |
+          python - "${{ github.ref_name }}" <<'EOF'
+          import re, sys, tomllib
+          tag = sys.argv[1]
+          m = re.fullmatch(r"v?(\d+\.\d+\.\d+(?:[a-z0-9.+-]*)?)", tag)
+          if not m:
+              sys.exit(f"tag {tag!r} is not a version tag (vX.Y.Z)")
+          want = m.group(1)
+          with open("pyproject.toml", "rb") as f:
+              declared = tomllib.load(f)["project"]["version"]
+          src = open("media_compost/__init__.py").read()
+          init = re.search(r'__version__\s*=\s*"([^"]+)"', src).group(1)
+          bad = {k: v for k, v in
+                 {"pyproject.toml": declared, "__init__.py": init}.items()
+                 if v != want}
+          if bad:
+              sys.exit(f"release tag {tag} but " + ", ".join(
+                  f"{k} says {v}" for k, v in bad.items()))
+          print(f"version {want}")
+          EOF
+      # Before anything is built, because this is the last moment a release
+      # can be taken back: PyPI does not allow a version to be replaced, so a
+      # release published with no entry for itself would carry that silence
+      # for good. `bump_version.py` owns what a changelog section is — the
+      # same parser that renames `## Unreleased` on release day.
+      - name: The changelog has an entry for this version, and it becomes the notes
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          mkdir -p _notes
+          python scripts/bump_version.py --section "${TAG#v}" | tee _notes/notes.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: notes
+          path: _notes/notes.md
+          if-no-files-found: error
+
+      - name: Build tools
+        run: python -m pip install build
+      - name: Frontend + wheel (refuses a wheel with no frontend in it)
+        run: bash scripts/package.sh
+      - name: Source distribution (MANIFEST.in carries the bundle into it)
+        run: python -m build --sdist --outdir _dist
+      - name: The sdist carries the frontend too
+        run: |
+          python - <<'EOF'
+          import glob, tarfile
+          [path] = glob.glob("_dist/*.tar.gz")
+          names = tarfile.open(path).getnames()
+          assert any(n.endswith("_web_dist/index.html") for n in names), \
+              "sdist has no frontend in it — check MANIFEST.in"
+          EOF
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: |
+            _dist/*.whl
+            _dist/*.tar.gz
+          if-no-files-found: error
+
+  # The draft, BEFORE anything irreversible: this is the artifact to test.
+  # Download the wheel from the draft release, install it somewhere clean and
+  # look at the app — it is the file PyPI will get, where a locally built one
+  # is only a file like it.
+  #
+  # A re-run deletes the draft it finds. A published release it will not
+  # touch: that one is immutable, and the way past it is the next version.
+  draft:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: _dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: notes
+          path: _notes
+      - name: Draft the release with its notes and its files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          if gh release view "$TAG" --repo "$REPO" --json isDraft --jq .isDraft 2>/dev/null | grep -qx true; then
+            gh release delete "$TAG" --repo "$REPO" --yes --cleanup-tag=false
+          fi
+          gh release create "$TAG" _dist/* \
+            --repo "$REPO" --draft --title "$TAG" --notes-file _notes/notes.md

@@ -28,11 +28,13 @@ your changes under that licence.
 
 - Work happens on a short-lived branch — in your fork, unless you are a
   maintainer — and lands on `main` through a pull request.
-- **A release is a tag on `main`**, named `v1.2.0`. Pushing it is the whole
-  gesture: `publish.yml` uploads the wheel to PyPI and then creates the
-  GitHub Release itself, notes and files included, and `docs.yml` publishes
-  the versioned documentation as `/1.2.0/` and `latest`. The unreleased docs
-  at `/dev/` are a hand-started run of the same workflow.
+- **A release is a tag on `main`**, named `v1.2.0`, and it goes out in two
+  gestures. Pushing the tag runs `draft.yml`, which builds and leaves a
+  DRAFT release carrying the wheel; running `publish.yml` by hand (*Actions
+  → Publish → Run workflow*, with the tag) uploads that wheel to PyPI,
+  publishes the draft and calls `docs.yml` for `/1.2.0/` and `latest`. The
+  split is the point: everything before it can be deleted, nothing after it
+  can. The unreleased docs at `/dev/` are a hand-started run of `docs.yml`.
 - **`gh-pages` is written by machines** (`mike`, from the docs workflow).
   Never commit to it, never branch from it.
 
@@ -279,30 +281,29 @@ cd frontend && npx tsc -b && npm test && cd ..
 #    `tests/ui/test_version.py` holds them equal.
 ./.venv/bin/python scripts/bump_version.py --release        # -> X.Y.Z
 
-# 4. Commit and tag on main. PUSHING THE TAG IS THE RELEASE: there is no
-#    GitHub form to fill in afterwards, and nothing else to press.
+# 4. Commit and tag on main. Pushing the tag starts the release; it does not
+#    finish it.
 git commit -am "Release X.Y.Z"
 git tag -a vX.Y.Z -m "X.Y.Z"
 git push && git push --tags
 
-# 5. Watch Actions. publish.yml holds the version to the tag and reads
+# 5. Watch Actions -> Draft. It holds the version to the tag and reads
 #    CHANGELOG.md's `## X.Y.Z` section BEFORE it builds anything — a version
 #    with no entry fails there — then builds the wheel and the sdist and
-#    DRAFTS the GitHub Release with that section as its notes and those files
-#    attached.
+#    leaves them on a DRAFT release with that section as its notes. Nothing
+#    so far is permanent: deleting the draft and the tag undoes all of it.
 
-# 6. Test the draft's wheel, which is the file PyPI is about to get rather
-#    than a local build of the same version. Download it from the draft
-#    release, then:
+# 6. Test the draft's wheel, which is the file PyPI will get rather than a
+#    local build of the same version. Download it from the draft release:
 python3 -m venv /tmp/mc-check
 /tmp/mc-check/bin/pip install ~/Downloads/media_compost-X.Y.Z-py3-none-any.whl
 /tmp/mc-check/bin/media-compost serve --data-dir /tmp/mc-check-lib
 #    The library page must render — a blank page means the bundle is missing.
-#    Nothing so far is permanent: deleting the draft and the tag undoes all
-#    of it. Approve the `pypi` environment when you are happy, and the run
-#    uploads to PyPI (trusted publishing, no token), publishes the draft, and
-#    calls docs.yml, which puts /X.Y.Z/ up and moves `latest` to it. Past the
-#    upload there is no undo — PyPI will not take a version twice.
+#    Then Actions -> Publish -> Run workflow, with `vX.Y.Z` as the tag. It
+#    takes the files off the draft, uploads them to PyPI (trusted publishing,
+#    no token), publishes the draft and calls docs.yml, which puts /X.Y.Z/ up
+#    and moves `latest` to it. Past the upload there is no undo — PyPI will
+#    not take a version twice.
 
 # 7. Move main past the release AT ONCE, so a build from main never carries
 #    the released number: pip would refuse to install it over the release.
@@ -331,14 +332,14 @@ git push
       -f website/mkdocs.yml` passes (CI runs it before publishing).
 - [ ] Backend and frontend test suites pass.
 - [ ] The draft release's own wheel, installed into a clean venv, serves the
-      app rather than a blank page — tested before approving the `pypi`
-      environment, since the upload is the step with no undo.
+      app rather than a blank page — tested before running Publish, since the
+      upload is the step with no undo.
 - [ ] `CHANGELOG.md`'s `Unreleased` section is now headed `X.Y.Z` (the bump
       does it, and refuses to release an empty one).
-- [ ] Tag `vX.Y.Z` pushed — which runs `publish.yml`: the draft release,
-      then PyPI once approved, then the release itself, and `docs.yml` called
-      from it (`/X.Y.Z/`, with the `latest` alias moved to it). `/dev/` is a
-      hand-started run of that same workflow and is as old as the last one.
+- [ ] Tag `vX.Y.Z` pushed (which runs `draft.yml`) and **Publish** run by
+      hand afterwards: PyPI, the draft published, and `docs.yml` called from
+      it for `/X.Y.Z/` with the `latest` alias moved to it. `/dev/` is a
+      hand-started run of `docs.yml` and is as old as the last one.
 - [ ] Both workflows green, and the release page carries the changelog's
       entry as its notes with the wheel and the sdist as its files. No
       release page at all means `publish.yml` stopped before it got there.
