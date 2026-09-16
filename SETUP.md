@@ -179,9 +179,10 @@ control is a three-state menu whose entries are labels pointing at Material's
 own palette radios, so Material still owns applying and persisting the choice.
 
 `.github/workflows/docs.yml` publishes it to GitHub Pages through **mike**,
-which keeps one directory per version in the `gh-pages` branch and maintains
-the switcher — publishing a release `v1.2.3` becomes `/1.2.3/` and takes over
-the `latest` alias. It runs on RELEASES ONLY (owner 2026-09): `/dev/` is a
+which keeps one directory per MINOR SERIES in the `gh-pages` branch and
+maintains the switcher — publishing `v1.2.3` becomes `/1.2/`, replacing
+whatever `v1.2.0` put there, and takes over the `latest` alias. A patch does
+not change what the app does, so it does not get a site of its own. It runs on RELEASES ONLY (owner 2026-09): `/dev/` is a
 hand-started run (*Actions → Docs → Run workflow*, on whatever branch you
 pick), because republishing the whole site for a typo in a docstring put a
 job in the queue behind every push and changed nothing anybody had installed.

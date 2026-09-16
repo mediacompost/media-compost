@@ -32,7 +32,7 @@ your changes under that licence.
   gestures. Pushing the tag runs `draft.yml`, which builds and leaves a
   DRAFT release carrying the wheel; running `publish.yml` by hand (*Actions
   → Publish → Run workflow*, with the tag) uploads that wheel to PyPI,
-  publishes the draft and calls `docs.yml` for `/1.2.0/` and `latest`. The
+  publishes the draft and calls `docs.yml` for `/1.2/` and `latest`. The
   split is the point: everything before it can be deleted, nothing after it
   can. The unreleased docs at `/dev/` are a hand-started run of `docs.yml`.
 - **`gh-pages` is written by machines** (`mike`, from the docs workflow).
@@ -301,7 +301,7 @@ python3 -m venv /tmp/mc-check
 #    The library page must render — a blank page means the bundle is missing.
 #    Then Actions -> Publish -> Run workflow, with `vX.Y.Z` as the tag. It
 #    takes the files off the draft, uploads them to PyPI (trusted publishing,
-#    no token), publishes the draft and calls docs.yml, which puts /X.Y.Z/ up
+#    no token), publishes the draft and calls docs.yml, which puts /X.Y/ up
 #    and moves `latest` to it. Past the upload there is no undo — PyPI will
 #    not take a version twice.
 
@@ -338,7 +338,7 @@ git push
       does it, and refuses to release an empty one).
 - [ ] Tag `vX.Y.Z` pushed (which runs `draft.yml`) and **Publish** run by
       hand afterwards: PyPI, the draft published, and `docs.yml` called from
-      it for `/X.Y.Z/` with the `latest` alias moved to it. `/dev/` is a
+      it for `/X.Y/` with the `latest` alias moved to it. `/dev/` is a
       hand-started run of `docs.yml` and is as old as the last one.
 - [ ] Both workflows green, and the release page carries the changelog's
       entry as its notes with the wheel and the sdist as its files. No

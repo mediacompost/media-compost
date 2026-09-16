@@ -19,7 +19,7 @@
 # NOT do the job either way: it would land inside the version directory rather
 # than at the root where Pages looks for it.
 #
-#   a `vX.Y.Z` tag pushed  ->  /1.2.3/, and `latest` starts pointing at it
+#   a `vX.Y.Z` tag pushed  ->  /1.2/, and `latest` starts pointing at it
 #   run by hand            ->  /dev/, from whatever branch you pick
 #
 # RELEASES ONLY (owner 2026-09). This used to run on every push to main, which
@@ -96,13 +96,21 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+      # ONE DIRECTORY PER MINOR SERIES, not per release: a patch REPLACES the
+      # documentation of the version it patches, so 1.0.0, 1.0.1 and 1.0.9 are
+      # all `/1.0/`. What a version of this site is for is the app somebody
+      # has installed, and a patch does not change what the app does — a
+      # directory per patch is a switcher nobody can choose from and an
+      # archive of near-identical copies.
       - name: Publish the released version
         if: inputs.ref != ''
         env:
           TAG: ${{ inputs.ref }}
         run: |
           version="${TAG#v}"
-          mike deploy -F website/mkdocs.yml --push --update-aliases "$version" latest
+          series="${version%.*}"
+          echo "publishing $version as /$series/"
+          mike deploy -F website/mkdocs.yml --push --update-aliases "$series" latest
           mike set-default -F website/mkdocs.yml --push latest
 
       - name: Publish the unreleased docs (a hand-started run, and only that)
