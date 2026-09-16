@@ -195,7 +195,7 @@ for idx, ts, pil_image in item.frames(fps=1.0):   # 1 frame per second
 
 Importing, tags, groups, subjects, faces, places, events, captions, sequences
 and links are all reachable the same way — see
-[docs/python-api.md](docs/python-api.md).
+[docs/python-api.md](https://github.com/mediacompost/media-compost/blob/main/docs/python-api.md).
 
 ## AI models (optional)
 
@@ -234,7 +234,7 @@ All commands take `--data-dir` to select the library (default `./_data`).
 
 ## More documentation
 
-- [`docs/README.md`](docs/README.md) — the user documentation index: guides to
+- [`docs/README.md`](https://github.com/mediacompost/media-compost/blob/main/docs/README.md) — the user documentation index: guides to
   every part of the app.
 - `SETUP.md` — developer setup: the venv, the frontend dev server, the
   multi-user proxy configuration, the documentation site.
