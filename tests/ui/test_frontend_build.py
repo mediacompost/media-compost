@@ -26,7 +26,7 @@ from media_compost.ui.config import UiConfig
 from media_compost.importer import Importer, ImportOptions
 from media_compost.ui.server import build as build_info
 from media_compost.ui.server import deps
-from media_compost.ui.server.app import app
+from media_compost.ui.server.app import _FRONTEND, app
 from media_compost.ui.server.deps import Library, get_library
 
 OURS = "index-SERVERBUILD.js"
@@ -203,9 +203,19 @@ def test_a_server_that_cannot_name_its_build_enforces_nothing(
 
 
 def test_the_check_is_scoped_to_the_api(client):
-    """The page itself must always load — it is how you get the new build."""
+    """The page itself is never refused — it is how you get the new build.
+
+    NOT `== 200`: the SPA route exists only where `_web_dist` does
+    (`app.py` mounts it behind `_FRONTEND.is_dir()`), so that assertion
+    passed on a machine that had built the frontend and 404'd on one that
+    had not — which is CI, every time. What this test is about is the
+    middleware's SCOPE, and a 404 from a missing bundle is the router
+    saying there is no page here rather than the check refusing one.
+    """
     got = client.get("/", headers={build_info.HEADER: "index-OLD.js"})
-    assert got.status_code == 200
+    assert got.status_code != 409, "the stale-build check refused the page itself"
+    if _FRONTEND.is_dir():
+        assert got.status_code == 200
 
 
 # ---- what a stale page may still do ----------------------------------------
