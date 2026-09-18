@@ -523,7 +523,14 @@ export interface ItemSearchBody {
   show_hidden?: boolean;
   kind?: string;
   sequence?: number | null;
+  /** Drop every item that belongs to a sequence — the sessions' "Skip
+   *  pictures in sequences". */
   hide_sequenced?: boolean;
+  /** FOLD SEQUENCES: drop a member exactly where a sequence holding it has
+   *  its own item in this same view, so a chapter and its pages are not
+   *  both on screen — and the pages stay wherever the chapter is not (a
+   *  group holding them but not it, sequences unticked in the kinds). */
+  fold_sequenced?: boolean;
   pending?: boolean;
   pending_kind?: string;
   /** A RANKING'S OWN VIEW: the items it has placed, in its standings order,

@@ -108,6 +108,7 @@ class ItemSet(Collection):
             kind=self._scope.get("kind", ""),
             sequence=self._scope.get("sequence"),
             hide_sequenced=self._scope.get("hide_sequenced", False),
+            fold_sequenced=self._scope.get("fold_sequenced", False),
             hidden=self._scope.get("hidden", False),
             show_hidden=self._scope.get("show_hidden", False),
             pending=self._scope.get("pending", False),

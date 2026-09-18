@@ -438,10 +438,12 @@ interface UIState {
   rankingDismissed: boolean;
   // Grid media-kind filter (orthogonal). Empty = all kinds.
   mediaKinds: Kind[];
-  // When false, the grid hides items that belong to any sequence (sequence
-  // container items themselves stay visible). On by default, so sequenced pages
-  // show unless the user turns them off.
-  showSequenced: boolean;
+  // FOLD SEQUENCES: when on, a sequence's members give way to the sequence
+  // itself wherever both would be in the view — and stay wherever it would
+  // not be (a group holding the pages but not the chapter, sequences
+  // unticked in the media kinds). The condition is the server's to answer;
+  // all that travels is the flag (`fold_sequenced`). On by default.
+  foldSequenced: boolean;
   // Overlay hidden items into the grid (dimmed); they stay out of all counts.
   showHiddenItems: boolean;
   expanded: Record<number, boolean>;
@@ -713,7 +715,7 @@ interface UIState {
   setGroupFocus: (id: number | null) => void;
 
   toggleMediaKind: (kind: Kind) => void;
-  toggleShowSequenced: () => void;
+  toggleFoldSequenced: () => void;
   toggleShowHiddenItems: () => void;
 
   selectGroup: (id: number, additive: boolean) => void;
@@ -1016,7 +1018,7 @@ export const useUI = create<UIState>((set) => ({
   rankingDismissed: START_SCOPE.rankingDismissed,
   rankedView: START_SCOPE.rankedView,
   mediaKinds: START_SCOPE.mediaKinds,
-  showSequenced: APP_PREFS.showSequenced.read(),
+  foldSequenced: APP_PREFS.foldSequenced.read(),
   showHiddenItems: APP_PREFS.showHiddenItems.read(),
   expanded: loadExpanded(),
   selectedItems: [],
@@ -1413,10 +1415,10 @@ export const useUI = create<UIState>((set) => ({
       if (next.length === all.length) next = []; // all on → "All media"
       return { mediaKinds: next };
     }),
-  toggleShowSequenced: () => set((s) => {
-    const showSequenced = !s.showSequenced;
-    APP_PREFS.showSequenced.write(showSequenced);
-    return { showSequenced };
+  toggleFoldSequenced: () => set((s) => {
+    const foldSequenced = !s.foldSequenced;
+    APP_PREFS.foldSequenced.write(foldSequenced);
+    return { foldSequenced };
   }),
   toggleShowHiddenItems: () => set((s) => {
     const showHiddenItems = !s.showHiddenItems;

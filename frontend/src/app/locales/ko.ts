@@ -266,7 +266,7 @@ const CATALOG: Catalog = {
   "Large": "크게",
   "All media": "모든 미디어",
   "Filter by media kind": "미디어 종류로 필터",
-  "Show sequenced": "시퀀스 항목 표시",
+  "Fold sequences": "시퀀스 접기",
   "Show hidden": "숨김 항목 표시",
   "Recent": "최근",
   "Show this category": "이 분류 보기",

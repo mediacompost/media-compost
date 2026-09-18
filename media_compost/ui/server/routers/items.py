@@ -345,6 +345,7 @@ async def facets(
     kind: str = Query(""),
     sequence: Optional[int] = Query(None),
     hide_sequenced: bool = Query(False),
+    fold_sequenced: bool = Query(False),
     pending: bool = Query(False),
     pending_kind: str = Query(""),
 ):
@@ -366,19 +367,21 @@ async def facets(
     Left to race them each one took FIFTEEN seconds."""
     return await dbgate.guarded(
         request, _facets_sync, s, groups, ungrouped, trash, kind, sequence,
-        hide_sequenced, hidden, show_hidden, pending, pending_kind, untagged)
+        hide_sequenced, fold_sequenced, hidden, show_hidden, pending,
+        pending_kind, untagged)
 
 
 def _facets_sync(s: Session, groups: str, ungrouped: bool, trash: bool,
                  kind: str, sequence: Optional[int], hide_sequenced: bool,
-                 hidden: bool, show_hidden: bool, pending: bool,
-                 pending_kind: str, untagged: bool):
+                 fold_sequenced: bool, hidden: bool, show_hidden: bool,
+                 pending: bool, pending_kind: str, untagged: bool):
     """The count proper — see `facets`."""
     from sqlalchemy import func
 
     cands = search.search_filtered(s, groups, ungrouped, trash,
                              kind=kind, sequence=sequence,
-                             hide_sequenced=hide_sequenced, hidden=hidden,
+                             hide_sequenced=hide_sequenced,
+                             fold_sequenced=fold_sequenced, hidden=hidden,
                              show_hidden=show_hidden, pending=pending,
                              pending_kind=pending_kind, untagged=untagged)
     count = s.execute(
@@ -403,6 +406,7 @@ async def list_items(
     kind: str = Query("", description="Restrict to a media kind: image | video."),
     sequence: Optional[int] = Query(None, description="Only members of this sequence."),
     hide_sequenced: bool = Query(False, description="Hide items that belong to a sequence."),
+    fold_sequenced: bool = Query(False, description="Hide a sequence's members where the sequence itself is in this view."),
     pending: bool = Query(False, description="Only items with pending AI tags/captions."),
     pending_kind: str = Query("", description="Narrow Pending to 'tags', 'captions' or 'faces'."),
     page: int = 1, page_size: int = 60, sort: str = "import_desc",
@@ -413,20 +417,22 @@ async def list_items(
     Through `dbgate` — it is the same page walk `query_items` does."""
     return await dbgate.guarded(
         request, _list_items_sync, s, lib, groups, ungrouped, untagged, trash,
-        hidden, show_hidden, kind, sequence, hide_sequenced, pending,
-        pending_kind, page, page_size, sort)
+        hidden, show_hidden, kind, sequence, hide_sequenced, fold_sequenced,
+        pending, pending_kind, page, page_size, sort)
 
 
 def _list_items_sync(s: Session, lib: Library, groups: str, ungrouped: bool,
                      untagged: bool, trash: bool, hidden: bool,
                      show_hidden: bool, kind: str, sequence: Optional[int],
-                     hide_sequenced: bool, pending: bool, pending_kind: str,
+                     hide_sequenced: bool, fold_sequenced: bool,
+                     pending: bool, pending_kind: str,
                      page: int, page_size: int, sort: str):
     """The listing proper — see `list_items`."""
     res = Resolver(s)
     base = search.search_filtered(s, groups, ungrouped, trash,
                             kind=kind, sequence=sequence,
-                            hide_sequenced=hide_sequenced, hidden=hidden,
+                            hide_sequenced=hide_sequenced,
+                            fold_sequenced=fold_sequenced, hidden=hidden,
                             show_hidden=show_hidden, pending=pending,
                             pending_kind=pending_kind, untagged=untagged,
                             resolver=res)

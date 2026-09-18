@@ -266,7 +266,7 @@ const CATALOG: Catalog = {
   "Large": "大",
   "All media": "全部媒体",
   "Filter by media kind": "按媒体类型筛选",
-  "Show sequenced": "显示序列中的条目",
+  "Fold sequences": "折叠序列",
   "Show hidden": "显示隐藏条目",
   "Recent": "最近",
   "Show this category": "显示该分类",

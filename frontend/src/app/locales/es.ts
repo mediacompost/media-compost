@@ -267,7 +267,7 @@ const CATALOG: Catalog = {
   "Large": "Grandes",
   "All media": "Todos los medios",
   "Filter by media kind": "Filtrar por tipo de medio",
-  "Show sequenced": "Mostrar los de secuencias",
+  "Fold sequences": "Agrupar secuencias",
   "Show hidden": "Mostrar ocultos",
   "Recent": "Recientes",
   "Show this category": "Mostrar esta categoría",

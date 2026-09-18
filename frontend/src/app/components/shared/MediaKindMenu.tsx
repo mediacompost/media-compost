@@ -23,7 +23,7 @@ export function MediaKindMenu({ selected, onToggle, title, extra = [] }: {
   onToggle: (k: Kind) => void;
   /** The trigger's tooltip — what the kinds narrow, which differs per host. */
   title: string;
-  /** Further toggles under a rule (the grid's "show sequenced" / "show
+  /** Further toggles under a rule (the grid's "fold sequences" / "show
    *  hidden"); a host with none passes nothing and gets no rule. */
   extra?: readonly { label: string; on: boolean; toggle: () => void; icon: string }[];
 }) {
@@ -47,7 +47,7 @@ export function MediaKindMenu({ selected, onToggle, title, extra = [] }: {
     })),
   ];
   // The trigger stays neutral regardless of the current filter/toggles —
-  // highlighting it (e.g. whenever "Show sequenced" is off, its default)
+  // highlighting it (e.g. whenever "Fold sequences" is on, its default)
   // read as a false "active" signal. The selection is conveyed by the
   // label and the checked rows inside the menu instead.
   return (

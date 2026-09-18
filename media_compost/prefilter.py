@@ -1456,6 +1456,86 @@ def _pending_clause(pending_kind: str) -> sa.ColumnElement:
     return or_(*parts) if parts else sa.false()
 
 
+def containers_in_view(where: list[sa.ColumnElement], *,
+                       ranking: Optional[str] = None) -> sa.Select:
+    """The SEQUENCE CONTAINERS this view shows — the view's own where list,
+    asked of the containers.
+
+    ``Item.kind == "sequence"`` says nothing new (a container is one by
+    construction) and is what keeps the statement off the whole library:
+    with it SQLite seeks ``ix_items_kind`` and reads the containers, without
+    it the view's own scan is simply run a second time (measured at a
+    million items: 862 ms against 442 for the same folded count).
+
+    Uncorrelated on purpose (``correlate(None)``): it is a question about
+    the VIEW, not about any row being tested, so SQLite runs it once per
+    statement and probes the membership per item.
+    """
+    return base_select([Item.id], None, where + [Item.kind == "sequence"],
+                       ranking=ranking).correlate(None)
+
+
+def view_shows_a_container(s: Session, where: list[sa.ColumnElement], *,
+                           ranking: Optional[str] = None) -> bool:
+    """Is there a sequence in this view for anything to fold onto?
+
+    The fold's own question, asked once and cheaply, so that a view holding
+    no sequence pays nothing PER ROW for it — which is most views in most
+    libraries, and every view in a library of loose pictures. Measured at a
+    million items with a fifth of them in books: 0.05 ms over All Items
+    (the first container answers at once), 1.1 ms under a search, 8.3 ms
+    for the worst case of proving a negative over a group — against the
+    16-230 ms the clause itself costs those same views.
+
+    A superset is safe here in both directions: the where list of an
+    inexactly-compiled search can only claim MORE containers than the view
+    really shows, and a false yes costs a clause that folds nothing, where
+    a no is the truth.
+    """
+    return bool(s.execute(
+        containers_in_view(where, ranking=ranking).limit(1)).first())
+
+
+def fold_sequenced_clause(
+    where: list[sa.ColumnElement], *, ranking: Optional[str] = None,
+) -> sa.ColumnElement:
+    """Hide a member whose OWN sequence is in this view — the grid's "Fold
+    sequences", as one WHERE clause over ``Item``.
+
+    A page of a chapter and the chapter itself are two items, and in a view
+    holding both the page is already on screen: it is what the chapter's card
+    is a picture of. So the fold drops a member exactly where a sequence
+    holding it has its CONTAINER in the same view — and where it does not, the
+    member stays, which is the whole of the rule. A group holding the pages
+    but not the chapter shows the pages; narrowing the media kinds to images
+    takes every container out of the view and so shows them too. Nothing here
+    is a fact about the item alone, which is why this is not a
+    ``scope_clauses`` clause: it takes the view's OWN where list, the search's
+    compiled clause included, and asks it again of the containers.
+
+    The where list passed in must NOT already hold this clause: the view a
+    container is judged against is the one without the fold. (A container
+    that is itself a member of another sequence is not a shape the importer
+    builds — a book inside a book is a flat sibling — so one step is the
+    whole answer rather than the first of a walk.)
+
+    AN ANTI-JOIN PROBE, not an id list. `Item.id NOT IN (the members of the
+    shown containers)` counts faster (323 ms against 444 at a million items)
+    and pages 200 times slower (58 ms against 0.27): it has to materialize
+    every folded member before it can answer about the first row, where the
+    probe streams in sort order and stops at the page's sixty. The page is
+    what somebody is waiting for; the count is memoized on the revision
+    (`routers/items.scope_count`).
+    """
+    si = aliased(SequenceItem)
+    sq = aliased(Sequence)
+    return not_(exists(
+        select(sa.literal(1)).select_from(si)
+        .join(sq, sq.id == si.sequence_id)
+        .where(si.item_id == Item.id,
+               sq.item_id.in_(containers_in_view(where, ranking=ranking)))))
+
+
 def base_select(cols, sequence: Optional[int],
                 where: list[sa.ColumnElement], *,
                 occurrences: bool = False,

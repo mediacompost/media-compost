@@ -18,7 +18,7 @@ export const APP_PREFS = {
   sidebarPreviewSmall: boolPref("mc.sidebarPreviewSmall", false),
   qaHeight: numPref("mc.qaHeight", { def: 220, min: 1 }),
   qaCollapsed: boolPref("mc.qaCollapsed", false),
-  showSequenced: boolPref("mc.showSequenced", true),
+  foldSequenced: boolPref("mc.foldSequenced", true),
   showHiddenItems: boolPref("mc.showHiddenItems", false),
   qaEnabled: boolPref("mc.qaEnabled", true),
   qaMode: boolPref("mc.qaMode", false),

@@ -232,8 +232,8 @@ export function ItemGrid() {
   const showSequence = useUI((s) => s.showSequence);
   const mediaKinds = useUI((s) => s.mediaKinds);
   const toggleMediaKind = useUI((s) => s.toggleMediaKind);
-  const showSequenced = useUI((s) => s.showSequenced);
-  const toggleShowSequenced = useUI((s) => s.toggleShowSequenced);
+  const foldSequenced = useUI((s) => s.foldSequenced);
+  const toggleFoldSequenced = useUI((s) => s.toggleFoldSequenced);
   const showHiddenItems = useUI((s) => s.showHiddenItems);
   const toggleShowHiddenItems = useUI((s) => s.toggleShowHiddenItems);
   const selectedItems = useUI((s) => s.selectedItems);
@@ -1796,7 +1796,7 @@ export function ItemGrid() {
             onToggle={(k) => toggleMediaKind(k)}
             title={t("Filter by media kind")}
             extra={[
-              { label: "Show sequenced", on: showSequenced, toggle: toggleShowSequenced, icon: "layers" },
+              { label: "Fold sequences", on: foldSequenced, toggle: toggleFoldSequenced, icon: "layers" },
               { label: "Show hidden", on: showHiddenItems, toggle: toggleShowHiddenItems, icon: "visibility" },
             ]}
           />

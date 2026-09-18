@@ -96,7 +96,7 @@ At the right end of the same row:
 
 - A **media-kind control** — a multi-select dropdown of images / videos / sequences. With none or all three checked, the grid shows all kinds and the button reads "All media"; otherwise it lists the checked kinds.
 - Below the kinds, the same menu holds two grid toggles:
-  - **Show sequenced** — whether items that belong to a sequence appear in the grid (the sequence container items themselves always stay visible).
+  - **Fold sequences** — on by default: a sequence's members give way to the sequence itself wherever both would be in the view, so a chapter shows as one card instead of as its own card and all of its pages. The members stay wherever the sequence would not be there to stand for them: a group holding the pages but not the chapter lists the pages, and so does the grid with sequences unticked in the media kinds above. Inside a sequence's own view it does nothing.
   - **Show hidden** — overlays hidden items into the current view, each marked with a crossed-out eye beside its name; they remain excluded from every category count.
 - The **grid-size control** (S/M/L) sits at the far right.
 

@@ -129,6 +129,17 @@ class CandidateSet:
     #: turned into a WHERE clause because the join IS the membership AND the
     #: order — the sequence view's own shape.
     ranking: Optional[str] = None
+    #: The grid's "Fold sequences" waiting for the RESIDUE pass — set only
+    #: where the search does not compile exactly. The clause
+    #: (`prefilter.fold_sequenced_clause`) asks the compiled where list which
+    #: containers this view shows, and a compiled clause that is only a
+    #: SUPERSET would answer with containers the search does not really
+    #: match — hiding their pages, which is an item MISSING from the view
+    #: rather than a slow answer. So where there is a residue the fold waits
+    #: for the evaluated set instead, where the containers are known exactly
+    #: (`_drop_folded_members`). Both paths mean the same thing, which is
+    #: what `tests/ui/test_search_equivalence.py` holds them to.
+    fold_sequenced: bool = False
 
     def ids_select(self):
         return prefilter.base_select([Item.id], self.sequence, self.where,
@@ -172,7 +183,8 @@ def scope_of(body) -> dict:
     return dict(
         groups=body.groups, ungrouped=body.ungrouped, trash=body.trash,
         kind=body.kind, sequence=body.sequence,
-        hide_sequenced=body.hide_sequenced, hidden=body.hidden,
+        hide_sequenced=body.hide_sequenced,
+        fold_sequenced=body.fold_sequenced, hidden=body.hidden,
         show_hidden=body.show_hidden, pending=body.pending,
         pending_kind=body.pending_kind, untagged=body.untagged,
         ranking=body.ranking, ranking_pool=body.ranking_pool,
@@ -188,7 +200,7 @@ def search_filtered(
     query: "Optional[q.Group]" = None,
     resolver: Optional[Resolver] = None,
     ranking: Optional[int] = None, ranking_pool: Optional[int] = None,
-    ranking_dismissed: bool = False,
+    ranking_dismissed: bool = False, fold_sequenced: bool = False,
 ) -> CandidateSet:
     """The candidate set for one view: scope + search, described as SQL.
 
@@ -234,9 +246,40 @@ def search_filtered(
             s, query, similar=similar, value_tags=value_tags)
         if clause is not None:
             where = where + [clause]
+    # THE FOLD IS ASKED OF THE VIEW, so it comes last: what it needs is the
+    # where list this view is paged from, and it must not hold the fold
+    # itself (the container is judged by the view WITHOUT it). Inside a
+    # sequence's own member view there is nothing to fold — every item shown
+    # is a member of the one sequence, and its container is not in the view
+    # at all.
+    #
+    # AND A VIEW WITH NO SEQUENCE IN IT PAYS NOTHING PER ROW: the two cheap
+    # halves of "is there anything to fold" are asked first — the media
+    # kinds, which say so for free, and one bounded probe for a container
+    # (`view_shows_a_container`, an indexed seek, which a library of loose
+    # pictures answers in a fraction of a millisecond).
+    fold = (fold_sequenced and sequence is None
+            and _kinds_can_hold_a_container(kind)
+            and prefilter.view_shows_a_container(s, where, ranking=rank_key))
+    if fold and residue is None:
+        where = where + [prefilter.fold_sequenced_clause(where,
+                                                         ranking=rank_key)]
     return CandidateSet(where=where, residue=residue, sequence=sequence,
                         similar=similar, value_tags=value_tags,
-                        ranking=rank_key)
+                        ranking=rank_key,
+                        fold_sequenced=fold and residue is not None)
+
+
+def _kinds_can_hold_a_container(kind: str) -> bool:
+    """Could this view show a sequence at all?
+
+    With the media kinds narrowed past sequences no container is on screen,
+    so nothing folds — and the clause would be a subquery asked to prove it
+    per view. Answered from the scope string rather than from SQL: it is the
+    one part of "is there anything to fold" that costs nothing to know.
+    """
+    kinds = {k.strip() for k in kind.split(",") if k.strip()}
+    return not kinds or "sequence" in kinds
 
 
 def _dismissed_clause(ranking_id: int):
@@ -446,4 +489,36 @@ def evaluate_residue(
         )
         if q.evaluate(residue, qctx):
             matched.append(iid)
+    if cands.fold_sequenced:
+        matched = _drop_folded_members(s, matched)
     return matched
+
+
+def _drop_folded_members(s: Session, matched: list[int]) -> list[int]:
+    """The residue path's "Fold sequences" — drop a member whose own
+    sequence's CONTAINER is in the same answer.
+
+    The SQL clause (`prefilter.fold_sequenced_clause`) says exactly this
+    about a view whose search compiled exactly; here the view's answer has
+    just been evaluated item by item, so the containers it shows are simply
+    the sequence containers in ``matched`` and one pass over the membership
+    rows of the matched items settles it. Order is the caller's, untouched.
+    """
+    if not matched:
+        return matched
+    shown = set(matched)
+    folded: set[int] = set()
+    for chunk in chunked(matched):
+        for member_id, container_id in s.execute(
+            select(SequenceItem.item_id, Sequence.item_id)
+            .join(Sequence, Sequence.id == SequenceItem.sequence_id)
+            # The chunk is the only id list in the statement: `shown` is
+            # the whole answer and is tested in Python, since an unsplit
+            # `IN` over it would go quadratic past SQLite's cap.
+            .where(SequenceItem.item_id.in_(chunk))
+        ).all():
+            if container_id in shown:
+                folded.add(member_id)
+    if not folded:
+        return matched
+    return [iid for iid in matched if iid not in folded]

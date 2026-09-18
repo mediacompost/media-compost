@@ -281,7 +281,18 @@ class ItemSearchRequest(RequestModel):
     show_hidden: bool = False
     kind: str = ""
     sequence: Optional[int] = None
+    #: Drop every item that belongs to a sequence, whatever else is on
+    #: screen — the three sessions' "Skip pictures in sequences", where the
+    #: question is about the picture alone.
     hide_sequenced: bool = False
+    #: THE GRID'S "FOLD SEQUENCES": drop a member exactly where a sequence
+    #: holding it has its CONTAINER in this same view, so a chapter and its
+    #: pages are not both on screen — and the pages stay wherever the
+    #: chapter is not shown (a group holding them but not it, a media-kind
+    #: filter with sequences unticked). Unlike every other field here it is
+    #: not a fact about the item: it asks this view's own where list again,
+    #: of the containers (`prefilter.fold_sequenced_clause`).
+    fold_sequenced: bool = False
     #: A RANKING'S OWN VIEW: the items it has placed, in its standings order,
     #: best first — and `ranking_pool` narrows that to one pool's fit.
     #: The scope is the JOIN rather than a clause, since a standing is fitted

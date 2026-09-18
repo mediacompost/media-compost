@@ -51,7 +51,7 @@ export function useViewRequest(): {
   const rankingDismissed = useUI((s) => s.rankingDismissed);
   const rankedView = useUI((s) => s.rankedView);
   const mediaKinds = useUI((s) => s.mediaKinds);
-  const showSequenced = useUI((s) => s.showSequenced);
+  const foldSequenced = useUI((s) => s.foldSequenced);
   const showHiddenItems = useUI((s) => s.showHiddenItems);
   const search = useUI((s) => s.search);
   const sortField = useUI((s) => s.sortField);
@@ -69,9 +69,13 @@ export function useViewRequest(): {
     ? `random_${sortSeed}` : `${sortField}_${sortDir}`;
   // The media-kind filter doesn't apply inside a single sequence's member view.
   const kind = sequenceView != null ? "" : [...mediaKinds].sort().join(",");
-  // "Show sequenced items" is meaningless inside a sequence's own member view;
-  // when it's off (outside a sequence view) we hide sequenced pages.
-  const hideSeq = sequenceView == null && !showSequenced;
+  // FOLD SEQUENCES — a member gives way to its own sequence where both would
+  // be in the view. Which members those are is the server's question (it is
+  // the view asked again, of the containers); all that travels is the flag.
+  // Inside a sequence's own member view there is nothing to fold: every item
+  // shown is a member of the one sequence and its container is not in the
+  // view at all.
+  const foldSeq = sequenceView == null && foldSequenced;
 
   // The whole query lives in `search` as the serialized string; the store keeps
   // it keystroke-fresh for the input, and this DEBOUNCED copy is what drives
@@ -105,11 +109,11 @@ export function useViewRequest(): {
         selectedGroups, ungrouped, untagged, trashView, hiddenView, pendingView,
         pendingKindParam ?? null, sequenceView, rankingView, rankingPool,
         rankingDismissed, rankedView,
-        kind, hideSeq, showHiddenItems,
+        kind, foldSeq, showHiddenItems,
       ]),
     [selectedGroups, ungrouped, untagged, trashView, hiddenView, pendingView,
      pendingKindParam, sequenceView, rankingView, rankingPool, rankingDismissed,
-     rankedView, kind, hideSeq,
+     rankedView, kind, foldSeq,
      showHiddenItems]
   );
 
@@ -121,7 +125,7 @@ export function useViewRequest(): {
       show_hidden: showHiddenItems, sequence: sequenceView, kind,
       ranking: rankingView, ranking_pool: rankingPool,
       ranking_dismissed: rankingDismissed,
-      hide_sequenced: hideSeq, sort,
+      fold_sequenced: foldSeq, sort,
     }),
     // filtersKey covers every scope field by VALUE (the arrays inside change
     // identity without changing meaning).

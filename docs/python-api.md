@@ -199,6 +199,7 @@ lib.pending                   # items with a machine's guess still waiting
 | `trash`, `hidden`, `show_hidden` | Which lifecycle state to list |
 | `kind` | `"image"`, `"video"` or `"sequence"` |
 | `sequence`, `hide_sequenced` | Only a sequence's members / drop items that are in one |
+| `fold_sequenced` | Drop a sequence's members where the sequence's own item is in the same result — what the grid's **Fold sequences** does |
 | `pending`, `pending_kind` | Items awaiting review; `pending_kind` is `"tags"`, `"captions"` or `"faces"` |
 | `sort` | `"recent"` (default), `"name"`, `"first"`, `"modified"`, `"resolution"`, `"taken"`, `"random"`, … as in the app |
 

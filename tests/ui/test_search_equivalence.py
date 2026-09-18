@@ -284,8 +284,8 @@ def lib(tmp_path_factory):
 
 def _oracle_ids(s, tree, *, groups="", ungrouped=False, untagged=False,
                 trash=False, hidden=False, show_hidden=False, kind="",
-                sequence=None, hide_sequenced=False, pending=False,
-                pending_kind="") -> list[int]:
+                sequence=None, hide_sequenced=False, fold_sequenced=False,
+                pending=False, pending_kind="") -> list[int]:
     trashed = set(s.execute(select(TrashedItem.item_id)).scalars().all())
     hidden_ids = set(s.execute(
         select(Item.id).where(Item.hidden.is_(True))).scalars().all())
@@ -483,7 +483,29 @@ def _oracle_ids(s, tree, *, groups="", ungrouped=False, untagged=False,
             if not q.evaluate(tree, ctx):
                 continue
         out.append(iid)
+    if fold_sequenced and sequence is None:
+        out = _fold_members(s, out)
     return out
+
+
+def _fold_members(s, matched: list[int]) -> list[int]:
+    """FOLD SEQUENCES said the plain way: once the view's answer is known,
+    a member whose own sequence's CONTAINER is in it gives way to it.
+
+    It reads the whole membership table and tests the answer in Python,
+    which is what an oracle is for — the backend asks the same question of
+    SQL (`prefilter.fold_sequenced_clause`) where the search compiles
+    exactly, and of the evaluated set where it does not.
+    """
+    shown = set(matched)
+    container_of: dict[int, list[int]] = {}
+    for member_id, container_id in s.execute(
+        select(SequenceItem.item_id, Sequence.item_id)
+        .join(Sequence, Sequence.id == SequenceItem.sequence_id)
+    ).all():
+        container_of.setdefault(member_id, []).append(container_id)
+    return [iid for iid in matched
+            if not any(c in shown for c in container_of.get(iid, []))]
 
 
 # ---- random condition trees over the whole grammar --------------------------
@@ -657,6 +679,38 @@ def test_random_trees_match_oracle(lib):
         f"nothing")
 
 
+def test_random_trees_match_oracle_with_sequences_folded(lib):
+    """The same 300 trees with "Fold sequences" on.
+
+    The fold asks the view's own where list again, of the CONTAINERS — so
+    every tree is really asked twice, and a compiled clause that is only a
+    superset would fold away pages whose chapter the search does not match.
+    That is the failure this run is here for: where the tree leaves a
+    residue the fold waits for the evaluated answer instead
+    (`ops/search._drop_folded_members`), and both paths have to land on the
+    oracle's plain reading.
+    """
+    client, library = lib
+    rng = random.Random(42)                      # the same stream as above
+    folded = 0
+    with library.db.session() as s:
+        for i in range(300):
+            tree = _rand_tree(rng)
+            got, total = _post_ids(client, tree, fold_sequenced=True)
+            want = _oracle_ids(s, tree, fold_sequenced=True)
+            assert set(got) == set(want), (
+                f"tree #{i}: {tree.model_dump_json()}\n"
+                f"missing={sorted(set(want) - set(got))} "
+                f"extra={sorted(set(got) - set(want))}"
+            )
+            assert total == len(want)
+            if len(want) != len(_oracle_ids(s, tree)):
+                folded += 1
+    assert folded, ("the fold never took anything out, so this run says "
+                    "nothing — does the seeded library still hold a "
+                    "sequence whose container the trees match?")
+
+
 def test_the_random_trees_reach_every_condition_kind(lib):
     """The second half of "non-vacuous": the run above proves the compiler
     and the evaluator AGREE, and this proves they agreed about everything.
@@ -699,6 +753,15 @@ def test_scopes_match_oracle(lib):
             {}, {"trash": True}, {"hidden": True}, {"show_hidden": True},
             {"ungrouped": True}, {"untagged": True}, {"kind": "video"},
             {"kind": "image,sequence"}, {"hide_sequenced": True},
+            # FOLD SEQUENCES, alone and under each scope that can take the
+            # containers out from under it: a group holding the members, a
+            # kind filter with sequences unticked, the sequence view itself.
+            {"fold_sequenced": True},
+            {"fold_sequenced": True, "kind": "image"},
+            {"fold_sequenced": True, "kind": "image,sequence"},
+            {"fold_sequenced": True, "groups": str(gid)},
+            {"fold_sequenced": True, "show_hidden": True},
+            {"fold_sequenced": True, "sequence": seq_id},
             {"pending": True}, {"pending": True, "pending_kind": "faces"},
             {"pending": True, "pending_kind": "captions"},
             {"groups": str(gid)}, {"sequence": seq_id},
