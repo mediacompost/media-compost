@@ -817,7 +817,8 @@ export function ItemGrid() {
       start: fetchFirstRow * columns,
       end: (fetchFirstRow + fetchRows + 1) * columns - 1,
     });
-  const { total, getItem, getIdAt, indexOfId, loadedIds, loadedItems } = view;
+  const { total, getItem, getIdAt, indexOfId, indexOfMember, loadedIds,
+          loadedItems } = view;
 
   // Loaded items by id: context-menu targets, drag ghosts, double-click prefs.
   const itemById = useMemo(() => {
@@ -996,13 +997,6 @@ export function ItemGrid() {
     setVisibleItemIds(loadedIds);
   }, [loadedIds, setVisibleItemIds]);
 
-  // Keep the keyboard cursor aligned with the anchor: a click (which sets the
-  // anchor) reseats the cursor there, so the next arrow starts from what was
-  // clicked. Shift+Arrow leaves the anchor untouched, so the cursor keeps moving.
-  useEffect(() => {
-    cursorRef.current = anchorItem;
-  }, [anchorItem]);
-
   // WHERE THE ANCHOR SITS IN THE VIEW, remembered when it is clicked.
   //
   // A shift+click's range is between two POSITIONS, and the grid can only
@@ -1011,6 +1005,60 @@ export function ItemGrid() {
   // unanswerable and the click collapsed to selecting one item. The index
   // does not fall out: it is what the grid pages by.
   const anchorIdx = useRef<number | null>(null);
+
+  // Keep the keyboard cursor aligned with the anchor: a click (which sets the
+  // anchor) reseats the cursor there, so the next arrow starts from what was
+  // clicked. Shift+Arrow leaves the anchor untouched, so the cursor keeps moving.
+  useEffect(() => {
+    cursorRef.current = anchorItem;
+    // WHICH CARD, kept with it. An arrow has just named the one it stepped
+    // to; anything else that moved the anchor is a click, which named the
+    // card it was on. `cursorIdx` verifies whichever this is before
+    // believing it, so a stale index costs nothing.
+    const at = cursorIdxRef.current;
+    if (at == null || getIdAt(at) !== anchorItem) {
+      cursorIdxRef.current = anchorIdx.current;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [anchorItem]);
+
+  /** WHERE THE ANCHOR SITS, as a flat position.
+   *
+   *  The card it was set on while the pages still hold that item there — an
+   *  id lookup cannot tell two copies of a repeated page apart, and in a
+   *  sequence view it answers with whichever copy the index map wrote last —
+   *  else what the loaded pages say, else where it was when it was set. */
+  const anchorIndex = (): number | null => {
+    const at = anchorIdx.current;
+    if (at != null && getIdAt(at) === anchorItem) return at;
+    const known = anchorItem != null ? indexOfId(anchorItem) : -1;
+    return known !== -1 ? known : anchorIdx.current;
+  };
+
+  /** Select the stretch between two flat POSITIONS — what a shift gesture
+   *  means, for the mouse and the arrow keys alike. The ids come from the
+   *  loaded pages when they cover the range (the common case, no request),
+   *  and from the server when they do not, which is the one question the
+   *  grid cannot answer about its own view. False when neither could. */
+  const selectRange = async (from: number, to: number): Promise<boolean> => {
+    const lo = Math.min(from, to);
+    const hi = Math.max(from, to);
+    const want = hi - lo + 1;
+    const local: number[] = [];
+    for (let i = lo; i <= hi && local.length === i - lo; i++) {
+      const at = getIdAt(i);
+      if (at != null) local.push(at);
+    }
+    if (local.length === want) {
+      setSelectedItems(local);
+      return true;
+    }
+    try {
+      const got = await api.itemIdRange(viewReq, lo, want);
+      if (got.ids.length) { setSelectedItems(got.ids); return true; }
+    } catch { /* the caller falls back to its own answer */ }
+    return false;
+  };
 
   /** One click's selection — and a SHIFT range is between two POSITIONS.
    *
@@ -1021,42 +1069,29 @@ export function ItemGrid() {
    * 167 both in it, the "range" between them was the hundred-odd ids that
    * happen to sit between them in an array with a hole in the middle. And
    * when the anchor's page HAS been dropped, `indexOf` answers -1 and the
-   * click collapsed to selecting one item.
-   *
-   * Both go away by working in flat indices, which is what the grid pages
-   * by and what does not fall out of the window. The ids come from the
-   * loaded pages when every index in the range is drawn — the common case,
-   * and no request — and from the server (`api.itemIdRange`) when they are
-   * not, which is the one question the grid cannot answer about its own
-   * view.
+   * click collapsed to selecting one item. Both go away by working in flat
+   * indices (`anchorIndex`, `selectRange`), which is what the grid pages by
+   * and what does not fall out of the window.
    */
   const clickSelect = async (id: number, index: number,
                              shift: boolean, meta: boolean) => {
-    // The anchor's own position: what the loaded pages say when they still
-    // hold it, else where it was when it was clicked.
-    const known = anchorItem != null ? indexOfId(anchorItem) : -1;
-    const from = known !== -1 ? known : anchorIdx.current;
-    if (shift && !meta && from != null) {
-      const lo = Math.min(from, index);
-      const hi = Math.max(from, index);
-      const want = hi - lo + 1;
-      const local: number[] = [];
-      for (let i = lo; i <= hi && local.length === i - lo; i++) {
-        const at = getIdAt(i);
-        if (at != null) local.push(at);
-      }
-      if (local.length === want) {
-        setSelectedItems(local);
-        return;
-      }
-      try {
-        const got = await api.itemIdRange(viewReq, lo, want);
-        if (got.ids.length) { setSelectedItems(got.ids); return; }
-      } catch { /* fall through to the loaded-pages range */ }
+    const from = anchorIndex();
+    if (shift && !meta && from != null && await selectRange(from, index)) {
+      return;
     }
-    selectItem(id, { meta, shift }, loadedIds);
-    // The anchor moved unless this was a shift-extend, which keeps it.
-    if (!shift) anchorIdx.current = index;
+    // A REPEATED PAGE IS SEVERAL CARDS OF ONE ITEM, so a plain click on
+    // another of its cards is not the click that lets a selection go —
+    // `selectItem`'s way out, which every list here has — but a move to a
+    // different occurrence of the same picture. What moved is the card.
+    const otherCopy = !shift && !meta && selectedItems.length === 1
+      && selectedItems[0] === id && anchorIndex() !== index;
+    if (!otherCopy) selectItem(id, { meta, shift }, loadedIds);
+    // The anchor moved unless this was a shift-extend, which keeps it —
+    // and with it the card an arrow key carries on from.
+    if (!shift) {
+      anchorIdx.current = index;
+      cursorIdxRef.current = index;
+    }
   };
 
   // Cmd/Ctrl+A selects every LOADED grid item — unless the user is typing in a
@@ -1186,6 +1221,30 @@ export function ItemGrid() {
   // store's `anchorItem`; this tracks where the cursor currently sits so
   // successive Shift+Arrow presses extend from the last cursor, not the anchor.
   const cursorRef = useRef<number | null>(null);
+  // WHICH CARD THAT IS — the flat index, because in a SEQUENCE VIEW the item
+  // id does not say: the grid draws a repeated page once per position and
+  // `indexOfId` answers with whichever copy was written to the map last. A
+  // blank page at positions 2 and 30 therefore stepped 2 → 31, the card after
+  // its OTHER appearance. The index is checked against the id before it is
+  // believed, so a view that moved underneath falls back to the lookup.
+  const cursorIdxRef = useRef<number | null>(null);
+
+  /** WHICH CARD a walk through the view is on, in flat indices.
+   *
+   *  Three answers, in the order that can tell two copies of one page apart:
+   *  the remembered card while it still holds that item; the OCCURRENCE the
+   *  selection names (`selMembers`), which is how a step taken in the
+   *  preview is carried on from here; and last the id's own lookup, exact
+   *  everywhere but a sequence view. */
+  const cursorIdx = (id: number | null | undefined): number => {
+    const at = cursorIdxRef.current;
+    if (id != null && at != null && getIdAt(at) === id) return at;
+    if (sequenceView != null && selMembers.size === 1) {
+      const m = indexOfMember([...selMembers][0]);
+      if (m !== -1 && (id == null || getIdAt(m) === id)) return m;
+    }
+    return id != null ? indexOfId(id) : -1;
+  };
 
   // Reset scroll to the top whenever the underlying query changes.
   useEffect(() => {
@@ -1319,7 +1378,7 @@ export function ItemGrid() {
     // leaves the selection alone until the next press.
     const curId = cursorRef.current ?? anchorItem ??
       (selectedItems.length ? selectedItems[selectedItems.length - 1] : getIdAt(0));
-    let cur = curId != null ? indexOfId(curId) : 0;
+    let cur = cursorIdx(curId);
     if (cur === -1) cur = 0;
     // Grouped, `cur ± columns` is wrong rather than merely imprecise: a
     // section's startIdx is generally not a multiple of `columns`, so the
@@ -1336,9 +1395,24 @@ export function ItemGrid() {
     scrollRowIntoView(next);
     if (nextId == null) return; // page not loaded yet — scrolled it into reach
     cursorRef.current = nextId;
-    // Shift extends from the store anchor; a plain arrow selects one and resets
-    // it. The ordered list for range math is the loaded ids in view order.
-    selectItem(nextId, { meta: false, shift: e.shiftKey }, loadedIds);
+    cursorIdxRef.current = next;
+    // Shift extends from the store anchor; a plain arrow selects one and
+    // resets it. BETWEEN TWO POSITIONS, the way a shift+click's range is —
+    // an id lookup would take the range to the wrong copy of a repeated
+    // page, and the occurrences the ring names (below) would then cover a
+    // different stretch to the items selected.
+    const from = e.shiftKey ? anchorIndex() : null;
+    if (from != null) {
+      void selectRange(from, next);
+    } else if (selectedItems.length === 1 && selectedItems[0] === nextId
+               && !e.shiftKey) {
+      // The step landed on ANOTHER CARD OF THE SAME ITEM — a repeated page.
+      // `selectItem` reads that as the click on the only picked card, which
+      // is the way back out of a selection, and would let it go under an
+      // arrow key. What moved is the card, not the selection.
+    } else {
+      selectItem(nextId, { meta: false, shift: e.shiftKey }, loadedIds);
+    }
     if (sequenceView != null) {
       if (e.shiftKey && memberAnchorIdx.current != null) {
         setSelMembers(new Set(membersInRange(memberAnchorIdx.current, next)));
@@ -1356,7 +1430,9 @@ export function ItemGrid() {
   // scrolled into view so it's visible once the overlay closes.
   useEffect(() => {
     if (!useUI.getState().quickLook || selectedItems.length !== 1) return;
-    const idx = indexOfId(selectedItems[0]);
+    // Through `cursorIdx`, so a repeated page scrolls to the copy the
+    // preview actually stepped onto rather than to another of its cards.
+    const idx = cursorIdx(selectedItems[0]);
     if (idx >= 0) scrollRowIntoView(idx);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedItems]);

@@ -446,16 +446,27 @@ function SequenceNav({ seqs, itemId, pick, onPick, onGo, t }: {
   // item. A book's blank page sits at positions 1, 5 and 9 and is ONE item,
   // so a walk that asked "where is this item" always answered 1 and the
   // forward chevron always went to page 2, whichever copy you had opened.
-  // The spot is remembered as we step and falls back to the item's first
-  // occurrence whenever it no longer names this item — which is exactly the
-  // case where the window was pointed here from somewhere else (a tab, the
-  // grid) and there is nothing better to assume.
+  // The spot is remembered as we step, falls back to the card the window was
+  // opened on where the grid named one (`selMembers`), and then to the
+  // item's first occurrence — which is the case where the window was pointed
+  // here by something that names no card (a tab, a link) and there is
+  // nothing better to assume.
   const [spot, setSpot] = useState<number | null>(null);
+  // WHICH CARD THE WINDOW WAS OPENED ON, when the grid named one: a
+  // sequence view tracks the occurrence a gesture picked (`selMembers`), and
+  // for a repeated page that is the difference between opening page 60 and
+  // reading 59 — from which the first Next showed the same picture again.
+  // Only until this nav has stepped once, and only where the named member
+  // really is this item's (the walk's own validity test).
+  const picked = useUI((s) => s.selMembers);
   const seq = seqs.find((s) => s.id === pick)
     ?? seqs.find((s) => s.is_main) ?? seqs[0] ?? null;
   const held = seq && spot != null
     ? seq.members.findIndex((m) => m.id === spot && m.item_id === itemId) : -1;
-  const at = held >= 0 ? held
+  const opened = seq && spot == null && picked.size === 1
+    ? seq.members.findIndex((m) => m.id === [...picked][0]
+                                   && m.item_id === itemId) : -1;
+  const at = held >= 0 ? held : opened >= 0 ? opened
     : (seq ? seq.members.findIndex((m) => m.item_id === itemId) : -1);
   if (!seq || at < 0) return null;
   const prev = at > 0 ? seq.members[at - 1] : null;

@@ -231,6 +231,9 @@ export interface ItemView {
   getIdAt: (index: number) => number | undefined;
   /** Flat view index of a loaded id, or -1 when it isn't loaded. */
   indexOfId: (id: number) => number;
+  /** The flat index of one OCCURRENCE — a sequence view's membership row.
+   *  -1 when its page is not loaded. */
+  indexOfMember: (member: number) => number;
   /** Ids of every loaded page, in view order. */
   loadedIds: number[];
   /** Items of every loaded page, in view order. */
@@ -373,6 +376,21 @@ export function useItemView(visible: { start: number; end: number }): ItemView {
     return m;
   }, [byPage]);
 
+  // AND BY OCCURRENCE, which in a sequence view is the only exact answer:
+  // the grid draws a repeated page once per POSITION, so the map above holds
+  // ONE of a repeated item's indices (the last one written) and `indexOfId`
+  // cannot say which copy anything means. A membership row is one card.
+  const indexByMember = useMemo(() => {
+    const m = new Map<number, number>();
+    for (const [p, arr] of byPage) {
+      for (let j = 0; j < arr.length; j++) {
+        const mid = arr[j].member_id;
+        if (mid != null) m.set(mid, (p - 1) * PAGE_SIZE + j);
+      }
+    }
+    return m;
+  }, [byPage]);
+
   const getItem = useCallback(
     (index: number): ItemOut | undefined => {
       if (index < 0) return undefined;
@@ -388,6 +406,10 @@ export function useItemView(visible: { start: number; end: number }): ItemView {
   const indexOfId = useCallback(
     (id: number) => indexById.get(id) ?? -1,
     [indexById]
+  );
+  const indexOfMember = useCallback(
+    (member: number) => indexByMember.get(member) ?? -1,
+    [indexByMember]
   );
 
   const first = results[0];
@@ -427,6 +449,7 @@ export function useItemView(visible: { start: number; end: number }): ItemView {
     getItem,
     getIdAt,
     indexOfId,
+    indexOfMember,
     loadedIds,
     loadedItems,
     iterate,

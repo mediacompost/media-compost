@@ -16,6 +16,7 @@ import { mpLabel } from "../format";
 import { useZoomPan } from "../useZoomPan";
 import { useWheel } from "../useWheel";
 import { panLimit } from "../zoomPivot";
+import { nextDistinctIndex, occurrenceIndex } from "../viewWalk";
 import { ZoomControls } from "./shared/ZoomControls";
 import { useRotate } from "./shared/useRotate";
 import { groupTagInstances, ItemInfoPanel } from "./shared/ItemInfoPanel";
@@ -213,28 +214,35 @@ export function QuickLook() {
   //   3. THE GRID, for a single selection: the selection moves to the previous
   //      or next item in the view's order and the preview follows.
   //
-  // (3) steps to the next DISTINCT item, which matters in a sequence view:
-  // the grid draws a repeated page once per position, so the plain next index
-  // was the same picture again and the key appeared to do nothing.
-  const stepSelectionRef = useRef((delta: number) => {
+  // (3) STEPS ONE CARD OF THE VIEW — the occurrence, not the item, which is
+  // a distinction only a sequence view makes (`viewWalk`). It draws a
+  // repeated page once per POSITION, so an item id cannot say where the walk
+  // is: `indexOf` answers that page's FIRST appearance however far into the
+  // book you are, so from its second the walk stepped as though from its
+  // first. The membership row the selection names (`selMembers`) says which
+  // copy, and the step is one card from THERE — over a RUN of the same
+  // picture, since a book's three blank pages in a row are one picture and a
+  // key that redraws it reads as a key that did nothing. The occurrence it
+  // lands on is named in turn, so the grid's ring and its own arrows carry
+  // on from where the preview left off.
+  const stepSelection = (delta: number) => {
     // An explicit target (sidebar preview) steps its own list, never the grid.
     if (useUI.getState().quickLookItems) return false;
-    const sel = useUI.getState().selectedItems;
+    const st = useUI.getState();
+    const sel = st.selectedItems;
     if (sel.length !== 1) return false; // multi: don't touch the grid selection
-    // The view's order, DEDUPED. A sequence view draws a repeated page once
-    // per POSITION and the preview shows PICTURES, so the raw order was
-    // wrong in both directions: stepping onto the same picture again reads
-    // as a key that did nothing, and `indexOf` answers the FIRST occurrence
-    // however far in you are — so from a page's second appearance the walk
-    // stepped as if from its first and oscillated between two pages forever.
-    const order = [...new Set(useUI.getState().visibleItemIds)];
-    const cur = order.indexOf(sel[0]);
+    const order = st.visibleItemIds;
+    const members = items.map((it) => it.member_id ?? null);
+    const named = st.selMembers.size === 1 ? [...st.selMembers][0] : null;
+    const cur = occurrenceIndex(order, members, sel[0], named);
     if (cur === -1) return false;
-    const next = cur + delta;
-    if (next < 0 || next >= order.length) return true; // at an end: absorb key
-    useUI.getState().setSelectedItems([order[next]]);
+    const next = nextDistinctIndex(order, cur, delta);
+    if (next === -1) return true; // at an end: absorb key
+    st.setSelectedItems([order[next]]);
+    const m = members[next];
+    if (m != null) st.setSelMembers(new Set([m]));
     return true;
-  });
+  };
 
   useEffect(() => {
     if (!quickLook) return;
@@ -279,7 +287,7 @@ export function QuickLook() {
       if (next >= 0 && next < pages.length) { setPage(next); return; }
       // …and off either end, the chapter is left the way any item is left.
     }
-    if (!stepSelectionRef.current(dir)) {
+    if (!stepSelection(dir)) {
       setIdx((i) => Math.max(0, Math.min(i + dir, ordered.length - 1)));
     }
   };
