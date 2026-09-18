@@ -138,8 +138,7 @@ the landing page — sit together there, while the Markdown stays at `docs/`,
 where somebody browsing the repository looks. Every path inside `mkdocs.yml` is
 relative to the config file, which is what makes that split cost nothing.
 
-Run the commands from the repository ROOT; `-f` is not optional, and `mike`
-needs its own `-F` because it shells out to mkdocs rather than importing it.
+Run the commands from the repository ROOT; `-f` is not optional.
 
 ```bash
 python3 -m venv .venv-docs
@@ -173,37 +172,42 @@ tree — including the AI extras — so keep it static.
 `partials/header.html` is **the header, for every page** — one template
 rather than a landing page drawing its own, so the links, the GitHub label
 and the site name cannot drift apart between them. Material's own chrome
-(search, the theme control, the drawer, mike's version switcher) is kept and
+(search, the theme control, the drawer) is kept and
 restyled rather than replaced; the theme
 control is a three-state menu whose entries are labels pointing at Material's
 own palette radios, so Material still owns applying and persisting the choice.
 
-`.github/workflows/docs.yml` publishes it to GitHub Pages through **mike**,
-which keeps one directory per MINOR SERIES in the `gh-pages` branch and
-maintains the switcher — publishing `v1.2.3` becomes `/1.2/`, replacing
-whatever `v1.2.0` put there, and takes over the `latest` alias. A patch does
-not change what the app does, so it does not get a site of its own.
+`.github/workflows/docs.yml` publishes it to GitHub Pages with **`mkdocs
+gh-deploy`**, which writes the built site to the ROOT of the `gh-pages`
+branch. **One site, for the version people can install**: no
+version in the address, no switcher, no `latest` alias — a link to a page is
+a link to the current documentation and stays one. It was `mike`, a directory
+per minor series with a switcher over them, which made four URLs for one page
+and an archive nobody asked for; the first gh-deploy replaces the branch, so
+`/1.0/`, `/latest/` and `/dev/` stop answering.
 
-A series already out can be rebuilt without a release: *Actions → Docs → Run
-workflow*, with the tag in the `ref` box. It builds that tag's pages through
-the workflow as it stands on the branch you start it from, which is what
-makes it a repair rather than a re-release. Leave `latest` unticked unless
-the series is the newest one. It runs on RELEASES ONLY (owner 2026-09): `/dev/` is a
-hand-started run (*Actions → Docs → Run workflow*, on whatever branch you
-pick) and is deployed hidden, so it is a URL you hand somebody rather than a
-version anybody can pick out of the switcher, because republishing the whole site for a typo in a docstring put a
-job in the queue behind every push and changed nothing anybody had installed.
+It runs FROM A TAG, always — `publish.yml` calls it with the tag it has just
+published, and *Actions → Docs → Run workflow* takes one too, which is how a
+documentation fix reaches the site without a release to carry it. There is no
+build from a branch: the site would then describe code nobody can install, and
+`mkdocs serve` above is how unreleased prose is read. It runs on RELEASES
+ONLY — republishing the whole site for a typo in a docstring put a job in the
+queue behind every push and changed nothing anybody had installed.
 Set Pages to *Deploy from a branch → gh-pages / (root)* once.
 
 `site_url` and `repo_url` in `website/mkdocs.yml` name the published site
 (<https://mediacompost.github.io/media-compost/>) and the repository
-(`mediacompost/media-compost`); the version switcher, the canonical links
-and the sitemap are built against the first, so a wrong one is a switcher
-that navigates nowhere — including the trailing `/media-compost/`, since a
-project site is served from a subdirectory. A custom domain would be a
-setting in the repository's Pages page and this line moving with it; the
-`CNAME` never comes from a file here — see the note at the top of
-`.github/workflows/docs.yml` for why one in `docs/` would not work. The screenshots under `docs/assets/screenshots/` are real captures of
+(`mediacompost/media-compost`); the canonical links and the sitemap are built
+against the first, so a wrong one is every page claiming to live somewhere it
+does not — including the trailing `/media-compost/`, since a project site is
+served from a subdirectory and joining a page's path onto an address with no
+trailing slash replaces that last segment. A custom domain would be a setting
+in the repository's Pages page and this line moving with it — and, now that
+the deploy replaces the whole branch root, a `CNAME` in `docs/`, which is
+exactly what mike made useless (see the note at the top of
+`.github/workflows/docs.yml`). The version in the site's footer is
+`extra.version_number`, moved by `scripts/bump_version.py` with the package's
+own three copies. The screenshots under `docs/assets/screenshots/` are real captures of
 the app — WebP at 2560×1600 (a 1280×800 window at 2×), with 640×400 `-thumb`
 copies for the five the landing page's gallery shows as thumbnails; see
 `scripts/capture_screenshots.py` for how they are remade.

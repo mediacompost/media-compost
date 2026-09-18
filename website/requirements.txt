@@ -8,7 +8,6 @@
 #   .venv-docs/bin/pip install -r website/requirements.txt
 #   .venv-docs/bin/mkdocs serve -f website/mkdocs.yml --watch-theme   # :8000
 mkdocs-material>=9.5
-mike>=2.1
 # The API reference, generated from the source. NOTE WHAT IS *NOT* HERE: none of
 # `media_compost`'s own dependencies, and not the package itself. mkdocstrings
 # reads Python through griffe, which parses the SOURCE rather than importing it,

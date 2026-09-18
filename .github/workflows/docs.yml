@@ -1,95 +1,74 @@
 # Publishes the website (website/mkdocs.yml + docs/) to GitHub Pages.
 #
-# EVERY mkdocs AND mike CALL HERE NEEDS THE CONFIG PATH. mike shells out to
-# mkdocs rather than importing it, so it does not inherit one — and with no
-# `mkdocs.yml` in the working directory it fails on the spot rather than
-# publishing something wrong, which is the good half of this trap.
+# ONE SITE, AT THE ROOT. It was `mike`, which keeps a
+# directory per minor series in the `gh-pages` branch and a switcher over
+# them, so the address carried a version (`/1.0/`), `latest` was an alias
+# somebody might be reading instead, and `/dev/` was a fourth answer to the
+# same question. What the site is for is the version people can install, and
+# there is one of those — so `mkdocs gh-deploy` now writes the built site to
+# the branch ROOT and every link into the documentation is a link to the
+# current documentation.
 #
-# Versions are kept side by side by `mike`, which writes one directory per
-# version into the `gh-pages` branch and maintains the switcher's version
-# index — so the Python API page from 0.3 stays readable after 0.4 changes it.
-# Set Pages to "Deploy from a branch → gh-pages / (root)" once; nothing else
-# here needs configuring, and the site answers at the project address,
-# `mediacompost.github.io/media-compost/`.
+# THE FIRST RUN OF THIS REPLACES THE BRANCH: gh-deploy commits the site it
+# just built as the whole tree, where mike only ever touched the directories
+# it owned. `/1.0/`, `/latest/`, `/dev/` and `versions.json` stop answering
+# the moment it lands. That is the change, not a side effect of it, but it is
+# worth knowing before pressing the button.
+#
+# Pages stays on "Deploy from a branch → gh-pages / (root)" — the same
+# setting mike needed, so there is nothing to change there.
 #
 # A CUSTOM DOMAIN is one more setting in the same place, and `site_url` in
-# `website/mkdocs.yml` has to move with it. That setting is what writes
-# `CNAME` to the branch root, and mike leaves it there — a deploy deletes only
-# the version directories it replaces. A `CNAME` committed to `docs/` would
-# NOT do the job either way: it would land inside the version directory rather
-# than at the root where Pages looks for it.
+# `website/mkdocs.yml` has to move with it. That setting writes `CNAME` to the
+# branch root, and THIS DEPLOY WOULD THEN REMOVE IT on its next run: with the
+# whole root replaced, a `CNAME` has to be part of the build, which now means
+# a file in `docs/` (under mike that landed inside a version directory and was
+# useless; `docs_dir` is the site root now).
 #
-#   called by a release    ->  /1.2/, and `latest` starts pointing at it
-#   run by hand, no tag    ->  /dev/, from whatever branch you pick — a URL,
-#                              never an entry in the version picker
-#   run by hand with a tag ->  that tag's series again, rebuilt in place
+# IT RUNS FROM A TAG, ALWAYS. `publish.yml` calls it with the tag it has just
+# published, and a hand-started run takes one too: a documentation fix for the
+# release that is out, without a release to carry it. There is no build from a
+# branch, because the site would then describe code nobody can install —
+# `mkdocs serve` is how unreleased prose is read (see `SETUP.md`).
 #
-# The third is for a series already published: a documentation fix worth
-# putting in front of the people running that version, without a release to
-# carry it. It builds the TAG's pages through the workflow as it stands on
-# whatever branch you started it from, which is what makes it a repair — the
-# pipeline's fixes apply, the version's own prose does not move. It leaves
-# `latest` alone unless you tick the box, because the series being rebuilt is
-# often not the newest one.
-#
-# RELEASES ONLY (owner 2026-09). This used to run on every push to main, which
+# RELEASES ONLY. This used to run on every push to main, which
 # republished the whole site for a typo in a docstring and put a second job in
-# the queue behind every commit. What the site is for is the version people
-# install, and that changes when a release does — so `/dev/` is now something
-# you ask for (Actions -> Docs -> Run workflow, on any branch) rather than
-# something every push pays for. The cost is that `/dev/` is as old as the
-# last manual run, which is the honest state of unreleased documentation
-# anyway.
+# the queue behind every commit.
 #
 # PUBLISH.YML CALLS THIS ONE — it is not watching for anything of its own.
 # `workflow_call` is what makes a site that only ever describes a version
-# somebody can install: the calling job says `needs: publish`, so a wheel
-# PyPI refused never gets documentation claiming otherwise. On a tag of its
-# own this would fire beside the upload rather than after it, and there is no
+# somebody can install: the calling job says `needs: publish`, so a wheel PyPI
+# refused never gets documentation claiming otherwise. On a tag of its own
+# this would fire beside the upload rather than after it, and there is no
 # `release: published` to wait for either, since publish.yml creates that
 # release with GITHUB_TOKEN and a token-made release raises no event another
 # workflow can see.
 #
 # The tag is an INPUT rather than something read off the context: publish.yml
 # is started by hand, so its `github.ref` is whatever branch the run was
-# launched from and never the tag. `inputs.ref` being set is also what tells
-# the two steps at the bottom apart — a release build from a hand-started one
-# — which is a fact about the call rather than about the event that caused it.
+# launched from and never the tag.
 name: Docs
 
-# Three kinds of run that otherwise look identical in the list: a release's,
-# a repair of a series already out, and /dev/. An empty `ref` is falsy, so it
-# falls through to "dev"; `latest` says whether this one takes the alias,
-# which is the difference between a rebuild and a redirection of everybody.
-run-name: Docs ${{ inputs.ref || 'dev' }}${{ inputs.latest && ' (latest)' || '' }}
+# Otherwise every run is "Docs" on "main": a dispatched run belongs to the
+# branch it was started from rather than to the tag it is about.
+run-name: Docs ${{ inputs.ref }}
 
 on:
   workflow_call:
     inputs:
       ref:
-        description: "The release tag to build, and the version to publish it as"
+        description: "The release tag to build and publish"
         required: true
         type: string
-      latest:
-        description: "Move the `latest` alias to it — true for a release"
-        required: false
-        default: true
-        type: boolean
   workflow_dispatch:
     inputs:
       ref:
-        description: "A release tag to publish again, e.g. v1.2.3. Empty publishes /dev/ from the branch above."
-        required: false
-        default: ""
+        description: "The release tag to publish again, e.g. v1.2.3"
+        required: true
         type: string
-      latest:
-        description: "Move the `latest` alias to it (only for the newest series)"
-        required: false
-        default: false
-        type: boolean
 
-# `mike` pushes the built site to gh-pages, so this needs write access to the
-# repository rather than the Pages deploy token.
+# `gh-deploy` pushes the built site to gh-pages, so this needs write access to
+# the repository rather than the Pages deploy token.
 permissions:
   contents: write
 
@@ -103,12 +82,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          # mike reads and rewrites the gh-pages branch; a shallow clone has
-          # neither it nor the history it appends to.
+          # gh-deploy appends a commit to gh-pages, which a shallow clone has
+          # neither of.
           fetch-depth: 0
-          # The tag for a release run, the chosen branch for a hand-started
-          # one.
-          ref: ${{ inputs.ref || github.ref }}
+          ref: ${{ inputs.ref }}
 
       - uses: actions/setup-python@v7
         with:
@@ -117,45 +94,27 @@ jobs:
 
       - run: pip install -r website/requirements.txt
 
-      - name: Build the site once, strictly
-        # Before anything is published: --strict turns a broken cross-link or
-        # a page missing from the nav into a failed build rather than a
-        # deployed 404.
-        run: mkdocs build --strict -f website/mkdocs.yml
-
+      # ghp-import (inside gh-deploy) makes a real commit, and git refuses to
+      # write one from a runner with nobody configured.
       - name: Identify as the bot
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      # ONE DIRECTORY PER MINOR SERIES, not per release: a patch REPLACES the
-      # documentation of the version it patches, so 1.0.0, 1.0.1 and 1.0.9 are
-      # all `/1.0/`. What a version of this site is for is the app somebody
-      # has installed, and a patch does not change what the app does — a
-      # directory per patch is a switcher nobody can choose from and an
-      # archive of near-identical copies.
-      - name: Publish the released version
-        if: inputs.ref != ''
+      # ONE COMMAND, AND IT BUILDS BEFORE IT PUSHES: `--strict` turns a broken
+      # cross-link or a page missing from the nav into a failed build, and
+      # nothing reaches the branch when it fails. It was a separate `mkdocs
+      # build --strict` gate ahead of `mike deploy`, which built the site
+      # twice to say the same thing.
+      - name: Build the site strictly and publish it to gh-pages
         env:
           TAG: ${{ inputs.ref }}
-          LATEST: ${{ inputs.latest }}
+        # The message NAMES THE TAG — `gh-pages` is otherwise a list of
+        # identical subjects and nothing on the branch says which release the
+        # site describes — and KEEPS MkDocs' own suffix: the next deploy reads
+        # its version back out of that line to refuse an older MkDocs writing
+        # over a newer one's output, and a message it cannot parse quietly
+        # drops the check.
         run: |
-          version="${TAG#v}"
-          series="${version%.*}"
-          echo "publishing $version as /$series/ (latest: $LATEST)"
-          if [ "$LATEST" = "true" ]; then
-            mike deploy -F website/mkdocs.yml --push --update-aliases "$series" latest
-            mike set-default -F website/mkdocs.yml --push latest
-          else
-            mike deploy -F website/mkdocs.yml --push "$series"
-          fi
-
-      # HIDDEN FROM THE PICKER, always. /dev/ is documentation for code nobody
-      # has installed, so it is a URL to hand somebody rather than a version
-      # to choose — and a switcher entry beside 1.0 invites choosing it.
-      # `properties.hidden` is the one thing Material's switcher filters on
-      # (`versions.filter(v => !v.properties?.hidden)`), and mike's
-      # `--prop-set` is what writes it.
-      - name: Publish the unreleased docs (a hand-started run naming no tag)
-        if: inputs.ref == ''
-        run: mike deploy -F website/mkdocs.yml --push --prop-set hidden=true dev
+          mkdocs gh-deploy --strict -f website/mkdocs.yml \
+            --message "Docs for $TAG — Deployed {sha} with MkDocs version: {version}"

@@ -3,10 +3,18 @@
 #
 # MkDocs rather than Sphinx because `docs/` was already a folder of plain
 # Markdown cross-linked by file name — which is exactly what MkDocs reads, and
-# what Sphinx would need MyST plus a toctree in every page to accept. The
-# version switcher below is `mike`, which is the tool that keeps several built
-# versions side by side in the `gh-pages` branch; that is the whole reason to
-# prefer it over a hand-rolled static site here.
+# what Sphinx would need MyST plus a toctree in every page to accept.
+#
+# ONE SITE, AT THE ROOT, FOR THE VERSION PEOPLE CAN INSTALL.
+# It was `mike`, which keeps a directory per minor series in `gh-pages` and a
+# switcher over them — so the address was `/1.0/`, `latest` was an alias
+# somebody could be reading instead, and `/dev/` was a fourth answer to the
+# same question. What that bought was an archive nobody asked for and four
+# URLs for one page; what it cost was every link into the documentation
+# carrying a version in it. The site is now built from the tag being
+# published and lands at the root, so a link to a page is a link to the
+# current documentation and stays one. `extra.version_number` below is what
+# says which release that is.
 #
 # EVERY PATH BELOW IS RELATIVE TO THIS FILE, which is what lets the site's
 # tooling sit in `website/` while the prose it publishes stays at `docs/` —
@@ -17,37 +25,39 @@
 #
 # Build:   .venv-docs/bin/mkdocs serve -f website/mkdocs.yml --watch-theme
 #          (preview on :8000; --watch-theme is NOT optional here — see below)
-# Publish: see .github/workflows/docs.yml — it runs `mike deploy`.
+# Publish: see .github/workflows/docs.yml — it runs `mkdocs gh-deploy`.
 
 site_name: Media Compost
 site_description: >-
   Organize, deduplicate and annotate image and video datasets for AI
   training — a web app that runs on your own machine.
 site_author: Media Compost
-# `site_url` is what the version switcher, the canonical links and the sitemap
-# are built against, so a wrong one shows up as a switcher that navigates
-# nowhere. It is the PROJECT PAGES ADDRESS: the one GitHub serves off
-# `gh-pages` with nothing to configure, nothing to renew and nothing that can
-# expire out from under the site. A project site is served from a
-# SUBDIRECTORY, hence `/media-compost/`.
+# `site_url` is what the canonical links and the sitemap are built against.
+# It is the PROJECT PAGES ADDRESS: the one GitHub serves off `gh-pages` with
+# nothing to configure, nothing to renew and nothing that can expire out from
+# under the site. A project site is served from a SUBDIRECTORY, hence
+# `/media-compost/`.
 #
 # AND THE TRAILING SLASH IS LOAD-BEARING, which is the one thing here that
-# looks like tidying and is not: mike builds each version with `site_url`
-# replaced by `urljoin(site_url, version)`, so ".../media-compost/" yields
-# ".../media-compost/1.0.0" and ".../media-compost" yields ".../1.0.0" — an
-# address that does not exist, on every canonical link of every page.
+# looks like tidying and is not: a canonical link is this value joined with
+# the page's own path, and joining "install/" onto ".../media-compost"
+# REPLACES that last segment — every page would then claim to live at
+# ".../install/", one directory above the site. (It used to be load-bearing
+# for a second reason, mike's `urljoin(site_url, version)`, which went with
+# mike.)
 #
 # IT WAS THE CUSTOM DOMAIN `compost.media` until 2026-09, and putting one back
 # is TWO changes rather than this line alone: the domain also goes in the
 # repository's Pages settings, which is what writes the `CNAME` at the root of
-# `gh-pages` — `mike` then leaves it alone, because a deploy deletes only the
-# version directories it is replacing and adds `versions.json` and `.nojekyll`
-# beside them. While a custom domain is set there, Pages REDIRECTS this
-# address to it, so a `site_url` left behind is not merely cosmetic.
+# `gh-pages`. While a custom domain is set there, Pages REDIRECTS this address
+# to it, so a `site_url` left behind is not merely cosmetic.
 #
-# Either way, a `CNAME` committed to `docs/` is the obvious move and does
-# nothing: `docs_dir` lands INSIDE a version directory, so it would publish
-# `/1.0.0/CNAME` and never the root one Pages reads.
+# AND THE `CNAME` WOULD HAVE TO BE IN THE BUILD NOW: `mkdocs gh-deploy`
+# replaces the branch root with the site it just built, where mike only ever
+# touched the directories it owned. So a domain also means a `CNAME` file in
+# `docs/`, which is exactly what this note used to say would NOT work — it
+# did not while `docs_dir` landed inside a version directory, and `docs_dir`
+# IS the site root now.
 site_url: https://mediacompost.github.io/media-compost/
 repo_url: https://github.com/mediacompost/media-compost
 repo_name: media-compost
@@ -55,8 +65,8 @@ edit_uri: edit/main/docs/
 
 docs_dir: ../docs
 # A LOCAL PREVIEW BUILD, and nothing else — it is gitignored, and the published
-# site is never built from here: `.github/workflows/docs.yml` runs `mike`, which
-# builds in the runner and commits the HTML to the `gh-pages` branch. So this
+# site is never built from here: `.github/workflows/docs.yml` builds in the
+# runner and commits the HTML to the `gh-pages` branch. So this
 # names a scratch directory beside the config that produces it, rather than a
 # `site/` at the repository root pretending to be part of the project. The
 # leading underscore is this repository's mark for a generated directory (see
@@ -150,13 +160,13 @@ extra_javascript:
   - assets/home.js
 
 extra:
-  version:
-    provider: mike
-    alias: true
   generator: false
-  # What the footer's small print says. `extra.version` above is mike's
-  # switcher and carries no number, so this is the one place the release is
-  # written down for the site.
+  # What the footer's small print says — and with no switcher and no version
+  # in the address, THE ONE PLACE THE SITE SAYS WHICH RELEASE IT DESCRIBES.
+  # `scripts/bump_version.py` is what moves it, holding it equal to the
+  # package's own three copies (`tests/ui/test_version.py`); the published
+  # site is built from a tag, so what it shows is that release rather than
+  # the `.devN` main carries in between.
   version_number: "1.0.2.dev0"
 
 markdown_extensions:

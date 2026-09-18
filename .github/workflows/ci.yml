@@ -30,7 +30,7 @@
 
 name: CI
 
-# ONCE A DAY, AND ONLY IF SOMETHING WAS PUSHED (owner 2026-09). A push used to
+# ONCE A DAY, AND ONLY IF SOMETHING WAS PUSHED. A push used to
 # start a run, which for a day of small commits is a queue of answers nobody
 # reads — the machine that made them has already run the suite. What is worth
 # knowing is whether the OTHER machine still agrees, and that question keeps

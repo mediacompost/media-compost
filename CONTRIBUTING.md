@@ -32,11 +32,14 @@ your changes under that licence.
   gestures. Pushing the tag runs `draft.yml`, which builds and leaves a
   DRAFT release carrying the wheel; running `publish.yml` by hand (*Actions
   → Publish → Run workflow*, with the tag) uploads that wheel to PyPI,
-  publishes the draft and calls `docs.yml` for `/1.2/` and `latest`. The
-  split is the point: everything before it can be deleted, nothing after it
-  can. The unreleased docs at `/dev/` are a hand-started run of `docs.yml`.
-- **`gh-pages` is written by machines** (`mike`, from the docs workflow).
-  Never commit to it, never branch from it.
+  publishes the draft and calls `docs.yml`, which rebuilds the site from that
+  tag. The split is the point: everything before it can be deleted, nothing
+  after it can. **The site is one site, at the root**, describing the release
+  that is out — there is no version in the address and no switcher; read
+  unreleased prose with `mkdocs serve` instead.
+- **`gh-pages` is written by machines** (`mkdocs gh-deploy`, from the docs
+  workflow, which replaces the whole branch each time). Never commit to it,
+  never branch from it.
 
 ## Opening a pull request
 
@@ -96,7 +99,7 @@ Two markers are deselected by default, for different reasons:
 `slow` is about wall clock alone (two files that wait on a tick thread and on
 a torch subprocess — together roughly half the suite's runtime). `perf` is
 about a synthetic 50k-item library and answers a question nobody asks on an
-ordinary edit. **CI runs neither** (owner 2026-09), so these two are the ones
+ordinary edit. **CI runs neither**, so these two are the ones
 to run here before a push that matters — nothing else will.
 
 Frontend:
@@ -311,9 +314,9 @@ python3 -m venv /tmp/mc-check
 #    The library page must render — a blank page means the bundle is missing.
 #    Then Actions -> Publish -> Run workflow, with `vX.Y.Z` as the tag. It
 #    takes the files off the draft, uploads them to PyPI (trusted publishing,
-#    no token), publishes the draft and calls docs.yml, which puts /X.Y/ up
-#    and moves `latest` to it. Past the upload there is no undo — PyPI will
-#    not take a version twice.
+#    no token), publishes the draft and calls docs.yml, which rebuilds the
+#    site from the tag — at the root, the one site there is. Past the upload
+#    there is no undo — PyPI will not take a version twice.
 
 # 7. Move main past the release AT ONCE, so a build from main never carries
 #    the released number: pip would refuse to install it over the release.
@@ -348,8 +351,8 @@ git push
       does it, and refuses to release an empty one).
 - [ ] Tag `vX.Y.Z` pushed (which runs `draft.yml`) and **Publish** run by
       hand afterwards: PyPI, the draft published, and `docs.yml` called from
-      it for `/X.Y/` with the `latest` alias moved to it. `/dev/` is a
-      hand-started run of `docs.yml` and is as old as the last one.
+      it to rebuild the site from that tag — at the root, since there is one
+      site and it describes the release that is out.
 - [ ] Both workflows green, and the release page carries the changelog's
       entry as its notes with the wheel and the sdist as its files. No
       release page at all means `publish.yml` stopped before it got there.
@@ -357,6 +360,6 @@ git push
       with an empty `Unreleased` reopened above `X.Y.Z`.
 
 **The documentation site** (`website/mkdocs.yml` over `docs/`, published by
-`.github/workflows/docs.yml` through `mike`) — how to preview it locally, how
+`.github/workflows/docs.yml`) — how to preview it locally, how
 the API reference is generated, what `site_url` decides and how the screenshots
 are made — is *The website* in `SETUP.md`.
