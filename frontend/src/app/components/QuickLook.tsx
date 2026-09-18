@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, ItemOut, TagBox, TagInstance } from "../api";
 import { Icon } from "../../shared/Icon";
 import { Chip } from "../../shared/Chip";
-import { modalIsOpen, quickLookIsCovered, useUI } from "../store";
+import { modalIsOpen, quickLookIsCovered, tagGridIsOpen, useUI } from "../store";
 import { LAYER } from "../../shared/layers";
 import { useEscape } from "../../shared/useEscape";
 import { useLoadedViewItems } from "../useItems";
@@ -17,6 +17,7 @@ import { useZoomPan } from "../useZoomPan";
 import { useWheel } from "../useWheel";
 import { panLimit } from "../zoomPivot";
 import { nextDistinctIndex, occurrenceIndex } from "../viewWalk";
+import { previewArrow } from "../previewKeys";
 import { ZoomControls } from "./shared/ZoomControls";
 import { useRotate } from "./shared/useRotate";
 import { groupTagInstances, ItemInfoPanel } from "./shared/ItemInfoPanel";
@@ -208,7 +209,10 @@ export function QuickLook() {
   //   1. THE PAGES of a sequence, when the preview is on one. Previewing a
   //      chapter and turning it is what anybody reaches for, and off either
   //      end the key falls through to (2) or (3) — the chapter is left the way
-  //      any other item is left.
+  //      any other item is left. SHIFT SKIPS THIS ONE (owner 2026-09):
+  //      ⇧←/⇧→ leave the chapter at once rather than turning its two hundred
+  //      pages to get out of it, which is the same fall-through asked for
+  //      outright. Whose shift it is, is `previewKeys.previewArrow`.
   //   2. THE SELECTION, when several items are previewed (the ‹ › buttons are
   //      showing): the preview index moves and the grid selection is untouched.
   //   3. THE GRID, for a single selection: the selection moves to the previous
@@ -266,12 +270,14 @@ export function QuickLook() {
         setShowInfo((v) => { APP_PREFS.quickLookInfo.write(!v); return !v; });
         return;
       }
-      // Up mirrors Left (previous); Down mirrors Right (next).
-      const dir = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1
-        : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
-      if (dir === 0) return;
+      // Up mirrors Left (previous); Down mirrors Right (next), and SHIFT
+      // asks for the next ITEM — unless the tag-grid session under us owns
+      // that press (`sessionKeys`' `underPreview`), which is the one rule
+      // `previewArrow` exists to state.
+      const arrow = previewArrow(e, { sessionOwnsShift: tagGridIsOpen() });
+      if (!arrow) return;
       e.preventDefault();
-      stepRef.current(dir);
+      stepRef.current(arrow.dir, arrow.whole);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -279,10 +285,14 @@ export function QuickLook() {
 
   /** One step of the walk — what the arrow KEYS and the ‹ › buttons both do.
    *  Two controls for one gesture have to mean the same thing, and the
-   *  fall-through off a sequence's ends is exactly where they would drift. */
-  const step = (dir: number) => {
+   *  fall-through off a sequence's ends is exactly where they would drift.
+   *
+   *  `whole` is Shift: the chapter is ONE THING to step over, so the pages
+   *  are skipped and the entry is left exactly as the last page's own step
+   *  would leave it — the same fall-through, reached without walking there. */
+  const step = (dir: number, whole = false) => {
     back.current = dir < 0;
-    if (pages) {
+    if (pages && !whole) {
       const next = page + dir;
       if (next >= 0 && next < pages.length) { setPage(next); return; }
       // …and off either end, the chapter is left the way any item is left.
@@ -678,18 +688,19 @@ export function QuickLook() {
               beside it — is exactly where they would drift. Dimmed at an end
               only when there is nothing to step ON to. */}
           <button
-            onMouseDown={(e) => { e.stopPropagation(); step(-1); }}
+            onMouseDown={(e) => { e.stopPropagation(); step(-1, e.shiftKey); }}
             disabled={walkAt <= 0 && !pages && clamped <= 0}
-            title="Previous (←)"
+            title={pages ? "Previous (←, ⇧← leaves the sequence)"
+                         : "Previous (←)"}
             style={{ ...arrowBtn, left: 16,
                      opacity: walkAt <= 0 && !pages ? 0.35 : 1 }}
           >
             <Icon name="chevron_left" size={26} />
           </button>
           <button
-            onMouseDown={(e) => { e.stopPropagation(); step(1); }}
+            onMouseDown={(e) => { e.stopPropagation(); step(1, e.shiftKey); }}
             disabled={walkAt >= walkOf - 1 && !pages}
-            title="Next (→)"
+            title={pages ? "Next (→, ⇧→ leaves the sequence)" : "Next (→)"}
             // CLEAR OF THE PANEL: with the info panel open the window's
             // right edge is the panel's, so the arrow sits just outside the
             // measured slot instead — `slotInset.r` is the panel, the row's

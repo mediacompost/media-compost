@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Shift + an arrow key in the preview leaves a sequence for the item beside
+  it, instead of turning its pages one at a time.
 - The sidebar's Quick Assign button reads a set's GROUPS as well as its tags:
   a set holding a group showed "Remove from N selected" before it had ever
   been applied, and the press then wrote only the tags.
