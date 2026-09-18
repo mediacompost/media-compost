@@ -118,6 +118,26 @@ LOG = """# Changelog
 First release
 """
 
+#: The same thing with the entries GROUPED, which is how a release with more
+#: than a couple of them is written (`CONTRIBUTING.md`): `### Features` and
+#: `### Fixes` under the version's own `##` heading.
+GROUPED = """# Changelog
+
+## Unreleased
+
+### Features
+
+- something a user would notice
+
+### Fixes
+
+- something that was wrong
+
+## 1.0.0
+
+First release
+"""
+
 
 def test_a_release_renames_the_unreleased_section():
     mod = _script()
@@ -134,6 +154,10 @@ def test_a_release_renames_the_unreleased_section():
         "# Changelog\n\n## 1.0.0\n\nFirst release\n",          # never opened
         "# Changelog\n\n## Unreleased\n\n## 1.0.0\n\nx\n",     # opened, nothing written
         "# Changelog\n\n## Unreleased\n",                        # opened, end of file
+        # OPENED, GROUPED, AND STILL EMPTY — the one the sub-headings would
+        # have let through: two headings are text, so "does it say anything"
+        # has to count ENTRIES.
+        "# Changelog\n\n## Unreleased\n\n### Features\n\n### Fixes\n\n## 1.0.0\n\nx\n",
     ],
 )
 def test_a_release_refuses_a_missing_or_empty_unreleased(text):
@@ -141,6 +165,23 @@ def test_a_release_refuses_a_missing_or_empty_unreleased(text):
     for the release they have just cut."""
     with pytest.raises(SystemExit):
         _script().rename_unreleased(text, "1.1.0")
+
+
+def test_a_versions_sub_headings_are_part_of_its_entry():
+    """`### Features` / `### Fixes` group a release's entries, and a
+    version is a `##` heading — so the groups ride along in the notes rather
+    than cutting the section short. `draft.yml` posts exactly this."""
+    mod = _script()
+    shipped = mod.rename_unreleased(GROUPED, "1.1.0")
+    assert [m.group(1) for m in mod.SECTION.finditer(shipped)] == ["1.1.0", "1.0.0"]
+    assert mod.section_of(shipped, "1.1.0") == (
+        "### Features\n\n- something a user would notice\n\n"
+        "### Fixes\n\n- something that was wrong"
+    )
+    # And the dev bump reopens an EMPTY section above it — never a pair of
+    # headings with nothing under them, which is the state refused above.
+    assert mod.reopen_unreleased(shipped).startswith(
+        "# Changelog\n\n## Unreleased\n\n## 1.1.0")
 
 
 def test_the_dev_bump_reopens_the_section_and_only_once():

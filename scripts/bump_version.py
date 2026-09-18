@@ -72,6 +72,14 @@ CHANGELOG = "CHANGELOG.md"
 UNRELEASED = "Unreleased"
 SECTION = re.compile(r"^## +(.+?) *$", re.M)
 
+# A VERSION IS A `##` HEADING AND NOTHING ELSE. Inside one, entries are
+# grouped under `### Features` and `### Fixes` (`CONTRIBUTING.md` names
+# them), and those are invisible to `SECTION` by construction: `## +` wants a
+# SPACE after two hashes and a third hash is not one. So a version's body is
+# its sub-headings and their entries together, which is what `--section`
+# prints and what the release notes say.
+GROUP = re.compile(r"^#{3,} +.*$", re.M)
+
 
 def read_all(root: pathlib.Path | None = None) -> dict[str, str]:
     """Each file's number, keyed by its repo-relative path.
@@ -153,10 +161,10 @@ def rename_unreleased(text: str, version: str) -> str:
             f"{CHANGELOG}: expected one '## {UNRELEASED}' heading, found {len(found)}"
         )
     head = found[0]
-    if not _body_under(text, head).strip():
+    if not _says_something(_body_under(text, head)):
         raise SystemExit(
-            f"{CHANGELOG}: '## {UNRELEASED}' is empty — write what {version} "
-            "changed before releasing it"
+            f"{CHANGELOG}: '## {UNRELEASED}' holds no entry — write what "
+            f"{version} changed before releasing it"
         )
     return text[: head.start()] + f"## {version}" + text[head.end():]
 
@@ -165,6 +173,18 @@ def _body_under(text: str, head: re.Match[str]) -> str:
     """What a `## ` heading holds: down to the next one, or the end."""
     after = SECTION.search(text, head.end())
     return text[head.end(): after.start() if after else len(text)]
+
+
+def _says_something(body: str) -> bool:
+    """Does this section say anything — with its GROUP HEADINGS discounted.
+
+    A body of `### Features` and `### Fixes` and nothing under them is not
+    empty as a string, and shipping it is exactly the silence the two checks
+    below exist to catch. Discounting the headings rather than demanding a
+    list item, because a section may legitimately be one line of prose (the
+    first release's is).
+    """
+    return bool(GROUP.sub("", body).strip())
 
 
 def section_of(text: str, version: str) -> str:
@@ -182,7 +202,7 @@ def section_of(text: str, version: str) -> str:
             f"{CHANGELOG}: expected one '## {version}' heading, found {len(found)}"
         )
     body = _body_under(text, found[0]).strip("\n")
-    if not body.strip():
+    if not _says_something(body):
         raise SystemExit(f"{CHANGELOG}: '## {version}' is there and says nothing")
     return body
 
