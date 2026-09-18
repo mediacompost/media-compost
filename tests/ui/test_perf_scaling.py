@@ -162,6 +162,43 @@ def _post(path, body):
     return call
 
 
+def _group_page():
+    """A page scoped to a real GROUP — and the scope field takes group IDS.
+
+    It read `{"groups": "g1"}`, a NAME, and `prefilter.scope_clauses` keeps
+    only the parts of that field that are digits: the case was an unscoped
+    page under a scoped name, which is the same nothing-measured the search
+    file's own group case was seeded into. The id is looked up once per
+    client and cached, so the measured calls are the POST alone — and `g1`
+    is the group worth naming, being the one with a subtree under it.
+    """
+    known: dict[int, str] = {}
+
+    def group_id(client) -> str:
+        def walk(nodes):
+            for n in nodes:
+                if n["name"] == "g1":
+                    return n["id"]
+                found = walk(n.get("children") or [])
+                if found is not None:
+                    return found
+            return None
+
+        if id(client) not in known:
+            found = walk(client.get("/api/groups").json())
+            assert found is not None, "the seeded library has no group g1"
+            known[id(client)] = str(found)
+        return known[id(client)]
+
+    def call(client):
+        r = client.post("/api/items/query",
+                        json={"groups": group_id(client), "page": 1,
+                              "page_size": 60})
+        assert r.status_code == 200, r.text[:200]
+        return r
+    return call
+
+
 #: One per read that a library's SIZE could plausibly reach into. Each is
 #: named for what it would mean if it failed.
 CASES = [
@@ -171,8 +208,7 @@ CASES = [
     # correlated `EXISTS` probed per group id — 7.8 s for one page of a root
     # group's 73 descendants at a million items, and one statement either
     # way, so only the CLOCK can see it.
-    ("a group-scoped page", _post("/api/items/query", {
-        "groups": "g1", "page": 1, "page_size": 60})),
+    ("a group-scoped page", _group_page()),
     ("a searched page", _post("/api/items/query", {
         "query": {"type": "group", "op": "and", "children": [
             {"type": "tag", "name": "t1"}]}, "page": 1, "page_size": 60})),

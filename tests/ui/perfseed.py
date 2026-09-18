@@ -142,8 +142,19 @@ def seed_library(data_dir: Path, *, items: int = 50_000, tags: int = 2_000,
                 seen.add(key)
                 rows.append(a)
         s.execute(insert(ItemTag), rows)
+        # EVERY GROUP GETS DIRECT MEMBERS, and the `// 3` is what makes
+        # that true. A third of the items are filed, round-robin — but
+        # round-robin over `n` while the filing itself tests `n % 3` shares
+        # a factor with the group count (3 divides 60), so only every THIRD
+        # group was ever named: `g1` had no direct member in any library
+        # this file has ever seeded, and `GROUPONLY:g1` measured nothing
+        # while `GROUP:g1` matched through a child and looked fine.
+        # Dividing first makes the two strides independent, so a case here
+        # may name any group and get an answer. Nothing else moves: the
+        # same items are filed and the same number of rows written, spread
+        # over 60 groups instead of 20.
         s.execute(insert(ItemGroup), [
-            {"item_id": iid, "group_id": gids[n % groups]}
+            {"item_id": iid, "group_id": gids[(n // 3) % groups]}
             for n, iid in enumerate(ids) if n % 3 == 0])
         if meta_per_tag:
             tids = list(s.execute(select(Tag.id).order_by(Tag.id)).scalars())
