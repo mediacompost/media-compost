@@ -67,7 +67,7 @@ import { useRotate } from "./shared/useRotate";
 import { RefPickerOverlay } from "./RefPicker";
 import { useLoadedViewItems, useViewScope } from "../useItems";
 import {
-  HEAVY_SELECTION, QA_NUM_MAX, itemHasAllQaTags, setIsEmpty,
+  HEAVY_SELECTION, QA_NUM_MAX, qaSetMatch, setIsEmpty,
 } from "../qaSets";
 import { sanitizeLinkTagInput } from "../tags";
 import { rankTagMatches, SUGGEST_CAP } from "../tagRank";
@@ -7775,23 +7775,32 @@ function QuickAssign() {
   const sel = qaSelected != null ? qaSets[qaSelected] ?? null : null;
   const qaActive = sel != null && !setIsEmpty(sel);
 
-  // Memoized: rebuilding this map on every render of the always-mounted panel
-  // was pure waste — `items` only changes identity when loaded pages do.
+  // Memoized: rebuilding these maps on every render of the always-mounted
+  // panel was pure waste — `items` only changes identity when loaded pages do.
   const byId = useMemo(
     () => new Map(items.map((it) => [it.id, it.direct_tags])),
     [items]
   );
+  const groupsById = useMemo(
+    () => new Map(items.map((it) => [it.id, it.group_ids ?? []])),
+    [items]
+  );
   // Whether every selected item already carries the whole selected set — the
-  // button's toggle. Skipped past HEAVY_SELECTION like every other per-item
-  // aggregate in this panel (it used to run at any size, which was the one
-  // aggregate here that ignored the cap).
+  // button's toggle, asked through `qaSetMatch`, WHICH IS THE SAME QUESTION
+  // THE OVERLAY'S ROWS COLOUR THEMSELVES BY.
+  //
+  // It was asked of the TAGS alone, and a set's GROUPS are part of what it
+  // stamps: a set of one group answered "every item carries it" for any
+  // selection at all — both tag lists are empty, so "every tag is there" is
+  // vacuously true — and the button sat red, offering to remove a membership
+  // it had never added. Skipped past HEAVY_SELECTION like every other
+  // per-item aggregate in this panel; an item whose page is not loaded
+  // counts as not carrying the set, which is what it has always done.
   const allSelectedHave =
     qaActive && sel != null &&
     selectedItems.length > 0 && selectedItems.length <= HEAVY_SELECTION &&
-    selectedItems.every((id) => {
-      const dt = byId.get(id);
-      return dt ? itemHasAllQaTags(dt, sel.pos, sel.neg) : false;
-    });
+    qaSetMatch(selectedItems.map((id) => byId.get(id) ?? []), sel,
+               selectedItems.map((id) => groupsById.get(id) ?? [])) === "full";
 
   // What the last apply did, said out loud. The button is at the BOTTOM of a
   // sidebar that may be collapsed and is nowhere near what you are looking at,
@@ -7812,7 +7821,8 @@ function QuickAssign() {
       // No toggle over the whole view: whether every item carries the set is
       // unknowable from loaded pages, so a whole-view press only assigns.
       const r = await api.quickAssignView({
-        ...view.req, positive: sel.pos, negative: sel.neg, remove: false,
+        ...view.req, positive: sel.pos, negative: sel.neg,
+        assign_groups: sel.groups, remove: false,
       });
       n = r.count;
       remove = false;
@@ -7824,6 +7834,11 @@ function QuickAssign() {
         item_ids: selectedItems,
         positive: sel.pos,
         negative: sel.neg,
+        // The set's GROUP memberships, stamped beside its tags — the overlay
+        // and the grid's click-to-assign have always sent them, and this
+        // button applied the tags alone, so a set holding a group did
+        // nothing about that group however often it was pressed.
+        assign_groups: sel.groups,
         remove,
       });
       n = r.count;

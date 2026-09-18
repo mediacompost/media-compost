@@ -96,16 +96,20 @@ export function assignNumber(
 }
 
 /** True when the item carries every one of the set's tags directly and with
- *  the right sign (positives assigned, negatives marked negative). Empty tag
- *  lists are vacuously satisfied — callers guard with `setIsEmpty`. */
+ *  the right sign (positives assigned, negatives marked negative) and sits in
+ *  every one of its groups. Empty lists are vacuously satisfied — callers
+ *  guard with `setIsEmpty`.
+ *
+ *  THE GROUP ARGUMENTS ARE REQUIRED, and were optional until a caller left
+ *  them off: a set's memberships are as much a part of what it stamps as its
+ *  tags, and asked without them a set of one group reads as carried by every
+ *  item there is. Pass `[]`, `[]` to mean a question about tags alone. */
 export function itemHasAllQaTags(
   directTags: TagAssignment[],
   qaPos: string[],
   qaNeg: string[],
-  // The set's groups against the item's memberships — both optional so the
-  // tag-only callers stay exactly what they were.
-  qaGroups: number[] = [],
-  groupIds: number[] = [],
+  qaGroups: number[],
+  groupIds: number[],
 ): boolean {
   const pos = new Set(directTags.filter((t) => !t.negative).map((t) => t.name));
   const neg = new Set(directTags.filter((t) => t.negative).map((t) => t.name));
@@ -114,13 +118,15 @@ export function itemHasAllQaTags(
     && qaGroups.every((g) => inGroups.has(g));
 }
 
-/** True when the item carries ANY of the set's tags with the right sign. */
+/** True when the item carries ANY of the set's tags with the right sign, or
+ *  sits in any of its groups. The group arguments are required — see
+ *  `itemHasAllQaTags`. */
 export function itemHasAnyQaTag(
   directTags: TagAssignment[],
   qaPos: string[],
   qaNeg: string[],
-  qaGroups: number[] = [],
-  groupIds: number[] = [],
+  qaGroups: number[],
+  groupIds: number[],
 ): boolean {
   const pos = new Set(directTags.filter((t) => !t.negative).map((t) => t.name));
   const neg = new Set(directTags.filter((t) => t.negative).map((t) => t.name));
@@ -143,43 +149,52 @@ export function itemHasAnyQaTag(
 export function qaSetMatch(
   perItemDirect: TagAssignment[][],
   set: QaSet,
-  // Each item's group memberships, aligned with `perItemDirect` — omitted
-  // by callers that predate groups in sets, whose sets then match by tags
-  // alone exactly as before.
-  perItemGroups: number[][] = [],
+  // Each item's group memberships, aligned with `perItemDirect`. REQUIRED,
+  // and optional until a caller left it off: without it the set's groups
+  // were dropped from the question, so a set of one group answered "full"
+  // for any selection and the sidebar's button offered to remove a
+  // membership it had never added. An item the caller knows nothing about
+  // passes `[]`, which is "in none of them" — the same conservative answer
+  // an unloaded item's `[]` tag list gives.
+  perItemGroups: number[][],
 ): "full" | "partial" | "none" {
   if (setIsEmpty(set) || perItemDirect.length === 0) return "none";
-  const gids = perItemGroups.length ? set.groups : [];
   const gOf = (i: number) => perItemGroups[i] ?? [];
   if (perItemDirect.every((dt, i) =>
-      itemHasAllQaTags(dt, set.pos, set.neg, gids, gOf(i)))) {
+      itemHasAllQaTags(dt, set.pos, set.neg, set.groups, gOf(i)))) {
     return "full";
   }
   if (perItemDirect.some((dt, i) =>
-      itemHasAnyQaTag(dt, set.pos, set.neg, gids, gOf(i)))) {
+      itemHasAnyQaTag(dt, set.pos, set.neg, set.groups, gOf(i)))) {
     return "partial";
   }
   return "none";
 }
 
 /**
- * The set's tags EVERY item already carries with the right sign, keyed
- * "+name" / "-name". On a partially-matching overlay row these are the chips
- * greyed out — the press will only add what is left. An empty selection
- * answers empty.
+ * What of the set EVERY item already carries — its tags with the right sign,
+ * keyed "+name" / "-name", and its GROUPS, keyed "g<id>". On a partially-
+ * matching overlay row these are the chips greyed out, so the row says what
+ * the press will actually add; a membership chip is part of that answer,
+ * being part of what the press writes. An empty selection answers empty.
  */
 export function qaSetDone(
   perItemDirect: TagAssignment[][],
-  set: QaSet
+  set: QaSet,
+  perItemGroups: number[][],
 ): Set<string> {
   const out = new Set<string>();
   if (perItemDirect.length === 0) return out;
-  const per = perItemDirect.map((dt) => ({
+  const per = perItemDirect.map((dt, i) => ({
     pos: new Set(dt.filter((t) => !t.negative).map((t) => t.name)),
     neg: new Set(dt.filter((t) => t.negative).map((t) => t.name)),
+    groups: new Set(perItemGroups[i] ?? []),
   }));
   for (const n of set.pos) if (per.every((p) => p.pos.has(n))) out.add("+" + n);
   for (const n of set.neg) if (per.every((p) => p.neg.has(n))) out.add("-" + n);
+  for (const g of set.groups) {
+    if (per.every((p) => p.groups.has(g))) out.add("g" + g);
+  }
   return out;
 }
 

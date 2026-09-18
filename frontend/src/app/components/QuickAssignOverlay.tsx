@@ -44,9 +44,10 @@ import { isTypingTarget } from "../../shared/typingTarget";
 
 /** A set's tags as read-only chips — the drawer shows the same sets as live
  *  editors, so this compact form exists for the overlay's rows alone.
- *  `done` names the chips (by their "+name"/"-name" key) the selection
- *  already carries whole: those go GREY — a solid grey, not a fainter copy —
- *  so a partially-matching row says which tags the press will actually add.
+ *  `done` names the chips (by their "+name"/"-name"/"g<id>" key) the
+ *  selection already carries whole: those go GREY — a solid grey, not a
+ *  fainter copy — so a partially-matching row says what the press will
+ *  actually add, a membership it would not have to write included.
  *  The text colours are the `-text` variants: these chips sit on the row's
  *  green and yellow surfaces, where the plain hues are hard to read. */
 export function QaChipRow({ set, done, groupNames }: {
@@ -83,7 +84,8 @@ export function QaChipRow({ set, done, groupNames }: {
       {/* Membership chips in the ACCENT tint — a group is not a tag, and the
           folder glyph plus the third colour is what says so at a glance. */}
       {set.groups.map((g) => (
-        <Chip key={`g${g}`} tone="accent" size="md" icon="folder">
+        <Chip key={`g${g}`} size="md" icon="folder"
+          tone={done?.has(`g${g}`) ? "neutral" : "accent"}>
           {groupNames?.get(g) ?? `#${g}`}
         </Chip>
       ))}
@@ -144,7 +146,7 @@ export function QuickAssignOverlay() {
     const per = selectedItems.map((id) => byId.get(id) ?? []);
     const perGroups = selectedItems.map((id) => groupsById.get(id) ?? []);
     return rows.map((r) => ({ state: qaSetMatch(per, r, perGroups),
-                              done: qaSetDone(per, r) }));
+                              done: qaSetDone(per, r, perGroups) }));
   }, [rows, wholeView, selectedItems, byId, groupsById]);
 
   // ---- open / close ---------------------------------------------------------

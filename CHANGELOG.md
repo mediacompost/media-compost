@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- The sidebar's Quick Assign button reads a set's GROUPS as well as its tags:
+  a set holding a group showed "Remove from N selected" before it had ever
+  been applied, and the press then wrote only the tags.
 - A sequence's repeated page is stepped where it stands: with the same picture
   at two positions, the grid's and the preview's arrow keys went to the item
   after its OTHER position.

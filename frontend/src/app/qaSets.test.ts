@@ -15,6 +15,11 @@ const dt = (pos: string[], neg: string[] = []) => [
   ...pos.map((name) => ({ name, negative: false, count: 0 })),
   ...neg.map((name) => ({ name, negative: true, count: 0 })),
 ];
+/** The membership lists of a selection that is in NO group — spelled here
+ *  rather than defaulted in `qaSetMatch`, which is what a caller leaving
+ *  them off used to mean and is the whole of the bug that made them
+ *  required (a set of one group read as carried by everything). */
+const inNoGroup = (per: unknown[]) => per.map(() => [] as number[]);
 
 // ---- numbers ---------------------------------------------------------------
 
@@ -72,43 +77,56 @@ test("assignNumber is a no-op (same identity) when nothing changes", () => {
 
 test("full: every item carries the whole set with the right signs", () => {
   const s = set(["cat"], ["dog"]);
-  assert.equal(qaSetMatch([dt(["cat"], ["dog"]), dt(["cat", "x"], ["dog"])], s), "full");
+  const per = [dt(["cat"], ["dog"]), dt(["cat", "x"], ["dog"])];
+  assert.equal(qaSetMatch(per, s, inNoGroup(per)), "full");
 });
 
 test("partial: some item carries some of it; a sign mismatch is no match", () => {
   const s = set(["cat"], ["dog"]);
-  assert.equal(qaSetMatch([dt(["cat"]), dt([])], s), "partial");
+  assert.equal(qaSetMatch([dt(["cat"]), dt([])], s, [[], []]), "partial");
   // `dog` carried POSITIVE satisfies nothing of a set that wants it negative.
-  assert.equal(qaSetMatch([dt(["dog"])], s), "none");
-  assert.equal(qaSetMatch([dt([], ["cat"])], s), "none");
+  assert.equal(qaSetMatch([dt(["dog"])], s, [[]]), "none");
+  assert.equal(qaSetMatch([dt([], ["cat"])], s, [[]]), "none");
 });
 
 test("an empty set never matches — a green row must promise a real removal", () => {
-  assert.equal(qaSetMatch([dt(["cat"])], set([])), "none");
-  assert.ok(itemHasAllQaTags(dt(["cat"]), [], [])); // the vacuous truth guarded against
+  assert.equal(qaSetMatch([dt(["cat"])], set([]), [[]]), "none");
+  // The vacuous truth guarded against — and it is vacuous over the GROUPS
+  // too, which is why a caller may not leave them out.
+  assert.ok(itemHasAllQaTags(dt(["cat"]), [], [], [], []));
 });
 
 test("an empty selection matches nothing", () => {
-  assert.equal(qaSetMatch([], set(["cat"])), "none");
+  assert.equal(qaSetMatch([], set(["cat"]), []), "none");
 });
 
 test("an unloaded item ([]) demotes full to partial", () => {
   const s = set(["cat"]);
-  assert.equal(qaSetMatch([dt(["cat"]), []], s), "partial");
+  assert.equal(qaSetMatch([dt(["cat"]), []], s, [[], []]), "partial");
 });
 
 test("qaSetDone names what EVERY item already carries, sign included", () => {
   const s = set(["cat", "bird"], ["dog"]);
   const per = [dt(["cat", "bird"], ["dog"]), dt(["cat"], ["dog"])];
-  assert.deepEqual([...qaSetDone(per, s)].sort(), ["+cat", "-dog"]);
+  assert.deepEqual([...qaSetDone(per, s, inNoGroup(per))].sort(),
+                   ["+cat", "-dog"]);
   // A sign mismatch is not done, and an empty selection answers empty.
-  assert.deepEqual([...qaSetDone([dt(["dog"])], s)], []);
-  assert.deepEqual([...qaSetDone([], s)], []);
+  assert.deepEqual([...qaSetDone([dt(["dog"])], s, [[]])], []);
+  assert.deepEqual([...qaSetDone([], s, [])], []);
+});
+
+test("qaSetDone names a GROUP every item is already in", () => {
+  const s = { ...newQaSet(1), pos: ["cat"], groups: [7, 9] };
+  const per = [dt(["cat"]), dt(["cat"])];
+  // 7 is shared, 9 is not — the row greys the one the press need not write.
+  assert.deepEqual([...qaSetDone(per, s, [[7, 9], [7]])].sort(),
+                   ["+cat", "g7"]);
+  assert.deepEqual([...qaSetDone(per, s, [[], []])], ["+cat"]);
 });
 
 test("itemHasAnyQaTag reads signs like the full check does", () => {
-  assert.ok(itemHasAnyQaTag(dt([], ["dog"]), ["cat"], ["dog"]));
-  assert.ok(!itemHasAnyQaTag(dt(["dog"]), ["cat"], ["dog"]));
+  assert.ok(itemHasAnyQaTag(dt([], ["dog"]), ["cat"], ["dog"], [], []));
+  assert.ok(!itemHasAnyQaTag(dt(["dog"]), ["cat"], ["dog"], [], []));
 });
 
 // ---- order -----------------------------------------------------------------
@@ -178,10 +196,17 @@ test("a set's groups round-trip and count toward emptiness and matching", () => 
   assert.deepEqual(back[0].groups, [7, 3]);
   const membersOnly = { ...newQaSet(null), groups: [7] };
   assert.equal(setIsEmpty(membersOnly), false);
-  // Matching reads the memberships when the caller supplies them…
+  // A set's groups are part of the question, always: the memberships say
+  // which items carry it, and an item in none of them carries none of it
+  // however many of its tags it has.
   const dt = [{ name: "a", negative: false, count: 1 }];
   assert.equal(qaSetMatch([dt], g, [[7, 3]]), "full");
   assert.equal(qaSetMatch([dt], g, [[7]]), "partial");
-  // …and stays tags-only for callers that pass none (the old contract).
-  assert.equal(qaSetMatch([dt], g), "full");
+  assert.equal(qaSetMatch([dt], g, [[]]), "partial");
+  // A set of GROUPS ALONE is the case the sidebar's button got wrong: asked
+  // by the tags it has none, so "every tag is there" was vacuously true and
+  // the button offered to remove a membership nothing had.
+  assert.equal(qaSetMatch([dt], membersOnly, [[]]), "none");
+  assert.equal(qaSetMatch([dt], membersOnly, [[7]]), "full");
+  assert.equal(qaSetMatch([dt, dt], membersOnly, [[7], []]), "partial");
 });
