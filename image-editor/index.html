@@ -1,0 +1,2781 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Organize, deduplicate and annotate image and video datasets for AI training — a web app that runs on your own machine.">
+      
+      
+        <meta name="author" content="Media Compost">
+      
+      
+        <link rel="canonical" href="https://mediacompost.github.io/media-compost/image-editor/">
+      
+      
+        <link rel="prev" href="../item-properties/">
+      
+      
+        <link rel="next" href="../annotation-editor/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Image editor - Media Compost</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:300,300i,400,400i,700,700i%7CIBM+Plex+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"IBM Plex Sans";--md-code-font:"IBM Plex Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../assets/site.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#image-editor" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header"><label class="md-header__button md-icon mc-drawer" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label><a class="mc-brand" href=".." title="Media Compost" aria-label="Media Compost">
+      <span class="mc-mark" data-md-component="logo">
+        
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18.92 14a6.98 6.98 0 0 1-2.96 4.76c-.2-.83-1.43-1.51-3.04-1.7.17-1.19.52-2.3.76-2.94.38.24.82.38 1.32.38 3.55 0 3-6 3-6s-.5 1-2 1h-1a2.5 2.5 0 0 0-2.13 3.81c.66-.69 1.37-1.31 2.13-1.81-1.32 1.33-2.33 3-3 4.6-.63-1.23-1.42-2.17-2-2.6.47.2.91.5 1.33.8.11-.24.17-.51.17-.8C11.45 10.77 7 11 7 11c.31.42.5.95.5 1.5v1c0 1.1.9 2 2 2 .5 0 .95-.18 1.3-.5.23.63.4 1.35.49 2.04-1.72.15-3.04.85-3.25 1.73C6.21 17.5 5 15.39 5 13c0-3.86 3.14-7 7-7v3l5-4-5-4v3a9 9 0 0 0 0 18c4.63 0 8.44-3.5 8.94-8z"/></svg>
+
+      </span>
+      <div class="md-header__title" data-md-component="header-title">
+        <div class="md-header__ellipsis">
+          <div class="md-header__topic">
+            <span class="md-ellipsis">Media Compost</span>
+          </div>
+          <div class="md-header__topic" data-md-component="header-topic">
+            <span class="md-ellipsis">
+              
+                Image editor
+              
+            </span>
+          </div>
+        </div>
+      </div>
+    </a><div class="mc-nav">
+      <a class="mc-nav__link" href=".." data-mc-nav="home">Home</a>
+      <a class="mc-nav__link" href="../getting-started/" data-mc-nav="docs">Docs</a><a class="mc-nav__link" href="../api/" data-mc-nav="api">API</a>
+    </div>
+
+    <form class="mc-palette" data-md-component="palette">
+        
+          
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo" aria-label="System" type="radio" name="__palette" id="__palette_0">
+          <span class="mc-palette__sink" hidden></span>
+        
+          
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom" aria-label="Light" type="radio" name="__palette" id="__palette_1">
+          <span class="mc-palette__sink" hidden></span>
+        
+          
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom" aria-label="Dark" type="radio" name="__palette" id="__palette_2">
+          <span class="mc-palette__sink" hidden></span>
+        
+      </form>
+
+      <div class="mc-theme">
+        <button class="mc-theme__btn" type="button" aria-haspopup="true" aria-expanded="false" title="Theme"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2m0 2a8 8 0 0 1 8 8 8 8 0 0 1-8 8z"/></svg>
+        </button>
+        <div class="mc-theme__menu" hidden>
+          
+            
+              <label class="mc-theme__item" for="__palette_0">
+                <span class="mc-theme__tick"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 7 9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59z"/></svg></span>
+                <span class="mc-theme__label">System</span>
+              </label>
+            
+          
+            
+              <label class="mc-theme__item" for="__palette_1">
+                <span class="mc-theme__tick"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 7 9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59z"/></svg></span>
+                <span class="mc-theme__label">Light</span>
+              </label>
+            
+          
+            
+              <label class="mc-theme__item" for="__palette_2">
+                <span class="mc-theme__tick"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 7 9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59z"/></svg></span>
+                <span class="mc-theme__label">Dark</span>
+              </label>
+            
+          
+        </div>
+      </div>
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+
+    
+      
+      
+        <label class="md-header__button md-icon mc-search-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+
+    
+      <div class="md-header__source"><a class="md-source" href="https://github.com/mediacompost/media-compost" title="Go to repository">
+          
+          <span class="md-source__icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg></span>
+          <span class="md-source__label">GitHub</span>
+        </a>
+      </div>
+    
+  </nav>
+</header><script>
+  (function () {
+    var hdr = document.querySelector(".md-header");
+    if (!hdr) return;
+
+    var links = [].slice.call(hdr.querySelectorAll("[data-mc-nav]"));
+    var path = function (u) {
+      return new URL(u, location.href).pathname.replace(/index\.html$/, "");
+    };
+    // Home is an exact match and API is a PREFIX — everything under `/api/` is
+    // the reference. Docs is what is left over, so a page added anywhere in the
+    // documentation lights the right link without being listed here.
+    var syncNav = function () {
+      if (!links.length) return;
+      var here = path(location.href);
+      var of = {};
+      links.forEach(function (a) { of[a.getAttribute("data-mc-nav")] = path(a.href); });
+      var active =
+        here === of.home ? "home"
+        : of.api && here.indexOf(of.api) === 0 ? "api"
+        : "docs";
+      links.forEach(function (a) {
+        var on = a.getAttribute("data-mc-nav") === active;
+        a.classList.toggle("mc-nav__link--on", on);
+        if (on) a.setAttribute("aria-current", "page");
+        else a.removeAttribute("aria-current");
+      });
+    };
+    syncNav();
+    var title = hdr.querySelector("[data-md-component=header-title]");
+    if (title && window.MutationObserver) {
+      new MutationObserver(syncNav).observe(title, {
+        childList: true, subtree: true, characterData: true
+      });
+    }
+
+    var btn = hdr.querySelector(".mc-theme__btn");
+    var menu = hdr.querySelector(".mc-theme__menu");
+    if (!btn || !menu) return;
+    var items = [].slice.call(menu.querySelectorAll(".mc-theme__item"));
+
+    // WHICH ENTRY IS LIVE IS NOT SIMPLY "THE CHECKED RADIO". Material never
+    // checks one on a first visit — it derives the palette from the media
+    // query and keeps the index to itself, so on a fresh browser all three
+    // radios are unchecked while the page is plainly in one of them, and a
+    // menu reading the radios alone showed no tick at all.
+    //
+    // So the order is: a radio that IS checked (you have picked one this
+    // session), else what Material persisted, read through its own
+    // `__md_get` — the storage key is scoped by pathname and re-deriving that
+    // here would be a second copy of it — else the first media query that
+    // matches, which is Material's own fallback.
+    var inputs = [].slice.call(hdr.querySelectorAll("input[name=__palette]"));
+    var activeIndex = function () {
+      for (var i = 0; i < inputs.length; i++) if (inputs[i].checked) return i;
+      var saved = window.__md_get && window.__md_get("__palette");
+      if (saved && typeof saved.index === "number") {
+        return Math.max(0, Math.min(saved.index, inputs.length - 1));
+      }
+      for (var j = 0; j < inputs.length; j++) {
+        var media = inputs[j].getAttribute("data-md-color-media");
+        if (media && matchMedia(media).matches) return j;
+      }
+      return 0;
+    };
+    var syncTicks = function () {
+      var live = inputs[activeIndex()];
+      items.forEach(function (l) {
+        if (live && l.htmlFor === live.id) l.setAttribute("data-on", "");
+        else l.removeAttribute("data-on");
+      });
+    };
+    var open = function (v) {
+      menu.hidden = !v;
+      btn.setAttribute("aria-expanded", v ? "true" : "false");
+      if (v) syncTicks();
+    };
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      open(menu.hidden);
+    });
+    // The tick is read AFTER the label's own click has checked the radio.
+    menu.addEventListener("click", function () {
+      setTimeout(function () { syncTicks(); open(false); }, 0);
+    });
+    document.addEventListener("click", function (e) {
+      if (!menu.hidden && !menu.contains(e.target) && !btn.contains(e.target)) open(false);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") open(false);
+    });
+    inputs.forEach(function (i) { i.addEventListener("change", syncTicks); });
+    syncTicks();
+  })();
+</script>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Media Compost" class="md-nav__button md-logo" aria-label="Media Compost" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18.92 14a6.98 6.98 0 0 1-2.96 4.76c-.2-.83-1.43-1.51-3.04-1.7.17-1.19.52-2.3.76-2.94.38.24.82.38 1.32.38 3.55 0 3-6 3-6s-.5 1-2 1h-1a2.5 2.5 0 0 0-2.13 3.81c.66-.69 1.37-1.31 2.13-1.81-1.32 1.33-2.33 3-3 4.6-.63-1.23-1.42-2.17-2-2.6.47.2.91.5 1.33.8.11-.24.17-.51.17-.8C11.45 10.77 7 11 7 11c.31.42.5.95.5 1.5v1c0 1.1.9 2 2 2 .5 0 .95-.18 1.3-.5.23.63.4 1.35.49 2.04-1.72.15-3.04.85-3.25 1.73C6.21 17.5 5 15.39 5 13c0-3.86 3.14-7 7-7v3l5-4-5-4v3a9 9 0 0 0 0 18c4.63 0 8.44-3.5 8.94-8z"/></svg>
+
+    </a>
+    Media Compost
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/mediacompost/media-compost" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    media-compost
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Install
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compatibility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compatibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Use it
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Use it
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../import/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Importing files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Browsing the library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../search/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Searching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../item-properties/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The item panel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Edit and annotate
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Edit and annotate
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Image editor
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Image editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#opening-the-editor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opening the editor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layout
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Layout">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#theme" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Theme
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#zoom-and-pan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Zoom and pan
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#selections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Selections
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Selections">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-wand-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The wand tool
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-text-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The text tool
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#move-and-transform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Move and transform
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Move and transform">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#clipboard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Clipboard
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#painting-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Painting tools
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Painting tools">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#brush" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Brush
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#erase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Erase
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blur" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blur
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fill-paint-bucket" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fill (paint bucket)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#crop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Crop
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#colors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Colors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adjustments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adjustments
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inpainting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inpainting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-image-menu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Image menu
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-selection-menu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Selection menu
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#saving-and-closing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saving and closing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#editing-older-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Editing older versions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keyboard-shortcuts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keyboard shortcuts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../annotation-editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Annotation editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../video-editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Video editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Your vocabulary
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Your vocabulary
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tag-sets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tag sets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../subjects-and-faces/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Subjects and faces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../places/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Places
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rankings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rankings and batch sessions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    History
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI and training
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    AI and training
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evaluate/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Automation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Automation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command line
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../python-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../translating/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Translating
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Opening a library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/handles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Items and tag set
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/collections/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collections
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/query/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Querying
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/conditions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building conditions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/importing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Importing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    History
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/values/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Value types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#opening-the-editor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opening the editor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layout
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Layout">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#theme" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Theme
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#zoom-and-pan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Zoom and pan
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#selections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Selections
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Selections">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-wand-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The wand tool
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-text-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The text tool
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#move-and-transform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Move and transform
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Move and transform">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#clipboard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Clipboard
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#painting-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Painting tools
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Painting tools">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#brush" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Brush
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#erase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Erase
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blur" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blur
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fill-paint-bucket" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fill (paint bucket)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#crop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Crop
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#colors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Colors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adjustments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adjustments
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inpainting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inpainting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-image-menu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Image menu
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-selection-menu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Selection menu
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#saving-and-closing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saving and closing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#editing-older-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Editing older versions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keyboard-shortcuts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keyboard shortcuts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/mediacompost/media-compost/edit/main/docs/image-editor.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="image-editor">Image Editor<a class="headerlink" href="#image-editor" title="Permanent link">&para;</a></h1>
+<p>The image editor is a Photoshop-style editor for retouching library images — selections, painting, transforms, cropping, adjustments, and AI-assisted cleanup. It is the <strong>Edit</strong> half of the item window, an overlay that opens over the library. (Unlike the rest of the app, this window is deliberately English-only — its tag set is Photoshop's, and it does not follow the <a href="../settings/">language setting</a>.)</p>
+<h2 id="opening-the-editor">Opening the editor<a class="headerlink" href="#opening-the-editor" title="Permanent link">&para;</a></h2>
+<p>Click <strong>Edit image</strong> in the sidebar (or use the grid's context menu). The item window opens with the address as a parameter on the view behind it (<code>?item=&lt;ids&gt;&amp;mode=edit</code>), so reloading brings it back; a <strong>mode switch</strong> at the left of the header flips the current tab between <strong>Edit</strong> and <strong>Annotate</strong> (the <a href="../annotation-editor/">annotation editor</a>) — leaving Edit with unsaved changes asks first. Opening several images at once shows <strong>one tab per image</strong> across the top; tabs size to their full names, a star (<code>*</code>) marks a tab with unsaved changes, and the tab bar's bottom line disappears under the active tab. With a single image the strip is hidden — the header's ✕ is the way out.</p>
+<h2 id="layout">Layout<a class="headerlink" href="#layout" title="Permanent link">&para;</a></h2>
+<ul>
+<li>The <strong>header</strong> holds the mode switch, the item's name (with the buffer's current size underneath) and its <strong>file-number chip</strong> (see <a href="#editing-older-versions">Editing older versions</a>), the theme menu, the <strong>Save</strong> split-button, and the window's ✕.</li>
+<li><strong>Undo/Redo</strong> and the <strong>Image</strong> and <strong>Selection</strong> menus float over the picture's top-left corner, in their own pills — they act on the picture, so they live over it.</li>
+<li>A compact <strong>tool palette</strong> floats below them at the left edge: selection and painting tools first, the hand and zoom tools at the bottom, and the two <strong>color swatches</strong> in their own panel beneath the tools. Hovering a tool shows its name immediately as a tooltip.</li>
+<li>A <strong>tool properties bar</strong> sits centered at the top; it carries only controls. The active tool's name and a one-line hint live in the <strong>help bar</strong> at the bottom left.</li>
+<li>The area around the image is a solid background; the transparency <strong>checkerboard</strong> shows only within the image's bounds, so its size and edges are always visible.</li>
+<li><strong>Zoom to fit</strong> respects the floating bars — the fitted image is never covered by the palette or the top and bottom bars.</li>
+</ul>
+<p><strong>Pen input is pressure-sensitive</strong>: with a stylus, each brush or erase stamp scales its size and strength by pen pressure (a mouse always paints at full pressure).</p>
+<p><strong>Tool shortcuts are spring-loaded</strong>: a quick tap switches tools for good, while <em>holding</em> a tool's key uses that tool only while pressed — releasing returns to the previous tool.</p>
+<h3 id="theme">Theme<a class="headerlink" href="#theme" title="Permanent link">&para;</a></h3>
+<p>The theme toggle is a menu with <strong>Default</strong>, <strong>Light</strong>, and <strong>Dark</strong>. Default follows the main app's mode (and keeps following it); Light and Dark hold this window at that mode regardless — useful for judging an image against the opposite background. The choice persists across sessions.</p>
+<h2 id="zoom-and-pan">Zoom and pan<a class="headerlink" href="#zoom-and-pan" title="Permanent link">&para;</a></h2>
+<ul>
+<li>The scroll wheel zooms. Along an axis where the picture overflows the view it <strong>pivots on the cursor</strong>, so the point under it stays put; along one where the picture still fits it grows about its own centre, so a picture zoomed up and back down lands exactly where it was. A wheel over the picture is the picture's whatever is held down: <code>Ctrl</code>/<code>Cmd</code> + scroll, and a trackpad pinch, zoom the image, and the browser's own page zoom is refused — so a slipped modifier cannot leave the app at 110%.</li>
+<li>The <strong>zoom tool</strong> clicks to zoom in a step on the clicked point, <code>Alt</code>-clicks to zoom out, and drags a box to fill the view with that area.</li>
+<li><strong>Fit</strong> and <strong>100%</strong> buttons also re-center the image. <strong>100% means one image pixel per device pixel</strong> — on a HiDPI/retina display the percentage is measured in device pixels, so 100% is true actual size.</li>
+<li>The <strong>hand tool</strong> (<code>H</code>) pans. Holding <code>Space</code> temporarily switches any tool to the hand, and dragging with the <strong>middle mouse button</strong> pans from any tool.</li>
+</ul>
+<h2 id="selections">Selections<a class="headerlink" href="#selections" title="Permanent link">&para;</a></h2>
+<p>The <strong>selection tool</strong> offers two shapes — rectangle and circle — and four modes — replace, extend, subtract, intersect — in its properties bar. <code>Shift</code> temporarily extends, <code>Option</code>/<code>Alt</code> subtracts, and <strong><code>Shift</code>+<code>Alt</code> intersects</strong> — keeping only what the new shape and the old selection have in common (Clip Studio Paint's pairing). Intersecting when nothing is selected leaves nothing, which is what intersecting with nothing means. <strong>The control follows the keys</strong>: hold a modifier and the lit button moves to the mode that press would use, so you can check the keys where the setting already is. Once a drag starts it locks — the mode was decided at the press, and from then on those keys mean the shape instead — and a lasso built from clicks keeps its mode until the outline closes. Press them <strong>after</strong> the drag has begun and they shape the box instead: <code>Option</code>/<code>Alt</code> draws it out from its centre, <code>Shift</code> constrains it to a square — a circle in the ellipse style, which draws inside the same rectangle — and holding both gives a square centred where you pressed. It is the same two keys doing Photoshop's two jobs each, told apart by whether they were already down when you pressed — and a key you held at the press is spent on the mode only until you let it go: release it mid-drag and press it again and it shapes the box like any other, so a selection begun with <code>Shift</code> can still be squared and one begun with <code>Alt</code> can still be drawn from its centre. The mode itself never changes mid-drag. A square takes the larger of the two distances and still grows the way you dragged. The active selection is outlined with animated <strong>marching ants</strong> (a 1 px dashed line that stays 1 px at any zoom), and the dimmed unselected area keeps a pixel-sharp edge. Box selections snap to whole pixel edges.</p>
+<p>The <strong>lasso</strong> (<code>L</code>) is its own tool beside it, with the same properties and the same modes: drag to draw freehand, or click to place corners (double-click, a click on the first corner, or <code>Enter</code> closes the outline; <code>Escape</code> throws it away). It was a third shape inside the selection tool, which put the one gesture that is genuinely different behind a shape picker.</p>
+<ul>
+<li><strong>Invert</strong> turns the selection inside out; <strong>Clear</strong> removes it. Both are enabled only while a selection exists.</li>
+<li>Dragging from the selection's <strong>outline</strong> moves the selection mask itself without touching pixels (the cursor shows <em>move</em> over the outline), and the move is undoable like every other selection change.</li>
+<li>Clicking anywhere without dragging removes the selection.</li>
+<li>The <code>Delete</code> key fills the selection with the background color (transparency by default).</li>
+<li>The bar's <strong>Crop</strong> button crops the image to the selection's bounding box.</li>
+<li><strong>Fill</strong> fills the whole selection with the foreground color; <strong>Inpaint</strong> fills it from its surroundings (see <a href="#inpainting">Inpainting</a>).</li>
+</ul>
+<h3 id="the-wand-tool">The wand tool<a class="headerlink" href="#the-wand-tool" title="Permanent link">&para;</a></h3>
+<p>The <strong>wand</strong> (<code>W</code>) selects the contiguous area of similar color under the click, with its own <strong>Tolerance</strong> slider and a replace / add / remove / intersect control (<code>Shift</code>, <code>Alt</code> and <code>Shift</code>+<code>Alt</code> override it for one click). Clicking inside the current selection in replace mode clears it. <strong>Keep the button down and drag to adjust the tolerance live</strong> — right/up widens the selection, left/down narrows it — and the tolerance you release at becomes the tool's new setting. Both tolerances and the wand's Grow are <strong>remembered between sessions</strong>.</p>
+<p>Beside the tolerance is a <strong>Grow</strong> field, in whole pixels: a positive number pads what the wand found, a negative one eats into it. It is for the hairline a flood stops short of at a soft or anti-aliased edge — select the sky, grow by two, and the fringe goes with it. It applies to the <strong>new area alone</strong>, so adding to a selection grows only the part being added and leaves what was already selected exactly as it stands. While you are dragging the tolerance you see the raw find, and the padding is applied when you let go — the drag is for judging the tolerance, which the unpadded area shows more honestly. (To grow the whole selection instead, use <strong>Grow selection…</strong> in the Selection menu; that dialog remembers its own amount, and <strong>Shrink selection…</strong> remembers a separate one.)</p>
+<p><strong>Blur selection…</strong>, beside them, blurs the <em>selection</em> rather than the picture: it softens the mask's own edge by N pixels, spreading it both ways. Everything done afterwards fades out across that band instead of stopping at a visible seam, which is what makes it useful before an inpaint — the filled area meets the original gradually. It remembers its own amount as well.</p>
+<h3 id="the-text-tool">The text tool<a class="headerlink" href="#the-text-tool" title="Permanent link">&para;</a></h3>
+<p>The <strong>Select text</strong> tool (<code>T</code>) turns what an OCR engine has read on this picture into selections: it outlines the text boxes, and clicking one — or sweeping a band over several, with the marquee's modifiers — selects those exact regions (rotated text becomes exact quadrilaterals), ready to fill, inpaint, or transform. Its bar switches between word boxes and whichever other levels the reading holds (character, line, block), carries <strong>All text</strong> and <strong>Clear</strong> buttons and its own <strong>Inpaint</strong> split-button, and offers the reading engines for a file that hasn't been read yet — a run's progress shows right there.</p>
+<h2 id="move-and-transform">Move and transform<a class="headerlink" href="#move-and-transform" title="Permanent link">&para;</a></h2>
+<p>Dragging a selection's <strong>outline</strong> moves the selection mask; lifting the <em>pixels</em> goes through <strong>Transform</strong> (or paste), which floats them into a movable layer — the hand tool and held <code>Space</code> only ever pan, Photoshop-style.</p>
+<p>The <strong>Transform</strong> button (in the selection bar, and in the floating-selection bar while a float is not yet in transform mode) shows a bounding box:</p>
+<ul>
+<li><strong>Corner handles scale</strong> — the opposite corner stays fixed, <code>Shift</code> keeps the aspect ratio, <code>Alt</code>/<code>Option</code> scales about the center.</li>
+<li><strong>Mid-edge handles</strong> move just that edge; a top handle <strong>rotates</strong>; dragging inside <strong>moves</strong>. While un-rotated, moves and resizes snap to whole pixels so content never blurs.</li>
+<li><strong>Apply</strong> (or <code>Enter</code>) bakes the result in and re-selects it; <strong>Cancel</strong> (or <code>Escape</code>) discards it — and <code>⌘Z</code> during a move or transform cancels it the same way.</li>
+<li>A <strong>Keep original</strong> toggle switches to copy mode: the source pixels stay in place and applying bakes a duplicate at the new position.</li>
+<li><strong>Flip H / Flip V</strong> mirror the content and <strong>Rotate Left / Rotate Right</strong> quarter-turn it; flips survive further resizing.</li>
+<li>Switching tools or saving applies a pending transform automatically.</li>
+</ul>
+<h3 id="clipboard">Clipboard<a class="headerlink" href="#clipboard" title="Permanent link">&para;</a></h3>
+<p><code>⌘/Ctrl+C</code> copies the selected pixels, <code>⌘/Ctrl+X</code> cuts them, and <code>⌘/Ctrl+V</code> pastes the clipboard as a new floating selection in transform mode, centered in the viewport. The clipboard lives for the editor's session and carries across its tabs.</p>
+<h2 id="painting-tools">Painting tools<a class="headerlink" href="#painting-tools" title="Permanent link">&para;</a></h2>
+<h3 id="brush">Brush<a class="headerlink" href="#brush" title="Permanent link">&para;</a></h3>
+<p>Paints the foreground color; the brush shape is previewed as an outlined circle under the cursor. With a selection active, the brush affects only the selected area. Size, hardness and opacity are set in the properties bar. <strong>The size slider is logarithmic</strong> — the same for the erase and blur tools — so each doubling takes the same length of track: the quarter points are 1, 4, 14, 53 and 200 px, and picking a 3 px tip is as easy as picking a 150 px one. The number field beside it is still plain pixels — <strong>Opacity is the foreground colour's alpha</strong>, the same number the colour picker shows, so the two always agree: paint at 40% and the swatch is 40% too — each slider has an editable number field, and every such field accepts <strong>simple arithmetic</strong> (<code>500+10</code> commits as 510). One pass lays the tip down in full: the centre of a stroke reaches the colour's own opacity at any hardness, and hardness decides only how wide the soft edge is. Crossing your own stroke within one stroke does not darken it — the colour's alpha is the opacity for the whole stroke, so a 50%-alpha colour paints a 50% stroke however many times it doubles back. (It used to build up like an airbrush instead, which meant a soft brush could never get past about a third of the colour: measured, 32.5% at the default hardness of 80, and 100% only at a hardness of 100.)</p>
+<h3 id="erase">Erase<a class="headerlink" href="#erase" title="Permanent link">&para;</a></h3>
+<p>The <strong>erase tool</strong> (<code>E</code>) has its own size and hardness. With no background color set it erases to transparency; with one set it paints the background color. <code>Delete</code>/<code>Backspace</code> likewise fills the selection (or the whole image) with the background color.</p>
+<h3 id="blur">Blur<a class="headerlink" href="#blur" title="Permanent link">&para;</a></h3>
+<p>The <strong>blur tool</strong> works like the brush but applies a gaussian blur inside the soft brush circle; its Strength slider sets the radius, repeated strokes blur further, and a selection clips it. <strong>Only the pixels under the brush are averaged</strong> — brushing along the edge of one colour never drags the colour beside it in, however strong the blur.</p>
+<h3 id="fill-paint-bucket">Fill (paint bucket)<a class="headerlink" href="#fill-paint-bucket" title="Permanent link">&para;</a></h3>
+<p>The <strong>fill tool</strong> flood-fills the contiguous area of similar color under the cursor with the foreground color, governed by a <strong>Tolerance</strong> slider. With a selection active the fill is confined to it. Like the wand, <strong>dragging with the button held adjusts the tolerance live</strong>, and the whole drag is one undo step.</p>
+<h2 id="crop">Crop<a class="headerlink" href="#crop" title="Permanent link">&para;</a></h2>
+<p>The <strong>crop tool</strong> drags out a rectangle with handles: corners resize (the opposite corner stays fixed), mid-edge handles move one edge, a stalked top handle <strong>rotates</strong> (synced with the Angle field, clamped to ±45°), and dragging inside moves it. An un-rotated crop is limited to the image bounds; a rotated one may reach past a corner, and whatever falls outside the picture is filled with transparency.</p>
+<ul>
+<li><strong>Ratio</strong> limits the crop to a fixed width-to-height shape — <strong>Original</strong> (the picture's own, spelled out as <code>Original (3:2)</code>), <code>1:1</code>, <code>3:2</code>, <code>2:3</code>, <code>4:3</code>, <code>3:4</code>, <code>16:9</code>, <code>9:16</code>, <code>5:4</code>, <code>4:5</code>, <strong>Free</strong>, or <strong>Custom…</strong>, which reveals two fields beside the menu seeded from the rectangle on screen and taking a ratio (<code>16 : 9</code>) or a size (<code>1920 : 1080</code>), reshaping the crop as you type. Picking one reshapes the rectangle already on screen (keeping its centre) as well as constraining the next drag; a locked rectangle <strong>stops at the edge of the picture</strong> rather than being squashed out of shape, and an edge handle moves the other pair of edges with it. The shape is held in the crop's own frame, so it survives the Angle field: a rotated <code>16:9</code> crop still produces a <code>16:9</code> picture.</li>
+<li><strong>To Selection</strong> sets the crop rectangle to the current selection's bounding box — with a ratio locked, to the largest rectangle of that shape inside it.</li>
+<li>Clicking the image without dragging clears the crop rectangle.</li>
+<li>The <strong>Crop</strong> button or <code>Enter</code> performs the crop; <code>Escape</code> clears the pending rectangle.</li>
+<li><strong>Duplicate &amp; Crop</strong> opens the cropped region as a pending <strong>New crop</strong> tab (marked unsaved) — the new item is only created when that tab is first saved; discarding the tab creates nothing.</li>
+</ul>
+<h2 id="colors">Colors<a class="headerlink" href="#colors" title="Permanent link">&para;</a></h2>
+<p>The palette carries two swatches: the <strong>foreground</strong> color (used when adding — brush, fill) and the <strong>background</strong> color (used when removing — erase, <code>Delete</code>). The background is transparent by default; picking a fully transparent color (alpha 0) resets it.</p>
+<p>Clicking a swatch opens a custom <strong>color picker</strong> popover anchored beside it: a saturation/value square, hue and alpha sliders, editable values in RGB, HSL, HSV, or hex (8-digit hex carries alpha), and a <strong>Recent colors</strong> row remembered across sessions. Every change applies live.</p>
+<p>Colors carry <strong>alpha</strong>: a color's alpha is the stroke's opacity cap, and erasing replaces the area with the background color at its own alpha — never a blend with the old pixels.</p>
+<h2 id="adjustments">Adjustments<a class="headerlink" href="#adjustments" title="Permanent link">&para;</a></h2>
+<p><strong>Image → Adjustments…</strong> opens a small panel over the top right of the canvas — not a modal, so you can keep panning and zooming while judging the change. Four sliders — <strong>brightness</strong>, <strong>contrast</strong>, <strong>saturation</strong>, <strong>hue</strong> — preview live on the full-resolution image; double-click a slider to return it to neutral. <strong>Reset</strong>, <strong>Cancel</strong>, and <strong>OK</strong> (applies everything as one undoable step). With a selection active, the adjustment applies to the selection only, and the panel says so.</p>
+<h2 id="inpainting">Inpainting<a class="headerlink" href="#inpainting" title="Permanent link">&para;</a></h2>
+<p><strong>Inpaint</strong> fills the selected area from the surrounding image with a LaMa AI model, removing unwanted content and replacing it with a plausible continuation. It runs from the <strong>Inpaint</strong> button in the bar of every tool that makes a selection — the marquee and lasso (next to Fill), the text tool, and the <strong>wand</strong>, which is where a patch of sky, a speech balloon's inside or a logo's background is picked up in one click — or from the Selection menu; only the selected pixels change, and the result is undoable.</p>
+<p><strong>A partly-selected pixel is partly filled</strong>, so <strong>Blur selection…</strong> is the answer to a seam you can still see: soften the mask's edge first and the fill meets the original gradually instead of at a line. The model's own tone is corrected against the pixels around the hole, so a fill dropped into a sky, a wall or a screentone sits at the tone of what surrounds it.</p>
+<p>Two models are available (the Inpaint button's dropdown picks one): <strong>Photo</strong> (big-lama) for photographic content and <strong>Anime / illustration</strong> (a line-art and screentone fine-tune of it) for illustrations, manga, and line art. A variant is greyed until its weights are downloaded in <a href="../settings/">Settings → Actions</a>.</p>
+<h2 id="the-image-menu">The Image menu<a class="headerlink" href="#the-image-menu" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Rotate left / Rotate right</strong>.</li>
+<li><strong>Image size…</strong> — resample to a new size with aspect-linked fields.</li>
+<li><strong>Canvas size…</strong> — grow with transparency or trim, with a 3×3 anchor grid; the image is never scaled.</li>
+<li><strong>Adjustments…</strong> — see <a href="#adjustments">Adjustments</a>.</li>
+<li><strong>Upscale</strong>, <strong>Colorize</strong>, <strong>Remove artifacts</strong>, <strong>Remove screen tones</strong> and <strong>Remove background</strong> — five submenus side by side, each listing that action's AI models and greying the ones not yet set up (or leaving them out, under the <a href="../settings/#ai-actions">hide-unready setting</a>); results replace the buffer and are undoable. The Colorize submenu includes the example-based manga model, which opens the reference picker right inside the editor.</li>
+<li><strong>Remove screen tones</strong> converts manga screentones into smooth greyscale gradients: two neural <strong>OpenComic descreen</strong> models (<strong>Compact</strong>, near-instant, and <strong>Lite</strong>, a touch cleaner) plus <strong>Descreen (FFT)</strong>, a download-free classical filter whose one extra trick is restraint — a page with no detectable screentone only gets a gentle smoothing.</li>
+</ul>
+<h2 id="the-selection-menu">The Selection menu<a class="headerlink" href="#the-selection-menu" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Select text / Select watermark</strong> run the detectors on the current buffer and turn the found regions into the selection (rotated text becomes exact quadrilaterals) — ready to fill, inpaint, or transform.</li>
+<li><strong>Inpaint selection</strong> — the two LaMa models as separate rows (see <a href="#inpainting">Inpainting</a>).</li>
+<li><strong>Fill selection</strong>, <strong>Grow / Shrink selection…</strong> (a dialog asks for the amount in pixels, expressions allowed), <strong>Invert selection</strong>, <strong>Transform selection</strong> (lifts the selected pixels straight into transform mode), <strong>Crop to selection</strong> (crops immediately), and <strong>Clear selection</strong> — all disabled until a selection exists.</li>
+</ul>
+<h2 id="saving-and-closing">Saving and closing<a class="headerlink" href="#saving-and-closing" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Save</strong> (or <code>⌘/Ctrl+S</code>) saves the buffer <strong>as a new file on the item</strong> — the file you edited is kept intact as a prior version, and the new one becomes the item's active file, so thumbnails update immediately everywhere. The button is enabled only while the buffer actually differs from the last saved state — undoing every change back to it disables Save again.</li>
+<li>The Save button's <strong>chevron</strong> menu offers <strong>Save to a new item</strong> (the edit becomes a standalone item, linked back to this one and carrying its tags, captions, and the rest — the original is left entirely alone) and <strong>Revert to saved</strong> (throws away unsaved edits — itself undoable).</li>
+<li>The window's <strong>✕</strong> in the header — or a tab's own ✕ — closes, guarding unsaved edits with a save/discard/cancel prompt. Switching the mode to Annotate is guarded the same way. With several tabs open the header's ✕ asks the same question <code>Escape</code> does: close the <strong>window</strong> or just this <strong>tab</strong>.</li>
+<li><strong><code>Escape</code> steps down before it closes</strong>: it first cancels an active transform, then clears a pending crop rectangle, then clears the selection — only then does it start closing. With several tabs open it asks whether to close the <strong>window</strong> or just the <strong>tab</strong>, and then guards unsaved changes. Closing the browser tab itself falls back to the browser's native unsaved-changes confirmation.</li>
+</ul>
+<h2 id="editing-older-versions">Editing older versions<a class="headerlink" href="#editing-older-versions" title="Permanent link">&para;</a></h2>
+<p>The header's <strong>file-number chip</strong> (<code>#N</code>) lists the item's image files (a video file on the same item is left out) — number, name or edit action, dimensions, and an "active" marker on the item's active file. Selecting one loads that file into the editor (guarding unsaved edits first), so an older or alternate version can be edited directly; saving still adds a new file to the item, based on the file that was loaded.</p>
+<h2 id="keyboard-shortcuts">Keyboard shortcuts<a class="headerlink" href="#keyboard-shortcuts" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Shortcut</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>H</code></td>
+<td>Hand tool (pan)</td>
+</tr>
+<tr>
+<td><code>M</code> / <code>L</code></td>
+<td>Select (marquee) / Lasso</td>
+</tr>
+<tr>
+<td><code>E</code></td>
+<td>Erase tool</td>
+</tr>
+<tr>
+<td><code>W</code></td>
+<td>Wand tool</td>
+</tr>
+<tr>
+<td><code>T</code></td>
+<td>Select-text tool</td>
+</tr>
+<tr>
+<td><code>Space</code> (hold)</td>
+<td>Temporarily switch to the hand tool</td>
+</tr>
+<tr>
+<td>Middle-drag</td>
+<td>Pan from any tool</td>
+</tr>
+<tr>
+<td><code>Shift</code> / <code>Alt</code></td>
+<td>Extend / subtract selection (while selecting)</td>
+</tr>
+<tr>
+<td><code>⌘/Ctrl+Z</code></td>
+<td>Undo (cancels an active move/transform)</td>
+</tr>
+<tr>
+<td><code>⌘/Ctrl+Shift+Z</code> or <code>⌘/Ctrl+Y</code></td>
+<td>Redo</td>
+</tr>
+<tr>
+<td><code>⌘/Ctrl+C</code> / <code>X</code> / <code>V</code></td>
+<td>Copy / cut / paste selection</td>
+</tr>
+<tr>
+<td><code>Enter</code></td>
+<td>Apply transform · perform crop</td>
+</tr>
+<tr>
+<td><code>Escape</code></td>
+<td>Cancel transform · clear crop rect · clear selection · then close</td>
+</tr>
+<tr>
+<td><code>Delete</code> / <code>Backspace</code></td>
+<td>Fill selection (or image) with the background color</td>
+</tr>
+<tr>
+<td><code>⌘/Ctrl+S</code></td>
+<td>Save</td>
+</tr>
+</tbody>
+</table>
+<p>Every tool has a shortcut — hover its palette button to see it — and holding any tool key uses that tool only while pressed.</p>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../annotation-editor/">Annotation editor</a> — tag bounding boxes are created there, not here</li>
+<li><a href="../video-editor/">Video editor</a></li>
+<li><a href="../item-properties/">Item properties</a> — where edits appear as file versions</li>
+<li><a href="../settings/">Settings</a> — model downloads for inpainting, upscaling, and colorizing</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../item-properties/" class="md-footer__link md-footer__link--prev" aria-label="Previous: The item panel">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                The item panel
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../annotation-editor/" class="md-footer__link md-footer__link--next" aria-label="Next: Annotation editor">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Annotation editor
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.top", "navigation.footer", "content.code.copy", "content.action.edit", "search.suggest", "search.highlight", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../assets/home.js"></script>
+      
+    
+  </body>
+</html>

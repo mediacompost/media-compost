@@ -1,0 +1,2913 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Organize, deduplicate and annotate image and video datasets for AI training — a web app that runs on your own machine.">
+      
+      
+        <meta name="author" content="Media Compost">
+      
+      
+        <link rel="canonical" href="https://mediacompost.github.io/media-compost/installation/">
+      
+      
+        <link rel="prev" href="../features/">
+      
+      
+        <link rel="next" href="../compatibility/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Installation - Media Compost</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:300,300i,400,400i,700,700i%7CIBM+Plex+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"IBM Plex Sans";--md-code-font:"IBM Plex Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../assets/site.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#installation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header"><label class="md-header__button md-icon mc-drawer" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label><a class="mc-brand" href=".." title="Media Compost" aria-label="Media Compost">
+      <span class="mc-mark" data-md-component="logo">
+        
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18.92 14a6.98 6.98 0 0 1-2.96 4.76c-.2-.83-1.43-1.51-3.04-1.7.17-1.19.52-2.3.76-2.94.38.24.82.38 1.32.38 3.55 0 3-6 3-6s-.5 1-2 1h-1a2.5 2.5 0 0 0-2.13 3.81c.66-.69 1.37-1.31 2.13-1.81-1.32 1.33-2.33 3-3 4.6-.63-1.23-1.42-2.17-2-2.6.47.2.91.5 1.33.8.11-.24.17-.51.17-.8C11.45 10.77 7 11 7 11c.31.42.5.95.5 1.5v1c0 1.1.9 2 2 2 .5 0 .95-.18 1.3-.5.23.63.4 1.35.49 2.04-1.72.15-3.04.85-3.25 1.73C6.21 17.5 5 15.39 5 13c0-3.86 3.14-7 7-7v3l5-4-5-4v3a9 9 0 0 0 0 18c4.63 0 8.44-3.5 8.94-8z"/></svg>
+
+      </span>
+      <div class="md-header__title" data-md-component="header-title">
+        <div class="md-header__ellipsis">
+          <div class="md-header__topic">
+            <span class="md-ellipsis">Media Compost</span>
+          </div>
+          <div class="md-header__topic" data-md-component="header-topic">
+            <span class="md-ellipsis">
+              
+                Installation
+              
+            </span>
+          </div>
+        </div>
+      </div>
+    </a><div class="mc-nav">
+      <a class="mc-nav__link" href=".." data-mc-nav="home">Home</a>
+      <a class="mc-nav__link" href="../getting-started/" data-mc-nav="docs">Docs</a><a class="mc-nav__link" href="../api/" data-mc-nav="api">API</a>
+    </div>
+
+    <form class="mc-palette" data-md-component="palette">
+        
+          
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo" aria-label="System" type="radio" name="__palette" id="__palette_0">
+          <span class="mc-palette__sink" hidden></span>
+        
+          
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom" aria-label="Light" type="radio" name="__palette" id="__palette_1">
+          <span class="mc-palette__sink" hidden></span>
+        
+          
+          
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom" aria-label="Dark" type="radio" name="__palette" id="__palette_2">
+          <span class="mc-palette__sink" hidden></span>
+        
+      </form>
+
+      <div class="mc-theme">
+        <button class="mc-theme__btn" type="button" aria-haspopup="true" aria-expanded="false" title="Theme"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2m0 2a8 8 0 0 1 8 8 8 8 0 0 1-8 8z"/></svg>
+        </button>
+        <div class="mc-theme__menu" hidden>
+          
+            
+              <label class="mc-theme__item" for="__palette_0">
+                <span class="mc-theme__tick"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 7 9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59z"/></svg></span>
+                <span class="mc-theme__label">System</span>
+              </label>
+            
+          
+            
+              <label class="mc-theme__item" for="__palette_1">
+                <span class="mc-theme__tick"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 7 9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59z"/></svg></span>
+                <span class="mc-theme__label">Light</span>
+              </label>
+            
+          
+            
+              <label class="mc-theme__item" for="__palette_2">
+                <span class="mc-theme__tick"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 7 9 19l-5.5-5.5 1.41-1.41L9 16.17 19.59 5.59z"/></svg></span>
+                <span class="mc-theme__label">Dark</span>
+              </label>
+            
+          
+        </div>
+      </div>
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+
+    
+      
+      
+        <label class="md-header__button md-icon mc-search-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+
+    
+      <div class="md-header__source"><a class="md-source" href="https://github.com/mediacompost/media-compost" title="Go to repository">
+          
+          <span class="md-source__icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg></span>
+          <span class="md-source__label">GitHub</span>
+        </a>
+      </div>
+    
+  </nav>
+</header><script>
+  (function () {
+    var hdr = document.querySelector(".md-header");
+    if (!hdr) return;
+
+    var links = [].slice.call(hdr.querySelectorAll("[data-mc-nav]"));
+    var path = function (u) {
+      return new URL(u, location.href).pathname.replace(/index\.html$/, "");
+    };
+    // Home is an exact match and API is a PREFIX — everything under `/api/` is
+    // the reference. Docs is what is left over, so a page added anywhere in the
+    // documentation lights the right link without being listed here.
+    var syncNav = function () {
+      if (!links.length) return;
+      var here = path(location.href);
+      var of = {};
+      links.forEach(function (a) { of[a.getAttribute("data-mc-nav")] = path(a.href); });
+      var active =
+        here === of.home ? "home"
+        : of.api && here.indexOf(of.api) === 0 ? "api"
+        : "docs";
+      links.forEach(function (a) {
+        var on = a.getAttribute("data-mc-nav") === active;
+        a.classList.toggle("mc-nav__link--on", on);
+        if (on) a.setAttribute("aria-current", "page");
+        else a.removeAttribute("aria-current");
+      });
+    };
+    syncNav();
+    var title = hdr.querySelector("[data-md-component=header-title]");
+    if (title && window.MutationObserver) {
+      new MutationObserver(syncNav).observe(title, {
+        childList: true, subtree: true, characterData: true
+      });
+    }
+
+    var btn = hdr.querySelector(".mc-theme__btn");
+    var menu = hdr.querySelector(".mc-theme__menu");
+    if (!btn || !menu) return;
+    var items = [].slice.call(menu.querySelectorAll(".mc-theme__item"));
+
+    // WHICH ENTRY IS LIVE IS NOT SIMPLY "THE CHECKED RADIO". Material never
+    // checks one on a first visit — it derives the palette from the media
+    // query and keeps the index to itself, so on a fresh browser all three
+    // radios are unchecked while the page is plainly in one of them, and a
+    // menu reading the radios alone showed no tick at all.
+    //
+    // So the order is: a radio that IS checked (you have picked one this
+    // session), else what Material persisted, read through its own
+    // `__md_get` — the storage key is scoped by pathname and re-deriving that
+    // here would be a second copy of it — else the first media query that
+    // matches, which is Material's own fallback.
+    var inputs = [].slice.call(hdr.querySelectorAll("input[name=__palette]"));
+    var activeIndex = function () {
+      for (var i = 0; i < inputs.length; i++) if (inputs[i].checked) return i;
+      var saved = window.__md_get && window.__md_get("__palette");
+      if (saved && typeof saved.index === "number") {
+        return Math.max(0, Math.min(saved.index, inputs.length - 1));
+      }
+      for (var j = 0; j < inputs.length; j++) {
+        var media = inputs[j].getAttribute("data-md-color-media");
+        if (media && matchMedia(media).matches) return j;
+      }
+      return 0;
+    };
+    var syncTicks = function () {
+      var live = inputs[activeIndex()];
+      items.forEach(function (l) {
+        if (live && l.htmlFor === live.id) l.setAttribute("data-on", "");
+        else l.removeAttribute("data-on");
+      });
+    };
+    var open = function (v) {
+      menu.hidden = !v;
+      btn.setAttribute("aria-expanded", v ? "true" : "false");
+      if (v) syncTicks();
+    };
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      open(menu.hidden);
+    });
+    // The tick is read AFTER the label's own click has checked the radio.
+    menu.addEventListener("click", function () {
+      setTimeout(function () { syncTicks(); open(false); }, 0);
+    });
+    document.addEventListener("click", function (e) {
+      if (!menu.hidden && !menu.contains(e.target) && !btn.contains(e.target)) open(false);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") open(false);
+    });
+    inputs.forEach(function (i) { i.addEventListener("change", syncTicks); });
+    syncTicks();
+  })();
+</script>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Media Compost" class="md-nav__button md-logo" aria-label="Media Compost" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18.92 14a6.98 6.98 0 0 1-2.96 4.76c-.2-.83-1.43-1.51-3.04-1.7.17-1.19.52-2.3.76-2.94.38.24.82.38 1.32.38 3.55 0 3-6 3-6s-.5 1-2 1h-1a2.5 2.5 0 0 0-2.13 3.81c.66-.69 1.37-1.31 2.13-1.81-1.32 1.33-2.33 3-3 4.6-.63-1.23-1.42-2.17-2-2.6.47.2.91.5 1.33.8.11-.24.17-.51.17-.8C11.45 10.77 7 11 7 11c.31.42.5.95.5 1.5v1c0 1.1.9 2 2 2 .5 0 .95-.18 1.3-.5.23.63.4 1.35.49 2.04-1.72.15-3.04.85-3.25 1.73C6.21 17.5 5 15.39 5 13c0-3.86 3.14-7 7-7v3l5-4-5-4v3a9 9 0 0 0 0 18c4.63 0 8.44-3.5 8.94-8z"/></svg>
+
+    </a>
+    Media Compost
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/mediacompost/media-compost" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    media-compost
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Install
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#one-distribution-three-parts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        One distribution, three parts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Requirements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-a-release-no-node" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install a release (no Node)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-from-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install from source
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-the-frontend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build the frontend
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-the-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the app
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-the-data-directory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing the data directory
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-as-a-single-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run as a single process
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#development-mode-two-processes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development mode (two processes)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optional-ai-model-environments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional: AI model environments
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deployment
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Deployment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#serving-on-a-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Serving on a network
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#docker-podman" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docker / Podman
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Docker / Podman">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#https-and-basic-auth-in-front-of-the-container" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTTPS and basic auth in front of the container
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-user-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-user access
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Multi-user access">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-nginx-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example nginx setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#turning-training-off" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Turning training off
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Network access
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compatibility/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compatibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Use it
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Use it
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../import/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Importing files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Browsing the library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../search/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Searching
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../item-properties/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The item panel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Edit and annotate
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Edit and annotate
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../image-editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Image editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../annotation-editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Annotation editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../video-editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Video editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Your vocabulary
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Your vocabulary
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tag-sets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tag sets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../subjects-and-faces/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Subjects and faces
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../places/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Places
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../events/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rankings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rankings and batch sessions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    History
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI and training
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    AI and training
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evaluate/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluate
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Automation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Automation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command line
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../python-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../translating/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Translating
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Opening a library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/handles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Items and tag set
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/collections/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collections
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/query/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Querying
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/conditions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building conditions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/importing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Importing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    History
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/values/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Value types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#one-distribution-three-parts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        One distribution, three parts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Requirements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-a-release-no-node" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install a release (no Node)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-from-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install from source
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-the-frontend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build the frontend
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-the-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the app
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-the-data-directory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing the data directory
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-as-a-single-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run as a single process
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#development-mode-two-processes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development mode (two processes)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optional-ai-model-environments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional: AI model environments
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deployment
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Deployment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#serving-on-a-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Serving on a network
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#docker-podman" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docker / Podman
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Docker / Podman">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#https-and-basic-auth-in-front-of-the-container" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HTTPS and basic auth in front of the container
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-user-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-user access
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Multi-user access">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-nginx-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example nginx setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#turning-training-off" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Turning training off
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Network access
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/mediacompost/media-compost/edit/main/docs/installation.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h1>
+<p>This page walks you through installing Media Compost — from PyPI or from
+source — and running it on your own machine.</p>
+<h2 id="one-distribution-three-parts">One distribution, three parts<a class="headerlink" href="#one-distribution-three-parts" title="Permanent link">&para;</a></h2>
+<p>Media Compost ships as <strong>one pip distribution</strong> holding one Python package in
+three parts — the library at the root, the app and the trainer as
+subpackages — with extras deciding what a given install can do:</p>
+<table>
+<thead>
+<tr>
+<th>package</th>
+<th>is</th>
+<th>costs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>media_compost</code></td>
+<td>the public Python API and the <code>media-compost</code> CLI — read and write libraries from a script</td>
+<td>nine dependencies, no server</td>
+</tr>
+<tr>
+<td><code>media_compost.ui</code></td>
+<td>the web app: the server, the frontend, the image/video editors, the AI actions</td>
+<td><code>[full]</code> — fastapi, uvicorn, python-multipart, faiss-cpu, imageio-ffmpeg, and <code>[train]</code></td>
+</tr>
+<tr>
+<td><code>media_compost.train</code></td>
+<td>the trainer, drivable from <code>media-compost-train</code> or the app's Train tab</td>
+<td><code>[train]</code> — the Hugging Face plumbing and, off macOS, the NVIDIA management library the GPU stats read; the torch stack lives in a venv of its own</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>you want</th>
+<th>install</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>read/write libraries from Python</td>
+<td><code>pip install media-compost</code></td>
+</tr>
+<tr>
+<td>headless training</td>
+<td><code>pip install "media-compost[train]"</code></td>
+</tr>
+<tr>
+<td>the web app, and everything else</td>
+<td><code>pip install "media-compost[full]"</code></td>
+</tr>
+</tbody>
+</table>
+<p>There are only those two extras, because there are only two questions: does
+this machine train, and does it serve. A machine that serves also trains — the
+trainer's own dependency is one small package — so <code>[full]</code> is the answer to
+everything except a scripting install and a headless GPU box.</p>
+<p><code>[full]</code> bundles an ffmpeg (<code>imageio-ffmpeg</code>) for video import and editing,
+and the bundled binary is what gets used when it is installed — an ffmpeg on
+PATH is the fallback for installs without it. To prefer a system ffmpeg (or
+ffprobe — the bundled wheel ships none, so video probing wants one on PATH
+anyway), point <code>MEDIA_COMPOST_FFMPEG</code> / <code>MEDIA_COMPOST_FFPROBE</code> at the
+binaries.</p>
+<p><strong>The AI model actions are deliberately not an extra.</strong> Their stacks are built
+around torch, and a Python dependency specifier cannot name a package index —
+which matters because PyPI's torch wheel is <strong>CPU-only on Windows</strong> (the CUDA
+builds live on <code>download.pytorch.org</code>). An extra listing torch would install a
+build that reads as a hang on exactly the machines people buy GPUs for. So the
+actions are set up from the app instead (<strong>Settings → Actions → Run setup</strong>) or
+with <code>python -m media_compost.ui.plugins.setup_action &lt;action&gt;</code> (<code>--list</code>
+names them), which is
+the same thing that button runs: packages, the dedicated environment if there
+is one, the right torch index for this machine (overridable with
+<code>MEDIA_COMPOST_TORCH_INDEX</code>), then the weights. Until then each action shows in the app as "needs
+setup" — or is hidden entirely, if you turn on <em>Settings → Actions → Hide
+actions that need setting up</em>.</p>
+<p>Because <code>[full]</code> includes <code>[train]</code>, an app install always satisfies what the
+trainer declares, so the Train tabs appear (pointing you at the
+training-environment setup). If a machine should not offer training at
+all, the explicit switch is <code>MEDIA_COMPOST_TRAINING=0</code> — see
+<a href="#turning-training-off">Turning training off</a> below.</p>
+<h2 id="requirements">Requirements<a class="headerlink" href="#requirements" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Python 3.11 or newer</strong></li>
+<li><strong>Node 24</strong> — only to build the frontend yourself, and the version
+  everything here is tested on.
+  A released wheel already contains it, so installing that way needs no Node
+  at all.</li>
+<li>No ML packages are required to run the app.</li>
+</ul>
+<h2 id="install-a-release-no-node">Install a release (no Node)<a class="headerlink" href="#install-a-release-no-node" title="Permanent link">&para;</a></h2>
+<p>The wheel on PyPI carries the built web app inside it, so this is everything:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>media-compost-venv
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>media-compost-venv/bin/pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"media-compost[full]"</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>media-compost-venv/bin/media-compost<span class="w"> </span>serve<span class="w"> </span>--open
+</code></pre></div>
+<p>That starts the server on <code>http://127.0.0.1:8000</code> and, with <code>--open</code>, opens your browser on it.
+Skip to <a href="#choosing-the-data-directory">Choosing the data directory</a>.</p>
+<p>A wheel from the <a href="https://github.com/mediacompost/media-compost/releases">releases page</a> installs the same way — give pip
+the path or URL in place of the name, and keep the extra on the end:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>media-compost-venv/bin/pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"&lt;path-or-url-to-the-wheel&gt;[full]"</span>
+</code></pre></div>
+<p>Install from source instead if you want to change the app — the rest of this
+page covers that.</p>
+<h2 id="install-from-source">Install from source<a class="headerlink" href="#install-from-source" title="Permanent link">&para;</a></h2>
+<p>Clone the repository, then create a virtual environment at the repo root and
+install the package into it:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/mediacompost/media-compost.git<span class="w"> </span>media-compost
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">cd</span><span class="w"> </span>media-compost
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>.venv/bin/pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">".[full]"</span>
+</code></pre></div>
+<p>pip is the supported default, but <a href="https://docs.astral.sh/uv/">uv</a> works
+everywhere pip is shown (<code>uv venv .venv</code>, then <code>uv pip …</code> for any pip command
+in these docs) — the app's setup buttons handle a uv-made venv, which ships
+no pip, by falling back to <code>uv pip</code>.</p>
+<p>This installs both commands into the venv: <code>media-compost</code> (the CLI,
+including <code>serve</code>) and <code>media-compost-train</code> (headless training) — see the
+<a href="../cli/">CLI reference</a>.</p>
+<h2 id="build-the-frontend">Build the frontend<a class="headerlink" href="#build-the-frontend" title="Permanent link">&para;</a></h2>
+<p>The server serves a prebuilt copy of the web app, so build it once:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>./scripts/build.sh
+</code></pre></div>
+<p>This builds the SPA and bundles it into the app package
+(<code>media_compost/ui/_web_dist</code>). Rerun it after updating the code — the
+server serves whatever <code>scripts/build.sh</code> last produced, so a frontend change
+you have not rebuilt is a change you will not see.</p>
+<p>To produce a wheel other people can install without Node, run
+<code>scripts/package.sh</code>: it builds the frontend first, packages everything
+together, and refuses to hand you an artifact with no web app inside it.</p>
+<h2 id="run-the-app">Run the app<a class="headerlink" href="#run-the-app" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>.venv/bin/media-compost<span class="w"> </span>serve
+</code></pre></div>
+<p>This starts the server on <code>http://127.0.0.1:8000</code>. Options:</p>
+<ul>
+<li><code>--host</code> / <code>--port</code> — where to listen (default <code>127.0.0.1:8000</code>)</li>
+<li><code>--data-dir &lt;path&gt;</code> — which library to open (see below)</li>
+<li><code>--open</code> — open a browser tab once the server is up (off by default, so a
+  restart never steals focus from a tab you already have)</li>
+</ul>
+<h2 id="choosing-the-data-directory">Choosing the data directory<a class="headerlink" href="#choosing-the-data-directory" title="Permanent link">&para;</a></h2>
+<p>A <strong>library</strong> is a folder holding everything Media Compost stores: the
+database, every item's files and artifacts, thumbnails, and training jobs.
+Pick it with either:</p>
+<ul>
+<li>the <code>--data-dir</code> option: <code>media-compost serve --data-dir /path/to/library</code></li>
+<li>the <code>MEDIA_COMPOST_DATA</code> environment variable</li>
+</ul>
+<p>If neither is set, the library defaults to <code>./_data</code> (relative to where you
+start the command). Every CLI command takes the same <code>--data-dir</code> option, so a
+bulk import and the server can point at the same library.</p>
+<h2 id="run-as-a-single-process">Run as a single process<a class="headerlink" href="#run-as-a-single-process" title="Permanent link">&para;</a></h2>
+<p>Run the server as <strong>one process with one worker</strong> — several in-memory
+components (the thumbnail cache, the import lock, the background job
+queue) live per-process and are not shared. One worker is fine for several
+concurrent users; see <a href="#deployment">Deployment</a> below for serving a shared
+library on a network.</p>
+<p>Related: <strong>one server per library.</strong> The server locks its library folder at
+startup, and a second server pointed at the same library refuses to start with
+a message naming the one already running; the lock is released however the
+process exits, so a stale lock file can never block a library. CLI commands
+work alongside a running server, with two exceptions: <code>migrate</code> refuses while
+a server is up (when it actually has steps to run), and <code>media-compost-train</code>
+refuses beside an app that has training enabled — see the
+<a href="../cli/">CLI reference</a>. See <a href="../troubleshooting/">Troubleshooting</a> if you hit
+the lock message.</p>
+<h2 id="development-mode-two-processes">Development mode (two processes)<a class="headerlink" href="#development-mode-two-processes" title="Permanent link">&para;</a></h2>
+<p>If you are changing the frontend, run the Vite dev server instead of
+rebuilding after every change:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># terminal 1 — API on :8000</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>.venv/bin/media-compost<span class="w"> </span>serve
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># terminal 2 — Vite dev server on :5173 (proxies /api to :8000)</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nb">cd</span><span class="w"> </span>frontend
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>npm<span class="w"> </span>install
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>npm<span class="w"> </span>run<span class="w"> </span>dev
+</code></pre></div>
+<p>Then open <code>http://localhost:5173</code>. For normal use, the single-process
+production run above is all you need.</p>
+<h2 id="optional-ai-model-environments">Optional: AI model environments<a class="headerlink" href="#optional-ai-model-environments" title="Permanent link">&para;</a></h2>
+<p>The core app runs without any ML packages. If you want the optional pieces:</p>
+<ul>
+<li>Most AI models install into the main venv — the app's <strong>Settings → Actions</strong>
+  page can run the setup for you, or use <code>pip install -r requirements.txt</code>
+  from the repo root (the app plus every optional model;
+  <code>requirements-ai.txt</code> is the optional half alone, and
+  <code>requirements-core.txt</code> the library alone). See <a href="../settings/">Settings</a>.</li>
+<li>Two model families need their own pinned environments, built by
+  <code>python -m media_compost.hub.setup_env florence</code> (Florence-2 captioning) and
+  <code>python -m media_compost.hub.setup_env magi</code> (the Magi models: comic-panel
+  and illustrated-face detection). To use an environment you built yourself,
+  point <code>MEDIA_COMPOST_FLORENCE_PYTHON</code> / <code>MEDIA_COMPOST_MAGI_PYTHON</code> /
+  <code>MEDIA_COMPOST_TRAINING_PYTHON</code> at its interpreter.</li>
+<li>LoRA training uses its own environment too: <code>media-compost-train setup</code>
+  (or <code>python -m media_compost.hub.setup_env training</code>).
+  See <a href="../training/">Training</a>.</li>
+</ul>
+<h2 id="deployment">Deployment<a class="headerlink" href="#deployment" title="Permanent link">&para;</a></h2>
+<p>The rest of this page is about running the app for real: serving a shared
+library on your network — directly or in Docker — multi-user access behind an
+authenticating proxy, turning training off, and what needs a network
+connection.</p>
+<h3 id="serving-on-a-network">Serving on a network<a class="headerlink" href="#serving-on-a-network" title="Permanent link">&para;</a></h3>
+<p>The <a href="#run-as-a-single-process">single-process run above</a> is already the
+production shape; to make the server reachable from other machines, bind it to
+a network interface:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>media-compost<span class="w"> </span>serve<span class="w"> </span>--host<span class="w"> </span><span class="m">0</span>.0.0.0<span class="w"> </span>--port<span class="w"> </span><span class="m">8000</span><span class="w"> </span>--data-dir<span class="w"> </span>/path/to/library
+</code></pre></div>
+<p>The app has no authentication of its own, so don't expose it directly to an
+untrusted network — put a reverse proxy in front (see
+<a href="#multi-user-access">Multi-user access</a> below).</p>
+<h3 id="docker-podman">Docker / Podman<a class="headerlink" href="#docker-podman" title="Permanent link">&para;</a></h3>
+<p>The repository root carries a <code>Dockerfile</code> and a <code>compose.yaml</code>. The image is self-contained: the frontend is compiled inside the build, so the host needs neither Node nor Python — only Docker or Podman.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>-d<span class="w">        </span><span class="c1"># build and run on http://localhost:8000</span>
+</code></pre></div>
+<p>Or without Compose:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>media-compost<span class="w"> </span>.
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>docker<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>-p<span class="w"> </span><span class="m">8000</span>:8000<span class="w"> </span>-v<span class="w"> </span>mc-library:/data<span class="w"> </span>-v<span class="w"> </span>mc-models:/models<span class="w"> </span>media-compost
+</code></pre></div>
+<p>(<code>podman build</code> / <code>podman run</code> work the same; the image runs as a non-root user.)</p>
+<p>Two volumes matter:</p>
+<ul>
+<li><strong><code>/data</code></strong> is the library — items, thumbnails, the database. To serve an existing library, bind-mount it there (<code>-v /path/to/library:/data</code>).</li>
+<li><strong><code>/models</code></strong> is the Hugging Face cache. Model weights downloaded from Settings → Actions land here and survive image updates.</li>
+</ul>
+<p>Everything in this Deployment section applies unchanged inside the container: one process and one worker (the image's default command already does that), one server per library, the reverse-proxy setup for multi-user access, and <code>MEDIA_COMPOST_TRAINING=0</code> for machines that should not offer training.</p>
+<p>Two container-specific notes:</p>
+<ul>
+<li><strong>The optional AI environments live in the container's filesystem.</strong> The in-app "Set up" buttons work — they create <code>.venv-&lt;env&gt;</code> inside the container and restart the server in place — and the result survives restarts, but not a container <em>recreation</em> (an image update). Re-run the setup afterwards, or bake the environments into a derived image (<code>RUN python -m media_compost.hub.setup_env florence</code> and friends).</li>
+<li>
+<p><strong>No GPU is visible unless you pass one through.</strong> On Linux with an NVIDIA card, install the <a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/">NVIDIA Container Toolkit</a> and add <code>--gpus all</code> to <code>docker run</code>. (The old <code>nvidia-docker</code> / <code>nvidia-docker2</code> wrapper commands are obsolete; the toolkit plus <code>--gpus</code> is the current spelling.) macOS containers have no GPU access at all — for training or heavy AI work on a Mac, run the app natively instead.</p>
+<p><strong>With Compose it is a block rather than a flag</strong>, which is why <code>compose.yaml</code> carries it commented out:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nt">services</span><span class="p">:</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="nt">media-compost</span><span class="p">:</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="nt">deploy</span><span class="p">:</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">      </span><span class="nt">resources</span><span class="p">:</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">        </span><span class="nt">reservations</span><span class="p">:</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">          </span><span class="nt">devices</span><span class="p">:</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nvidia</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">              </span><span class="nt">count</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">all</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="w">              </span><span class="nt">capabilities</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">gpu</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+<p>A recent Compose also takes the shorthand <code>gpus: all</code>; the block above works on both.</p>
+<p>Nothing extra is needed <em>inside</em> the container: on Linux the torch the AI setup installs is the CUDA build already (which is also why a GPU-less Linux image still pulls several GB of <code>nvidia-*</code> wheels — see <code>MEDIA_COMPOST_TORCH_INDEX</code> if you want a CPU-only one).</p>
+</li>
+</ul>
+<h4 id="https-and-basic-auth-in-front-of-the-container">HTTPS and basic auth in front of the container<a class="headerlink" href="#https-and-basic-auth-in-front-of-the-container" title="Permanent link">&para;</a></h4>
+<p>The app itself speaks plain HTTP and never authenticates, so anything beyond
+localhost wants a reverse proxy in front that does both. In Docker the proxy is
+just a second container; the official <a href="https://hub.docker.com/_/nginx"><code>nginx</code></a>
+image plus two small files is the whole setup.</p>
+<p><code>compose.yaml</code> — the app as above, but with <strong>no published port</strong> of its own;
+only the proxy is reachable:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nt">services</span><span class="p">:</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="nt">media-compost</span><span class="p">:</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span><span class="nt">build</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">      </span><span class="nt">MEDIA_COMPOST_REQUIRE_AUTH</span><span class="p">:</span><span class="w"> </span><span class="s">"1"</span><span class="w">   </span><span class="c1"># reject anything the proxy let through unauthenticated</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">library:/data</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">models:/models</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="w">  </span><span class="nt">proxy</span><span class="p">:</span>
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nginx:alpine</span>
+<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"443:443"</span>
+<a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./nginx.conf:/etc/nginx/conf.d/default.conf:ro</span>
+<a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./htpasswd:/etc/nginx/htpasswd:ro</span>
+<a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./certs:/etc/nginx/certs:ro</span>
+<a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a><span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">media-compost</span>
+<a id="__codelineno-10-21" name="__codelineno-10-21" href="#__codelineno-10-21"></a><span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
+<a id="__codelineno-10-22" name="__codelineno-10-22" href="#__codelineno-10-22"></a>
+<a id="__codelineno-10-23" name="__codelineno-10-23" href="#__codelineno-10-23"></a><span class="nt">volumes</span><span class="p">:</span>
+<a id="__codelineno-10-24" name="__codelineno-10-24" href="#__codelineno-10-24"></a><span class="w">  </span><span class="nt">library</span><span class="p">:</span>
+<a id="__codelineno-10-25" name="__codelineno-10-25" href="#__codelineno-10-25"></a><span class="w">  </span><span class="nt">models</span><span class="p">:</span>
+</code></pre></div>
+<p><code>nginx.conf</code> — TLS, basic auth, and the proxy pass. nginx forwards the
+<code>Authorization</code> header by default, and the app reads the username out of it, so
+History attribution and per-user settings work with nothing further:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">server</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">    </span><span class="kn">listen</span><span class="w"> </span><span class="mi">443</span><span class="w"> </span><span class="s">ssl</span><span class="p">;</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">    </span><span class="kn">server_name</span><span class="w"> </span><span class="s">media.example.com</span><span class="p">;</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">    </span><span class="kn">ssl_certificate</span><span class="w">     </span><span class="s">/etc/nginx/certs/fullchain.pem</span><span class="p">;</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">    </span><span class="kn">ssl_certificate_key</span><span class="w"> </span><span class="s">/etc/nginx/certs/privkey.pem</span><span class="p">;</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">    </span><span class="c1"># Imports upload whole files — don't let the proxy cap the body size.</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">    </span><span class="kn">client_max_body_size</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="w">    </span><span class="c1"># COMPRESS WHAT COMPRESSES. The app sends everything raw, and over</span>
+<a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="w">    </span><span class="c1"># anything slower than a LAN that is the difference between a snappy</span>
+<a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="w">    </span><span class="c1"># library and a sluggish one: the tag catalog alone is megabytes of JSON</span>
+<a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="w">    </span><span class="c1"># that gzips about sixteen times over, and it is re-fetched whenever the</span>
+<a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="w">    </span><span class="c1"># library changes.</span>
+<a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a><span class="w">    </span><span class="kn">gzip</span><span class="w">            </span><span class="no">on</span><span class="p">;</span>
+<a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a><span class="w">    </span><span class="kn">gzip_vary</span><span class="w">       </span><span class="no">on</span><span class="p">;</span>
+<a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a><span class="w">    </span><span class="kn">gzip_min_length</span><span class="w"> </span><span class="mi">1000</span><span class="p">;</span>
+<a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a><span class="w">    </span><span class="c1"># WITHOUT THIS NOTHING IS COMPRESSED — nginx leaves a PROXIED response</span>
+<a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a><span class="w">    </span><span class="c1"># alone unless told otherwise, and everything here is proxied.</span>
+<a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a><span class="w">    </span><span class="kn">gzip_proxied</span><span class="w">    </span><span class="s">any</span><span class="p">;</span>
+<a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a><span class="w">    </span><span class="c1"># Only the text types. Pictures and video are already compressed, and</span>
+<a id="__codelineno-11-23" name="__codelineno-11-23" href="#__codelineno-11-23"></a><span class="w">    </span><span class="c1"># gzip also disables byte-range serving for what it touches, which is</span>
+<a id="__codelineno-11-24" name="__codelineno-11-24" href="#__codelineno-11-24"></a><span class="w">    </span><span class="c1"># what a `&lt;video&gt;` scrubs with — leaving them off this list is what keeps</span>
+<a id="__codelineno-11-25" name="__codelineno-11-25" href="#__codelineno-11-25"></a><span class="w">    </span><span class="c1"># both facts true.</span>
+<a id="__codelineno-11-26" name="__codelineno-11-26" href="#__codelineno-11-26"></a><span class="w">    </span><span class="kn">gzip_types</span><span class="w">      </span><span class="s">application/json</span><span class="w"> </span><span class="s">text/javascript</span><span class="w"> </span><span class="s">text/css</span><span class="w"> </span><span class="s">text/plain</span>
+<a id="__codelineno-11-27" name="__codelineno-11-27" href="#__codelineno-11-27"></a><span class="w">                    </span><span class="s">text/vtt</span><span class="w"> </span><span class="s">image/svg+xml</span><span class="p">;</span>
+<a id="__codelineno-11-28" name="__codelineno-11-28" href="#__codelineno-11-28"></a>
+<a id="__codelineno-11-29" name="__codelineno-11-29" href="#__codelineno-11-29"></a><span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-11-30" name="__codelineno-11-30" href="#__codelineno-11-30"></a><span class="w">        </span><span class="kn">auth_basic</span><span class="w">           </span><span class="s">"Media</span><span class="w"> </span><span class="s">Compost"</span><span class="p">;</span>
+<a id="__codelineno-11-31" name="__codelineno-11-31" href="#__codelineno-11-31"></a><span class="w">        </span><span class="kn">auth_basic_user_file</span><span class="w"> </span><span class="s">/etc/nginx/htpasswd</span><span class="p">;</span>
+<a id="__codelineno-11-32" name="__codelineno-11-32" href="#__codelineno-11-32"></a><span class="w">        </span><span class="kn">proxy_pass</span><span class="w">           </span><span class="s">http://media-compost:8000</span><span class="p">;</span>
+<a id="__codelineno-11-33" name="__codelineno-11-33" href="#__codelineno-11-33"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-11-34" name="__codelineno-11-34" href="#__codelineno-11-34"></a><span class="p">}</span>
+</code></pre></div>
+<p>Create the two credential files once, then <code>docker compose up -d</code> and open
+<code>https://&lt;your-host&gt;/</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># one line per user in ./htpasswd (repeat for more users; needs no local</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="c1"># install — the official httpd image carries the htpasswd tool)</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>httpd:alpine<span class="w"> </span>htpasswd<span class="w"> </span>-nbB<span class="w"> </span>alice<span class="w"> </span><span class="s1">'their-password'</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>htpasswd
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="c1"># a self-signed certificate in ./certs, until a real one replaces it</span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>certs<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>openssl<span class="w"> </span>req<span class="w"> </span>-x509<span class="w"> </span>-newkey<span class="w"> </span>rsa:2048<span class="w"> </span>-nodes<span class="w"> </span>-days<span class="w"> </span><span class="m">365</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="w">  </span>-keyout<span class="w"> </span>certs/privkey.pem<span class="w"> </span>-out<span class="w"> </span>certs/fullchain.pem<span class="w"> </span>-subj<span class="w"> </span>/CN<span class="o">=</span>media.example.com
+</code></pre></div>
+<p>For a certificate browsers trust without a warning, point a real domain at the
+host and swap the <code>certs/</code> mount for one issued by
+<a href="https://letsencrypt.org/">Let's Encrypt</a> (certbot, or a proxy that renews for
+you — Caddy and Traefik both do, at the cost of a little more configuration
+than the few directives above). Everything in
+<a href="#multi-user-access">Multi-user access</a> below applies unchanged — the nginx
+there is this nginx, running on the host instead of in a container.</p>
+<p><strong>This setup is for a trusted network — a home or an office LAN — not for the
+open internet.</strong> The proxy adds encryption and a password, nothing more:
+there is no brute-force protection or rate limiting on the basic-auth prompt,
+no lockout, and no audit trail of failed attempts, so a reachable password
+prompt can be hammered indefinitely. The app behind it trusts every
+authenticated caller completely — any signed-in user can edit or delete
+everything, and the server itself has not been hardened against hostile
+traffic. For access from outside, put the whole thing behind a VPN
+(WireGuard, Tailscale) instead of forwarding the port.</p>
+<h3 id="multi-user-access">Multi-user access<a class="headerlink" href="#multi-user-access" title="Permanent link">&para;</a></h3>
+<p>Media Compost is primarily a single-user app, but the one shared library can be served to several people at once. The model:</p>
+<ul>
+<li><strong>The app never authenticates.</strong> It sits behind a reverse proxy that does (HTTP Basic), and only <em>reads</em> who the caller is.</li>
+<li>The username comes from a trusted header the proxy sets, configured with <code>MEDIA_COMPOST_USER_HEADER</code> (for example <code>X-Remote-User</code>) — checked first when configured — or, failing that, from the <code>Authorization: Basic</code> header (the password is ignored; it was already checked upstream).</li>
+<li><strong>Anonymous access is allowed by default.</strong> Set <code>MEDIA_COMPOST_REQUIRE_AUTH=1</code> to reject requests with no resolvable user (<code>401</code>). <strong><code>GET /api/health</code> is the one exception</strong> and answers unauthenticated whatever this is set to — the container's own <code>HEALTHCHECK</code> polls it, and a health probe that needed credentials would mark every container unhealthy. It reports only whether the server is up, whether training is offered, and the library's format version.</li>
+</ul>
+<p>Knowing the caller does two things:</p>
+<ul>
+<li><strong>History attribution</strong> — every change in the <a href="../history/">History</a> log carries the username of whoever made it, shown as a chip.</li>
+<li><strong>Personal settings</strong> — each person's saved searches and Language &amp; Region / double-click preferences are their own.</li>
+</ul>
+<p>Everything else is <strong>shared</strong>: the library content (items, tags, groups, captions), the Actions page, and the model checkpoint settings. Everyone sees the same library; concurrent edits to the same thing resolve last-write-wins. A signed-in user is shown as a small chip in the top bar (hidden on an anonymous install).</p>
+<h4 id="example-nginx-setup">Example nginx setup<a class="headerlink" href="#example-nginx-setup" title="Permanent link">&para;</a></h4>
+<p>Authenticate with HTTP Basic and pass the identity through. The simplest form forwards the <code>Authorization</code> header (the default nginx behavior), and the app reads the username from it:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">server</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">    </span><span class="kn">listen</span><span class="w"> </span><span class="mi">443</span><span class="w"> </span><span class="s">ssl</span><span class="p">;</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">    </span><span class="kn">server_name</span><span class="w"> </span><span class="s">media.example.com</span><span class="p">;</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">    </span><span class="kn">ssl_certificate</span><span class="w">     </span><span class="s">/etc/nginx/certs/fullchain.pem</span><span class="p">;</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="w">    </span><span class="kn">ssl_certificate_key</span><span class="w"> </span><span class="s">/etc/nginx/certs/privkey.pem</span><span class="p">;</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="w">    </span><span class="c1"># Imports upload whole files — don't let the proxy cap the body size.</span>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="w">    </span><span class="kn">client_max_body_size</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>
+<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="w">    </span><span class="c1"># COMPRESS WHAT COMPRESSES. The app sends everything raw, and over</span>
+<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="w">    </span><span class="c1"># anything slower than a LAN that is the difference between a snappy</span>
+<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="w">    </span><span class="c1"># library and a sluggish one: the tag catalog alone is megabytes of JSON</span>
+<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="w">    </span><span class="c1"># that gzips about sixteen times over, and it is re-fetched whenever the</span>
+<a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="w">    </span><span class="c1"># library changes.</span>
+<a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a><span class="w">    </span><span class="kn">gzip</span><span class="w">            </span><span class="no">on</span><span class="p">;</span>
+<a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a><span class="w">    </span><span class="kn">gzip_vary</span><span class="w">       </span><span class="no">on</span><span class="p">;</span>
+<a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a><span class="w">    </span><span class="kn">gzip_min_length</span><span class="w"> </span><span class="mi">1000</span><span class="p">;</span>
+<a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a><span class="w">    </span><span class="c1"># WITHOUT THIS NOTHING IS COMPRESSED — nginx leaves a PROXIED response</span>
+<a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a><span class="w">    </span><span class="c1"># alone unless told otherwise, and everything here is proxied.</span>
+<a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a><span class="w">    </span><span class="kn">gzip_proxied</span><span class="w">    </span><span class="s">any</span><span class="p">;</span>
+<a id="__codelineno-13-21" name="__codelineno-13-21" href="#__codelineno-13-21"></a><span class="w">    </span><span class="c1"># Only the text types. Pictures and video are already compressed, and</span>
+<a id="__codelineno-13-22" name="__codelineno-13-22" href="#__codelineno-13-22"></a><span class="w">    </span><span class="c1"># gzip also disables byte-range serving for what it touches, which is</span>
+<a id="__codelineno-13-23" name="__codelineno-13-23" href="#__codelineno-13-23"></a><span class="w">    </span><span class="c1"># what a `&lt;video&gt;` scrubs with — leaving them off this list is what keeps</span>
+<a id="__codelineno-13-24" name="__codelineno-13-24" href="#__codelineno-13-24"></a><span class="w">    </span><span class="c1"># both facts true.</span>
+<a id="__codelineno-13-25" name="__codelineno-13-25" href="#__codelineno-13-25"></a><span class="w">    </span><span class="kn">gzip_types</span><span class="w">      </span><span class="s">application/json</span><span class="w"> </span><span class="s">text/javascript</span><span class="w"> </span><span class="s">text/css</span><span class="w"> </span><span class="s">text/plain</span>
+<a id="__codelineno-13-26" name="__codelineno-13-26" href="#__codelineno-13-26"></a><span class="w">                    </span><span class="s">text/vtt</span><span class="w"> </span><span class="s">image/svg+xml</span><span class="p">;</span>
+<a id="__codelineno-13-27" name="__codelineno-13-27" href="#__codelineno-13-27"></a>
+<a id="__codelineno-13-28" name="__codelineno-13-28" href="#__codelineno-13-28"></a><span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-13-29" name="__codelineno-13-29" href="#__codelineno-13-29"></a><span class="w">        </span><span class="kn">auth_basic</span><span class="w">           </span><span class="s">"Media</span><span class="w"> </span><span class="s">Compost"</span><span class="p">;</span>
+<a id="__codelineno-13-30" name="__codelineno-13-30" href="#__codelineno-13-30"></a><span class="w">        </span><span class="kn">auth_basic_user_file</span><span class="w"> </span><span class="s">/etc/nginx/htpasswd</span><span class="p">;</span>
+<a id="__codelineno-13-31" name="__codelineno-13-31" href="#__codelineno-13-31"></a><span class="w">        </span><span class="kn">proxy_pass</span><span class="w">           </span><span class="s">http://127.0.0.1:8000</span><span class="p">;</span>
+<a id="__codelineno-13-32" name="__codelineno-13-32" href="#__codelineno-13-32"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-13-33" name="__codelineno-13-33" href="#__codelineno-13-33"></a><span class="p">}</span>
+</code></pre></div>
+<p>Alternatively, have the proxy set an explicit header and tell the app to trust it:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="w">    </span><span class="k">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">        </span><span class="kn">auth_basic</span><span class="w">           </span><span class="s">"Media</span><span class="w"> </span><span class="s">Compost"</span><span class="p">;</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">        </span><span class="kn">auth_basic_user_file</span><span class="w"> </span><span class="s">/etc/nginx/htpasswd</span><span class="p">;</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">        </span><span class="kn">proxy_set_header</span><span class="w">     </span><span class="s">X-Remote-User</span><span class="w"> </span><span class="nv">$remote_user</span><span class="p">;</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">        </span><span class="kn">proxy_pass</span><span class="w">           </span><span class="s">http://127.0.0.1:8000</span><span class="p">;</span>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">    </span><span class="p">}</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nv">MEDIA_COMPOST_USER_HEADER</span><span class="o">=</span>X-Remote-User<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="nv">MEDIA_COMPOST_REQUIRE_AUTH</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>media-compost<span class="w"> </span>serve<span class="w"> </span>--host<span class="w"> </span><span class="m">127</span>.0.0.1
+</code></pre></div>
+<p>Only use a trusted header when the app is reachable exclusively through the proxy — the app believes whatever the header says.</p>
+<h3 id="turning-training-off">Turning training off<a class="headerlink" href="#turning-training-off" title="Permanent link">&para;</a></h3>
+<p>On a machine that could never finish a training run — a NAS, an old laptop — launch with:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nv">MEDIA_COMPOST_TRAINING</span><span class="o">=</span><span class="m">0</span><span class="w"> </span>media-compost<span class="w"> </span>serve
+</code></pre></div>
+<p>The <strong>Train</strong>, <strong>Evaluate</strong>, and <strong>Models</strong> tabs disappear entirely (not greyed out — absent), the API behind them is turned off with them (so a leftover bookmark or an old browser tab cannot start a run), and opening <code>/train</code> lands you in the Library. Everything else keeps working, including the AI actions that only look at one picture at a time. See <a href="../training/">Training</a> for what the tabs do when enabled.</p>
+<h3 id="network-access">Network access<a class="headerlink" href="#network-access" title="Permanent link">&para;</a></h3>
+<p>Day-to-day use fetches nothing — AI models run from weights already on disk.
+A connection is needed in exactly three situations:</p>
+<ul>
+<li><strong>Downloading model weights</strong>, from <strong>Settings → Actions</strong> (the AI actions)
+  and the Train tab's Models page (training base models), into the shared
+  Hugging Face cache.</li>
+<li><strong>Setting up an AI action or the trainer</strong> — <strong>Run setup</strong> installs Python
+  packages (and torch from its own index), building a dedicated environment
+  where a model needs one.</li>
+<li><strong>A Hugging Face access token</strong>, for the few gated training base models
+  (FLUX.1 dev and Kontext, FLUX.2 Klein 9B) whose licenses have to be
+  accepted on Hugging Face first — picked up from the environment or from
+  <code>hf auth login</code>. No bundled AI action needs one.</li>
+</ul>
+<p>If the environment <strong>forces Hugging Face offline mode</strong> (for example
+<code>HF_HUB_OFFLINE</code>), the app respects it: everything already downloaded keeps
+working, and the Settings → Actions and Train → Models pages show a warning card naming the
+variable, with a one-click way to unset it for the session.</p>
+<p>See <a href="../settings/">Settings</a> for the Actions page and its download controls.</p>
+<h2 id="next-steps">Next steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../getting-started/">Getting started</a> — a first tour of the app</li>
+<li><a href="../import/">Importing files</a> — the import overlay and its options</li>
+<li><a href="../cli/">CLI reference</a> — bulk import and library maintenance from the terminal</li>
+<li><a href="../troubleshooting/">Troubleshooting</a> — error screens, the library lock message, and common issues</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../features/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Features">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Features
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../compatibility/" class="md-footer__link md-footer__link--next" aria-label="Next: Compatibility">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Compatibility
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.top", "navigation.footer", "content.code.copy", "content.action.edit", "search.suggest", "search.highlight", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../assets/home.js"></script>
+      
+    
+  </body>
+</html>
