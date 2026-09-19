@@ -22,12 +22,14 @@ import { panForZoom, zoomPivot } from "../zoomPivot";
 import { CACHE_MAX_PX, visibleBlit } from "../canvasBlit";
 import { Adjust, NO_ADJUST, drawAdjusted, isIdentity } from "../imageAdjust";
 import { blurredCanvas, blurredImage } from "../canvasBlur";
+import { sharpenedImage } from "../imageSharpen";
 import { EditorMenus } from "./EditorMenu";
 import { Icon } from "../../shared/Icon";
 import { RefPickerOverlay } from "./RefPicker";
 import { ColorPickerPopover } from "./ColorPicker";
 import { useUI } from "../store";
-import { APP_PREFS, BLUR_IMAGE_MAX } from "../prefs";
+import { APP_PREFS, BLUR_IMAGE_MAX, SHARPEN_AMOUNT_MAX, SHARPEN_RADIUS, SHARPEN_RADIUS_MAX }
+  from "../prefs";
 import { bumpLibrary } from "../invalidation";
 import { evalExpr } from "../mathExpr";
 import { checkerPattern } from "../canvasChecker";
@@ -311,6 +313,111 @@ const TOOLS: { id: Tool; icon: string; name: string; key: string }[] = [
   { id: "zoom", icon: "zoom_in", name: "Zoom", key: "Z" },
 ];
 
+/**
+ * THE THREE LIVE EFFECTS, WHICH ARE ONE THING WITH THREE SETS OF NUMBERS ON
+ * IT: the four adjustments, the blur and the sharpen. Each is previewed on
+ * the full-resolution buffer from a snapshot taken when its panel opened,
+ * each is confined to the selection where there is one, and each is applied
+ * as one undoable step — so they share the panel (`EffectPanel`), the
+ * snapshot, the preview and the commit, and differ only here.
+ */
+type Effect =
+  | { kind: "adjust"; adjust: Adjust }
+  | { kind: "blur"; radius: number }
+  | { kind: "sharpen"; radius: number; amount: number };
+
+/** Whether `e` would change nothing — Reset has nothing to do, and OK writes
+ *  no undo step. A sharpen's RADIUS is not part of the answer: at 0% there is
+ *  nothing to be the radius of. */
+const effectIsNeutral = (e: Effect): boolean =>
+  e.kind === "adjust" ? isIdentity(e.adjust)
+    : e.kind === "blur" ? e.radius < 1
+      : e.amount < 1;
+
+/** What a panel opens on. Adjustments open neutral because their four
+ *  numbers are four questions and none of them is asked yet; the blur and
+ *  the sharpen open on what they were last used at and preview it straight
+ *  away, because the number IS the question and a panel that opened neutral
+ *  would make Reset and opening it the same thing. */
+const freshEffect = (kind: Effect["kind"]): Effect =>
+  kind === "adjust" ? { kind, adjust: { ...NO_ADJUST } }
+    : kind === "blur" ? { kind, radius: APP_PREFS.blurImagePx.read() }
+      : { kind, radius: APP_PREFS.sharpenRadiusPx.read(),
+          amount: APP_PREFS.sharpenAmount.read() };
+
+/** An applied effect's numbers are the next one's starting point. */
+const rememberEffect = (e: Effect): void => {
+  if (e.kind === "blur") APP_PREFS.blurImagePx.write(e.radius);
+  if (e.kind === "sharpen") {
+    APP_PREFS.sharpenAmount.write(e.amount);
+    APP_PREFS.sharpenRadiusPx.write(e.radius);
+  }
+};
+
+/** What Reset takes it to: neutral, keeping anything that is not a strength
+ *  (a sharpen at 0% still has the radius on screen to go back up from). */
+const resetEffect = (e: Effect): Effect =>
+  e.kind === "adjust" ? { kind: "adjust", adjust: { ...NO_ADJUST } }
+    : e.kind === "blur" ? { kind: "blur", radius: 0 }
+      : { ...e, amount: 0 };
+
+const EFFECT_PANEL: Record<Effect["kind"], { icon: string; title: string }> = {
+  adjust: { icon: "tune", title: "Adjustments" },
+  blur: { icon: "lens_blur", title: "Blur" },
+  sharpen: { icon: "deblur", title: "Sharpen" },
+};
+
+/** One row of `EffectPanel`: a slider, what it reads as, and the two ways it
+ *  is moved. */
+interface EffectSlider {
+  key: string; label: string; min: number; max: number; value: number;
+  /** The value as it reads on screen, sign and unit and all. */
+  text: string;
+  onChange: (v: number) => void;
+  /** Double-click: back to this slider's own resting value. */
+  onRest: () => void;
+}
+
+/** The rows `e` puts on the panel. `to` takes the effect the row asks for —
+ *  a slider never writes its own state, so what is on screen and what is
+ *  being previewed cannot come apart. */
+function effectSliders(e: Effect, to: (next: Effect) => void): EffectSlider[] {
+  if (e.kind === "adjust") {
+    return ([
+      ["brightness", "Brightness", -100, 100],
+      ["contrast", "Contrast", -100, 100],
+      ["saturation", "Saturation", -100, 100],
+      ["hue", "Hue", -180, 180],
+    ] as const).map(([key, label, min, max]) => ({
+      key, label, min, max, value: e.adjust[key],
+      text: `${e.adjust[key] > 0 ? "+" : ""}${e.adjust[key]}${key === "hue" ? "°" : ""}`,
+      onChange: (v: number) => to({ kind: "adjust", adjust: { ...e.adjust, [key]: v } }),
+      onRest: () => to({ kind: "adjust", adjust: { ...e.adjust, [key]: 0 } }),
+    }));
+  }
+  if (e.kind === "blur") {
+    return [{
+      key: "radius", label: "Radius", min: 0, max: BLUR_IMAGE_MAX,
+      value: e.radius, text: `${e.radius} px`,
+      onChange: (v: number) => to({ ...e, radius: v }),
+      onRest: () => to({ ...e, radius: 0 }),
+    }];
+  }
+  // Sharpen: the STRENGTH first — it is what somebody reaches for — and the
+  // size of the detail it lifts under it. A radius has no neutral to
+  // double-click back to, so it goes back to the one it starts at.
+  return [
+    { key: "amount", label: "Amount", min: 0, max: SHARPEN_AMOUNT_MAX,
+      value: e.amount, text: `${e.amount} %`,
+      onChange: (v: number) => to({ ...e, amount: v }),
+      onRest: () => to({ ...e, amount: 0 }) },
+    { key: "radius", label: "Radius", min: 1, max: SHARPEN_RADIUS_MAX,
+      value: e.radius, text: `${e.radius} px`,
+      onChange: (v: number) => to({ ...e, radius: v }),
+      onRest: () => to({ ...e, radius: SHARPEN_RADIUS }) },
+  ];
+}
+
 // Custom tool cursors (Photoshop-style): tiny inline SVGs with a dark outline
 // so they read on any image. Hotspots sit on the icon's business end.
 const svgCursor = (svg: string, hx: number, hy: number, fallback: string) =>
@@ -394,7 +501,20 @@ export function EditorOverlay() {
   const antsRef = useRef<HTMLCanvasElement>(null);
   const canvasBoxRef = useRef<HTMLDivElement>(null);
 
-  const [tool, setTool] = useState<Tool>("hand");
+  // THE TOOL OUTLIVES THE WINDOW. A tool is the job in hand — cropping a
+  // hundred scans, painting out a hundred logos — and the editor is opened
+  // once per picture, so starting every window on the hand tool made the
+  // first gesture of each of them be picking the tool again. Checked against
+  // `TOOLS` here rather than by a closed list in `prefs.ts`: this is where
+  // the list lives, and a tool that has been renamed away reads as the hand.
+  const [tool, setTool] = useState<Tool>(() => {
+    const saved = APP_PREFS.editorTool.read();
+    return TOOLS.some((t) => t.id === saved) ? (saved as Tool) : "hand";
+  });
+  // Written from an EFFECT rather than at the setters: the spring-loaded keys
+  // (hold B to paint, release to go back) set the tool twice for one gesture,
+  // and `setTool` is called from five places besides the palette.
+  useEffect(() => { APP_PREFS.editorTool.write(tool); }, [tool]);
   // Held-key tool overrides (Photoshop-style): Space = temporary hand tool;
   // Alt flips the zoom tool to zoom-out (and its cursor to the minus loupe).
   const [spaceHand, setSpaceHand] = useState(false);
@@ -508,19 +628,12 @@ export function EditorOverlay() {
   const cropAspect = aspectRatio(cropAspectId, dims, cropCustom);
   // Zoom-tool drag marquee, in image pixels (drawn like the crop rect).
   const [zoomRect, setZoomRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
-  // Live brightness/contrast/hue/saturation. The panel floats over the canvas
-  // rather than sitting in a modal, so the image can still be panned and
-  // zoomed while the sliders are open — judging an adjustment means looking at
-  // the part of the picture it matters in. `effectBase` is the buffer as it was
-  // when the panel opened: every preview is computed from THAT, so dragging a
-  // slider back and forth never compounds, and Cancel is a restore.
-  const [adjust, setAdjust] = useState<Adjust | null>(null);
-  // Blurring the picture is the same panel with one slider on it, and the same
-  // snapshot rule — null = shut. It opens on the radius it was last used at
-  // and previews that straight away: the radius is the whole question, and a
-  // panel that opened neutral would make Reset and opening the same thing.
-  const [blurAmt, setBlurAmt] = useState<number | null>(null);
-  // The buffer as it was when EITHER panel opened; only one is ever open, and
+  // Which live effect is open (see `Effect`), null = none. The panel floats
+  // over the canvas rather than sitting in a modal, so the picture can still
+  // be panned and zoomed while the sliders are open — judging one of these
+  // means looking at the part of the picture it matters in.
+  const [effect, setEffect] = useState<Effect | null>(null);
+  // The buffer as it was when the panel opened; only one is ever open, and
   // opening one commits the other.
   const effectBase = useRef<HTMLCanvasElement | null>(null);
   // Error banner for editor-menu AI actions (apply/detect failures).
@@ -2442,80 +2555,13 @@ export function EditorOverlay() {
     p.restore();
   };
 
-  // Paint the previewed adjustment into the live buffer, always FROM the
-  // snapshot: the selection keeps the adjusted pixels, everything outside it
-  // keeps the originals.
-  const previewAdjust = (a: Adjust) => {
-    const base = effectBase.current;
-    if (!base) return;
-    const p = pixelRef.current.getContext("2d")!;
-    p.save();
-    p.globalCompositeOperation = "source-over";
-    p.clearRect(0, 0, dims.w, dims.h);
-    if (isIdentity(a)) {
-      p.drawImage(base, 0, 0);
-      p.restore();
-      redraw();
-      return;
-    }
-    const tmp = document.createElement("canvas");
-    tmp.width = dims.w; tmp.height = dims.h;
-    const tc = tmp.getContext("2d")!;
-    drawAdjusted(tc, base, dims.w, dims.h, a);
-    if (hasSelection) {
-      tc.globalCompositeOperation = "destination-in";
-      tc.drawImage(maskRef.current, 0, 0);
-    }
-    p.drawImage(base, 0, 0);      // untouched outside the selection
-    p.drawImage(tmp, 0, 0);       // adjusted inside it
-    p.restore();
-    redraw();
-  };
-
-  /** The buffer as it stands, for a panel to compute every preview from.
-   *  Taking it is also where the OTHER panel is committed: only one snapshot
-   *  exists, so opening a second panel over a live preview would snapshot the
-   *  preview and leave the first with nothing to cancel back to. Keeping what
-   *  it shows is what somebody who has gone from one to the other means. */
-  const snapEffectBase = () => {
-    if (adjust) closeAdjust(true);
-    if (blurAmt != null) closeBlur(true);
-    const snap = document.createElement("canvas");
-    snap.width = dims.w; snap.height = dims.h;
-    snap.getContext("2d")!.drawImage(pixelRef.current, 0, 0);
-    effectBase.current = snap;
-  };
-
-  const openAdjust = () => {
-    snapEffectBase();
-    setAdjust({ ...NO_ADJUST });
-  };
-
-  const closeAdjust = (keep: boolean) => {
-    const base = effectBase.current;
-    const a = adjust;
-    if (base && a) {
-      // Undo has to capture the image as it was BEFORE the adjustment, and the
-      // buffer currently holds the preview — so put the snapshot back, record
-      // that, then re-apply.
-      const p = pixelRef.current.getContext("2d")!;
-      p.clearRect(0, 0, dims.w, dims.h);
-      p.drawImage(base, 0, 0);
-      if (keep && !isIdentity(a)) {
-        pushHistory();
-        previewAdjust(a);
-      } else {
-        redraw();
-      }
-    }
-    effectBase.current = null;
-    setAdjust(null);
-  };
-
-  // Blurring the whole picture, from the same snapshot. `blurredImage` is the
-  // edge-clamped blur — blurring a canvas plainly mixes in the transparency
-  // outside it and hands back a photograph with a see-through frame.
-  const drawBlur = (px: number) => {
+  /** Render `e` from the snapshot into the live buffer. Always from the
+   *  SNAPSHOT: dragging a slider back and forth never compounds, and Cancel
+   *  is a restore. With a selection, the effect reads the whole picture and
+   *  writes only inside the mask — a blur that could see nothing outside the
+   *  selection would darken towards its own edge, and a sharpen would find an
+   *  edge there that is not in the picture. */
+  const drawEffect = (e: Effect) => {
     const base = effectBase.current;
     if (!base) return;
     const p = pixelRef.current.getContext("2d")!;
@@ -2523,72 +2569,91 @@ export function EditorOverlay() {
     p.globalCompositeOperation = "source-over";
     p.clearRect(0, 0, dims.w, dims.h);
     p.drawImage(base, 0, 0);          // untouched, and outside any selection
-    if (px >= 1) {
-      let soft: HTMLCanvasElement = blurredImage(base, px);
+    if (!effectIsNeutral(e)) {
+      let out: HTMLCanvasElement;
+      if (e.kind === "adjust") {
+        out = document.createElement("canvas");
+        out.width = dims.w; out.height = dims.h;
+        drawAdjusted(out.getContext("2d")!, base, dims.w, dims.h, e.adjust);
+      } else if (e.kind === "blur") {
+        out = blurredImage(base, e.radius);
+      } else {
+        out = sharpenedImage(base, e.radius, e.amount);
+      }
       if (hasSelection) {
-        // The blur READS from outside the selection — a blur that could only
-        // see the selected pixels would darken its own edge — and only writes
-        // inside it.
         const tmp = document.createElement("canvas");
         tmp.width = dims.w; tmp.height = dims.h;
         const tc = tmp.getContext("2d")!;
-        tc.drawImage(soft, 0, 0);
+        tc.drawImage(out, 0, 0);
         tc.globalCompositeOperation = "destination-in";
         tc.drawImage(maskRef.current, 0, 0);
-        soft = tmp;
+        out = tmp;
       }
-      p.drawImage(soft, 0, 0);
+      p.drawImage(out, 0, 0);
     }
     p.restore();
     redraw();
   };
 
-  // A full-resolution gaussian is heavy enough to outrun a slider drag —
-  // and where `ctx.filter` is a no-op it is the pixel loop in `canvasBlur`,
-  // not the GPU — so the renders are COALESCED: the number moves on the
-  // event, the picture on the next frame, at the last radius asked for.
-  const blurFrame = useRef<number | null>(null);
-  const blurWanted = useRef(0);
-  const previewBlur = (px: number) => {
-    blurWanted.current = px;
-    if (blurFrame.current != null) return;
-    blurFrame.current = requestAnimationFrame(() => {
-      blurFrame.current = null;
-      drawBlur(blurWanted.current);
+  // A full-resolution gaussian is heavy enough to outrun a slider drag — and
+  // where `ctx.filter` is a no-op it is the pixel loop in `canvasBlur` rather
+  // than the GPU, with the unsharp mask's own pass on top of it — so the
+  // renders are COALESCED: the number moves on the event, the picture on the
+  // next frame, at the last value asked for. (The four adjustments are cheap
+  // enough not to need it and lose nothing by it.)
+  const effectFrame = useRef<number | null>(null);
+  const effectWanted = useRef<Effect | null>(null);
+  /** Take `e` as the panel's state AND put it on screen. */
+  const previewEffect = (e: Effect) => {
+    setEffect(e);
+    effectWanted.current = e;
+    if (effectFrame.current != null) return;
+    effectFrame.current = requestAnimationFrame(() => {
+      effectFrame.current = null;
+      if (effectWanted.current) drawEffect(effectWanted.current);
     });
   };
-  const settleBlur = () => {
-    if (blurFrame.current != null) cancelAnimationFrame(blurFrame.current);
-    blurFrame.current = null;
+  const settleEffect = () => {
+    if (effectFrame.current != null) cancelAnimationFrame(effectFrame.current);
+    effectFrame.current = null;
   };
 
-  const openBlur = () => {
-    snapEffectBase();
-    const px = APP_PREFS.blurImagePx.read();
-    setBlurAmt(px);
-    previewBlur(px);
+  /** Open one of the effect panels on the buffer as it stands.
+   *
+   *  Opening is also where an effect ALREADY open is committed: there is one
+   *  snapshot, so a second panel over a live preview would snapshot the
+   *  preview and leave the first with nothing to cancel back to. Keeping what
+   *  is on screen is what somebody going from one to the other means. */
+  const openEffect = (kind: Effect["kind"]) => {
+    closeEffect(true);
+    const snap = document.createElement("canvas");
+    snap.width = dims.w; snap.height = dims.h;
+    snap.getContext("2d")!.drawImage(pixelRef.current, 0, 0);
+    effectBase.current = snap;
+    previewEffect(freshEffect(kind));
   };
 
-  const closeBlur = (keep: boolean) => {
-    settleBlur();
+  const closeEffect = (keep: boolean) => {
+    settleEffect();
     const base = effectBase.current;
-    const px = blurAmt;
-    if (base && px != null) {
-      // Undo captures the picture BEFORE the blur, and the buffer holds the
-      // preview — so put the snapshot back, record that, then re-apply.
+    const e = effect;
+    if (base && e) {
+      // Undo has to capture the picture as it was BEFORE the effect, and the
+      // buffer holds the preview — so put the snapshot back, record that,
+      // then re-apply.
       const p = pixelRef.current.getContext("2d")!;
       p.clearRect(0, 0, dims.w, dims.h);
       p.drawImage(base, 0, 0);
-      if (keep && px >= 1) {
+      if (keep && !effectIsNeutral(e)) {
         pushHistory();
-        drawBlur(px);
-        APP_PREFS.blurImagePx.write(px);
+        drawEffect(e);
+        rememberEffect(e);
       } else {
         redraw();
       }
     }
     effectBase.current = null;
-    setBlurAmt(null);
+    setEffect(null);
   };
 
   const fillSelection = () => {
@@ -4029,12 +4094,11 @@ export function EditorOverlay() {
 
   // ---- save ----
   const doSave = async (mode: "overwrite" | "derived" = "overwrite"): Promise<boolean> => {
-    // An adjustment or a blur still being previewed is what is on screen, so
-    // it is what a save means — but the preview lives in the buffer with no
-    // undo entry behind it. Commit it the way OK does, so the file and the
-    // history agree about what was saved.
-    if (adjust) closeAdjust(true);
-    if (blurAmt != null) closeBlur(true);
+    // An effect still being previewed is what is on screen, so it is what a
+    // save means — but the preview lives in the buffer with no undo entry
+    // behind it. Commit it the way OK does, so the file and the history agree
+    // about what was saved. (With no panel open this does nothing.)
+    closeEffect(true);
     // A pending crop tab: the first save CREATES the item (discarding the
     // tab never creates anything).
     if (editorItemId != null && editorItemId < 0) {
@@ -4808,8 +4872,9 @@ export function EditorOverlay() {
                 onRotate={rotate90}
                 onResizeImage={resizeImage}
                 onResizeCanvas={resizeCanvas}
-                onAdjust={openAdjust}
-                onBlurImage={openBlur}
+                onAdjust={() => openEffect("adjust")}
+                onBlurImage={() => openEffect("blur")}
+                onSharpenImage={() => openEffect("sharpen")}
                 onApplyModel={(kind, model, needsReference) => {
                   if (needsReference) setRefPick({ kind, model });
                   else void applyModel(kind, model);
@@ -5051,52 +5116,20 @@ export function EditorOverlay() {
               Working…
             </div>
           )}
-          {/* The two live effects — brightness/contrast/saturation/hue, and
-              the blur — draw through ONE panel over the top-right of the
-              canvas. Not a modal: the picture underneath stays pannable and
-              zoomable, which is the only way to judge either of them on the
-              part that matters. */}
-          {adjust && (
+          {/* The live effects all draw through ONE panel over the top-right
+              of the canvas — see `Effect`. Not a modal: the picture
+              underneath stays pannable and zoomable, which is the only way to
+              judge any of them on the part that matters. */}
+          {effect && (
             <EffectPanel
-              icon="tune" title="Adjustments" onSelection={hasSelection}
-              sliders={([
-                ["brightness", "Brightness", -100, 100],
-                ["contrast", "Contrast", -100, 100],
-                ["saturation", "Saturation", -100, 100],
-                ["hue", "Hue", -180, 180],
-              ] as const).map(([key, label, min, max]) => ({
-                key, label, min, max, value: adjust[key],
-                text: `${adjust[key] > 0 ? "+" : ""}${adjust[key]}${key === "hue" ? "°" : ""}`,
-                onChange: (v: number) => {
-                  const next = { ...adjust, [key]: v };
-                  setAdjust(next);
-                  previewAdjust(next);
-                },
-                onNeutral: () => {
-                  const next = { ...adjust, [key]: 0 };
-                  setAdjust(next);
-                  previewAdjust(next);
-                },
-              }))}
-              neutral={isIdentity(adjust)}
-              onReset={() => { setAdjust({ ...NO_ADJUST }); previewAdjust(NO_ADJUST); }}
-              onCancel={() => closeAdjust(false)}
-              onOk={() => closeAdjust(true)}
-            />
-          )}
-          {blurAmt != null && (
-            <EffectPanel
-              icon="lens_blur" title="Blur" onSelection={hasSelection}
-              sliders={[{
-                key: "radius", label: "Radius", min: 0, max: BLUR_IMAGE_MAX,
-                value: blurAmt, text: `${blurAmt} px`,
-                onChange: (v: number) => { setBlurAmt(v); previewBlur(v); },
-                onNeutral: () => { setBlurAmt(0); previewBlur(0); },
-              }]}
-              neutral={blurAmt < 1}
-              onReset={() => { setBlurAmt(0); previewBlur(0); }}
-              onCancel={() => closeBlur(false)}
-              onOk={() => closeBlur(true)}
+              icon={EFFECT_PANEL[effect.kind].icon}
+              title={EFFECT_PANEL[effect.kind].title}
+              onSelection={hasSelection}
+              sliders={effectSliders(effect, previewEffect)}
+              neutral={effectIsNeutral(effect)}
+              onReset={() => previewEffect(resetEffect(effect))}
+              onCancel={() => closeEffect(false)}
+              onOk={() => closeEffect(true)}
             />
           )}
 
@@ -5454,13 +5487,7 @@ function EffectPanel({ icon, title, onSelection, sliders, neutral, onReset, onCa
   title: string;
   /** Whether the effect is confined to a selection — the panel says so. */
   onSelection: boolean;
-  sliders: {
-    key: string; label: string; min: number; max: number; value: number;
-    /** The value as it reads on screen, sign and unit and all. */
-    text: string;
-    onChange: (v: number) => void;
-    onNeutral: () => void;
-  }[];
+  sliders: EffectSlider[];
   /** True while the effect changes nothing — Reset has nothing to do. */
   neutral: boolean;
   onReset: () => void;
@@ -5501,7 +5528,7 @@ function EffectPanel({ icon, title, onSelection, sliders, neutral, onReset, onCa
           <input
             type="range" min={s.min} max={s.max} step={1} value={s.value}
             onChange={(e) => s.onChange(Number(e.target.value))}
-            onDoubleClick={s.onNeutral}
+            onDoubleClick={s.onRest}
             style={{ width: "100%", accentColor: "var(--accent)" }}
           />
         </div>

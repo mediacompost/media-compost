@@ -5,6 +5,11 @@
 - The image editor's **Image** menu has a **Blur…**: a gaussian blur of the
   picture on one slider, previewed live and applied as one undoable step, and
   confined to the selection where there is one.
+- And a **Sharpen…** beside it: an unsharp mask on an Amount and a Radius,
+  previewed live the same way. **Remove artifacts** in that menu takes a new
+  glyph, the old one being what sharpening looks like.
+- The image editor opens on the tool it was last left on, across pictures and
+  across sessions, instead of on the hand tool every time.
 
 ## 1.1.0
 

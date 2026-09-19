@@ -19,6 +19,8 @@ Click **Edit image** in the sidebar (or use the grid's context menu). The item w
 
 **Tool shortcuts are spring-loaded**: a quick tap switches tools for good, while *holding* a tool's key uses that tool only while pressed — releasing returns to the previous tool.
 
+**The editor opens on the tool you last used**, across pictures and across sessions: a tool is the job in hand — cropping a batch of scans, painting out a batch of logos — and the editor is opened once per picture.
+
 ### Theme
 
 The theme toggle is a menu with **Default**, **Light**, and **Dark**. Default follows the main app's mode (and keeps following it); Light and Dark hold this window at that mode regardless — useful for judging an image against the opposite background. The choice persists across sessions.
@@ -118,6 +120,10 @@ Colors carry **alpha**: a color's alpha is the stroke's opacity cap, and erasing
 
 This is not the Selection menu's [**Blur selection…**](#the-selection-menu), which softens the *selection's* edge and changes no pixel of the picture.
 
+## Sharpen
+
+**Image → Sharpen…** is the same panel again, with **Amount** (per cent — 100 adds the picture's own detail back once over) and **Radius** (the size of the detail being lifted; small, because sharpening a photograph means its texture). It is an unsharp mask: the picture minus a blurred copy of itself *is* the detail, so adding that back is what "sharper" means. Live preview, one undoable step, the selection only where there is one — and double-clicking the Radius puts it back to its default rather than to zero, a radius having no neutral.
+
 ## Inpainting
 
 **Inpaint** fills the selected area from the surrounding image with a LaMa AI model, removing unwanted content and replacing it with a plausible continuation. It runs from the **Inpaint** button in the bar of every tool that makes a selection — the marquee and lasso (next to Fill), the text tool, and the **wand**, which is where a patch of sky, a speech balloon's inside or a logo's background is picked up in one click — or from the Selection menu; only the selected pixels change, and the result is undoable.
@@ -133,6 +139,7 @@ Two models are available (the Inpaint button's dropdown picks one): **Photo** (b
 - **Canvas size…** — grow with transparency or trim, with a 3×3 anchor grid; the image is never scaled.
 - **Adjustments…** — see [Adjustments](#adjustments).
 - **Blur…** — see [Blur](#blur).
+- **Sharpen…** — see [Sharpen](#sharpen).
 - **Upscale**, **Colorize**, **Remove artifacts**, **Remove screen tones** and **Remove background** — five submenus side by side, each listing that action's AI models and greying the ones not yet set up (or leaving them out, under the [hide-unready setting](settings.md#ai-actions)); results replace the buffer and are undoable. The Colorize submenu includes the example-based manga model, which opens the reference picker right inside the editor.
 - **Remove screen tones** converts manga screentones into smooth greyscale gradients: two neural **OpenComic descreen** models (**Compact**, near-instant, and **Lite**, a touch cleaner) plus **Descreen (FFT)**, a download-free classical filter whose one extra trick is restraint — a page with no detectable screentone only gets a gentle smoothing.
 

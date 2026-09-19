@@ -4,7 +4,7 @@
 // every literal in the source to this table). The typed ones are read and
 // written through `shared/storage`; the rest are still read at their
 // sites through `storage.get`/`set`, listed here so the index is whole.
-import { boolPref, numPref } from "../shared/storage.ts";
+import { boolPref, numPref, strPref } from "../shared/storage.ts";
 
 /** The floor a side panel may be dragged to — the library's right panel
  *  and the annotator's sidebar share it. */
@@ -14,6 +14,15 @@ export const PANEL_MIN_W = 260;
  *  is a wash of colour and the pad the clamped blur adds is most of the
  *  work — the slider and the stored value share the ceiling. */
 export const BLUR_IMAGE_MAX = 100;
+
+/** Sharpening's two numbers, the same way. The amount is per cent — 100 adds
+ *  the detail back once over — and the radius is the SIZE of the detail being
+ *  lifted, small by default because sharpening a photograph means its texture
+ *  and a wide radius is a contrast control wearing sharpening's name. */
+export const SHARPEN_AMOUNT = 80;
+export const SHARPEN_AMOUNT_MAX = 300;
+export const SHARPEN_RADIUS = 2;
+export const SHARPEN_RADIUS_MAX = 20;
 
 export const APP_PREFS = {
   sidebarWidth: numPref("mc.sidebarWidth", { def: 266, min: 198, max: 520 }),
@@ -55,6 +64,17 @@ export const APP_PREFS = {
    *  does: the radius is the whole question, and one somebody set for these
    *  pictures is the likeliest answer for the next of them. */
   blurImagePx: numPref("mc.editor.blurImagePx", { def: 6, min: 0, max: BLUR_IMAGE_MAX }),
+  /** The Image menu's Sharpen, the same way: per cent, and the size of the
+   *  detail it lifts. */
+  sharpenAmount: numPref("mc.editor.sharpenAmount", { def: SHARPEN_AMOUNT, min: 0, max: SHARPEN_AMOUNT_MAX }),
+  sharpenRadiusPx: numPref("mc.editor.sharpenRadiusPx", { def: SHARPEN_RADIUS, min: 1, max: SHARPEN_RADIUS_MAX }),
+  /** THE TOOL THE PALETTE OPENS ON. A tool is the job in hand — cropping a
+   *  hundred scans, painting out a hundred logos — and the editor is opened
+   *  once per picture, so starting every window on the hand tool made the
+   *  first gesture of each of them be picking the tool again. The value is
+   *  checked against `TOOLS` where that list lives, not by a closed list
+   *  here: a tool that has been renamed away reads as the default. */
+  editorTool: strPref<string>("mc.editor.tool", "hand"),
 };
 
 

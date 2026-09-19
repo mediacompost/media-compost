@@ -8,8 +8,8 @@ import { RowMenu, type RowAction } from "./shared/RowMenu";
 
 /**
  * The image editor's action-bar menus: an **Image** menu (rotate, image /
- * canvas size dialogs, the two live effects — adjustments and blur) plus one
- * menu button per buffer-level AI action —
+ * canvas size dialogs, the three live effects — adjustments, blur and
+ * sharpen) plus one menu button per buffer-level AI action —
  * Upscale, Colorize, Remove artifacts, Remove screen tones, Remove
  * background, each with its models under it — and a **Select**
  * menu (detector-driven text/watermark selection). Only models that are
@@ -31,6 +31,7 @@ export function EditorMenus({
   onResizeCanvas,
   onAdjust,
   onBlurImage,
+  onSharpenImage,
   onApplyModel,
   onSelectRegions,
   onCropToSelection,
@@ -55,6 +56,8 @@ export function EditorMenus({
   onAdjust: () => void;
   /** Open the live blur panel. */
   onBlurImage: () => void;
+  /** Open the live sharpen panel. */
+  onSharpenImage: () => void;
   // needsReference marks a reference-guided model — the editor opens the
   // reference picker before applying.
   onApplyModel: (kind: JobKind, model: string, needsReference?: boolean) => void;
@@ -141,6 +144,11 @@ export function EditorMenus({
                ? "Gaussian blur — on the selection"
                : "Gaussian blur the whole picture",
              enabled: true, onClick: onBlurImage }),
+    ...row({ icon: "deblur", label: "Sharpen…",
+             note: hasSelection
+               ? "Unsharp mask — on the selection"
+               : "Unsharp mask: lift the picture's own detail",
+             enabled: true, onClick: onSharpenImage }),
     // The AI actions, a submenu each.
     { icon: "photo_size_select_large", label: "Upscale", separated: true, onClick: () => {},
       children: modelRows("upscale" as JobKind) },
@@ -152,7 +160,11 @@ export function EditorMenus({
     // nothing — every child said "Remove …" already, so the word appeared
     // twice on the way to a model and each of the three sat two flyouts deep
     // where the neighbours it belongs with sat one.
-    { icon: "deblur", label: "Remove artifacts", onClick: () => {},
+    // `healing` rather than `deblur`: that glyph is dots resolving into a
+    // sharp grid, which is Sharpen above and was never what removing
+    // compression artifacts looks like — and two rows of one menu drawn with
+    // one glyph say they are the same kind of thing.
+    { icon: "healing", label: "Remove artifacts", onClick: () => {},
       children: modelRows("restore" as JobKind) },
     { icon: "texture", label: "Remove screen tones", onClick: () => {},
       children: modelRows("descreen" as JobKind) },
