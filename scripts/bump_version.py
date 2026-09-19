@@ -88,12 +88,12 @@ CHANGELOG = "CHANGELOG.md"
 UNRELEASED = "Unreleased"
 SECTION = re.compile(r"^## +(.+?) *$", re.M)
 
-# A VERSION IS A `##` HEADING AND NOTHING ELSE. Inside one, entries are
-# grouped under `### Features` and `### Fixes` (`CONTRIBUTING.md` names
-# them), and those are invisible to `SECTION` by construction: `## +` wants a
-# SPACE after two hashes and a third hash is not one. So a version's body is
-# its sub-headings and their entries together, which is what `--section`
-# prints and what the release notes say.
+# A VERSION IS A `##` HEADING AND NOTHING ELSE. A version's entries are one
+# list (`CONTRIBUTING.md`), but a `###` heading inside a section is invisible
+# to `SECTION` by construction — `## +` wants a SPACE after two hashes and a
+# third hash is not one — so if one is ever written, the body is that heading
+# and its entries together rather than the section stopping short of them.
+# That body is what `--section` prints and what the release notes say.
 GROUP = re.compile(r"^#{3,} +.*$", re.M)
 
 
@@ -196,13 +196,12 @@ def _body_under(text: str, head: re.Match[str]) -> str:
 
 
 def _says_something(body: str) -> bool:
-    """Does this section say anything — with its GROUP HEADINGS discounted.
+    """Does this section say anything — with any `###` HEADING discounted.
 
-    A body of `### Features` and `### Fixes` and nothing under them is not
-    empty as a string, and shipping it is exactly the silence the two checks
-    below exist to catch. Discounting the headings rather than demanding a
-    list item, because a section may legitimately be one line of prose (the
-    first release's is).
+    A body of headings and nothing under them is not empty as a string, and
+    shipping it is exactly the silence the two checks below exist to catch.
+    Discounting the headings rather than demanding a list item, because a
+    section may legitimately be one line of prose (the first release's is).
     """
     return bool(GROUP.sub("", body).strip())
 

@@ -244,15 +244,12 @@ explains what it is protecting.
   written as the changes land and is renamed to the version on release
   day — a changelog reconstructed from the log that morning is a list of
   commit subjects, which is the thing it exists not to be.
-- **A line goes under `### Features` or `### Fixes`**, the two groups a
-  version's section holds: the first is what somebody can now do (a changed
-  default and a renamed control included — being new is implied by being in
-  the changelog at all), the second is what was wrong and no longer is. A
-  group with nothing under it is not written; the whole of the section is
-  the release's notes, and an empty heading in them says nothing twice.
-  A VERSION IS STILL A `##` HEADING — `bump_version.py` delimits sections by
-  those alone, so the groups ride inside one, and its "this release says
-  nothing" refusal discounts them (`_says_something`).
+- **A version's entries are ONE list, most notable first**: what is new,
+  then what changed, then what was wrong. A VERSION IS A `##` HEADING —
+  `bump_version.py` delimits sections by those alone, so a `###` inside one
+  would ride along in the notes rather than cut the section short, and its
+  "this release says nothing" refusal discounts such a heading
+  (`_says_something`).
 - A decision whose reasoning would otherwise be lost — especially "the
   obvious way was tried and it broke X", and most especially a number that
   settled an argument — goes in the docstring of the thing it is about.

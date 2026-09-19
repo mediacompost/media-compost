@@ -2,23 +2,20 @@
 
 ## Unreleased
 
-### Features
-
-- The image editor's **Image** menu lists **Remove artifacts**, **Remove
-  screen tones** and **Remove background** beside Upscale and Colorize,
-  instead of under a **Remove** of their own.
-- The image editor's ✕ asks what Escape asks: with a second picture open,
-  close the window or only this tab. It closed the window outright.
-- The wand's properties bar carries **Inpaint**, like the select and text
-  tools'.
 - The library grid's **Show sequenced** toggle is now **Fold sequences**, on
   by default: a sequence's members give way to the sequence itself where both
   would be in the view, and stay where it would not.
 - Shift + an arrow key in the preview leaves a sequence for the item beside
   it, instead of turning its pages one at a time.
-
-### Fixes
-
+- The wand's properties bar carries **Inpaint**, like the select and text
+  tools'.
+- The image editor's **Image** menu lists **Remove artifacts**, **Remove
+  screen tones** and **Remove background** beside Upscale and Colorize,
+  instead of under a **Remove** of their own.
+- The image editor's ✕ asks what Escape asks: with a second picture open,
+  close the window or only this tab. It closed the window outright, so one
+  press discarded every other open picture's window without asking while the
+  keyboard route asked.
 - Inpainting reads the selection as an alpha, so a **feathered** selection
   fades the fill in instead of ending at a line, and an anti-aliased ellipse
   or lasso no longer gets a stepped edge. The mask was binarised at the
