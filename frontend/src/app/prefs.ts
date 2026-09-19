@@ -10,6 +10,11 @@ import { boolPref, numPref } from "../shared/storage.ts";
  *  and the annotator's sidebar share it. */
 export const PANEL_MIN_W = 260;
 
+/** The Image menu's blur, in pixels of gaussian radius. Past this the picture
+ *  is a wash of colour and the pad the clamped blur adds is most of the
+ *  work — the slider and the stored value share the ceiling. */
+export const BLUR_IMAGE_MAX = 100;
+
 export const APP_PREFS = {
   sidebarWidth: numPref("mc.sidebarWidth", { def: 266, min: 198, max: 520 }),
   rightWidth: numPref("mc.rightWidth", { def: 322, min: PANEL_MIN_W, max: 560 }),
@@ -45,7 +50,13 @@ export const APP_PREFS = {
   shrinkSelectionPx: numPref("mc.editor.shrinkPx", { def: 2, min: 1, max: 500 }),
   /** How far the selection's own EDGE is softened (Blur selection). */
   blurSelectionPx: numPref("mc.editor.blurSelectionPx", { def: 4, min: 1, max: 500 }),
+  /** The Image menu's Blur — how far the PICTURE is softened. The panel
+   *  opens on it and previews it straight away, the way every blur dialog
+   *  does: the radius is the whole question, and one somebody set for these
+   *  pictures is the likeliest answer for the next of them. */
+  blurImagePx: numPref("mc.editor.blurImagePx", { def: 6, min: 0, max: BLUR_IMAGE_MAX }),
 };
+
 
 /** Every other app key, with what it holds — read at its site. */
 export const APP_PREF_KEYS: Record<string, string> = {

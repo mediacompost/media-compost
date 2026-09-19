@@ -52,7 +52,7 @@ const BUDGET: Record<string, number> = {
   "app/components/AnnotationOverlay.tsx": 4,
   "app/components/ColorPicker.tsx": 2,
   "app/components/EditorMenu.tsx": 1,
-  "app/components/EditorOverlay.tsx": 10,
+  "app/components/EditorOverlay.tsx": 7,
   "app/components/EstimateOverlay.tsx": 2,
   "app/components/FilterMenu.tsx": 1,
   "app/components/GroupPropertiesOverlay.tsx": 2,

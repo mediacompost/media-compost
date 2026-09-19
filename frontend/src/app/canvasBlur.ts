@@ -150,3 +150,48 @@ export function blurredCanvas(src: HTMLCanvasElement, radius: number): HTMLCanva
   ctx.putImageData(img, 0, 0);
   return out;
 }
+
+/**
+ * `src` blurred by `radius` with its EDGE PIXELS CLAMPED — the blur every
+ * "blur this picture" means.
+ *
+ * A canvas has nothing outside it but transparency, so blurring a picture
+ * whole mixes that transparency in along all four edges: an opaque photograph
+ * comes back with a soft see-through frame as wide as the kernel reaches.
+ * (`blurredCanvas` is right for what IT blurs — a masked shape, whose
+ * surrounding transparency is the point.) So the picture is first padded by
+ * repeating its border pixels, blurred, and the middle taken back out. The pad
+ * is the kernel's own reach, ~3σ, which is why the cost grows a little with
+ * the radius on top of the blur's own.
+ */
+export function blurredImage(src: HTMLCanvasElement, radius: number): HTMLCanvasElement {
+  const w = src.width, h = src.height;
+  const out = document.createElement("canvas");
+  out.width = w;
+  out.height = h;
+  const ctx = out.getContext("2d")!;
+  if (radius < 0.3) {
+    ctx.drawImage(src, 0, 0);
+    return out;
+  }
+  const pad = Math.ceil(radius * 3);
+  const padded = document.createElement("canvas");
+  padded.width = w + pad * 2;
+  padded.height = h + pad * 2;
+  const p = padded.getContext("2d")!;
+  p.drawImage(src, pad, pad);
+  // The four border rows/columns stretched over the padding, then the corner
+  // pixels over the corners. A one-pixel source scaled up is that pixel
+  // repeated, whatever the browser's smoothing does with it.
+  p.drawImage(src, 0, 0, w, 1, pad, 0, w, pad);
+  p.drawImage(src, 0, h - 1, w, 1, pad, h + pad, w, pad);
+  p.drawImage(src, 0, 0, 1, h, 0, pad, pad, h);
+  p.drawImage(src, w - 1, 0, 1, h, w + pad, pad, pad, h);
+  p.drawImage(src, 0, 0, 1, 1, 0, 0, pad, pad);
+  p.drawImage(src, w - 1, 0, 1, 1, w + pad, 0, pad, pad);
+  p.drawImage(src, 0, h - 1, 1, 1, 0, h + pad, pad, pad);
+  p.drawImage(src, w - 1, h - 1, 1, 1, w + pad, h + pad, pad, pad);
+  const blurred = blurredCanvas(padded, radius);
+  ctx.drawImage(blurred, pad, pad, w, h, 0, 0, w, h);
+  return out;
+}

@@ -8,7 +8,8 @@ import { RowMenu, type RowAction } from "./shared/RowMenu";
 
 /**
  * The image editor's action-bar menus: an **Image** menu (rotate, image /
- * canvas size dialogs) plus one menu button per buffer-level AI action —
+ * canvas size dialogs, the two live effects — adjustments and blur) plus one
+ * menu button per buffer-level AI action —
  * Upscale, Colorize, Remove artifacts, Remove screen tones, Remove
  * background, each with its models under it — and a **Select**
  * menu (detector-driven text/watermark selection). Only models that are
@@ -29,6 +30,7 @@ export function EditorMenus({
   onResizeImage,
   onResizeCanvas,
   onAdjust,
+  onBlurImage,
   onApplyModel,
   onSelectRegions,
   onCropToSelection,
@@ -51,6 +53,8 @@ export function EditorMenus({
   onResizeCanvas: (w: number, h: number, anchor: CanvasAnchor) => void;
   /** Open the live brightness/contrast/hue/saturation panel. */
   onAdjust: () => void;
+  /** Open the live blur panel. */
+  onBlurImage: () => void;
   // needsReference marks a reference-guided model — the editor opens the
   // reference picker before applying.
   onApplyModel: (kind: JobKind, model: string, needsReference?: boolean) => void;
@@ -128,6 +132,15 @@ export function EditorMenus({
                ? "Brightness, contrast, hue, saturation — on the selection"
                : "Brightness, contrast, hue and saturation",
              enabled: true, onClick: onAdjust, separated: true }),
+    // Beside Adjustments, because it is the same kind of thing: a number you
+    // judge by looking, previewed live on the picture and applied as one
+    // undoable step. (The Selection menu's **Blur selection…** is a different
+    // verb — it softens the MASK's edge, and touches no pixel of the picture.)
+    ...row({ icon: "lens_blur", label: "Blur…",
+             note: hasSelection
+               ? "Gaussian blur — on the selection"
+               : "Gaussian blur the whole picture",
+             enabled: true, onClick: onBlurImage }),
     // The AI actions, a submenu each.
     { icon: "photo_size_select_large", label: "Upscale", separated: true, onClick: () => {},
       children: modelRows("upscale" as JobKind) },

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- The image editor's **Image** menu has a **Blur…**: a gaussian blur of the
+  picture on one slider, previewed live and applied as one undoable step, and
+  confined to the selection where there is one.
+
 ## 1.1.0
 
 - The library grid's **Show sequenced** toggle is now **Fold sequences**, on

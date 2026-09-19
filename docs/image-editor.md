@@ -112,6 +112,12 @@ Colors carry **alpha**: a color's alpha is the stroke's opacity cap, and erasing
 
 **Image → Adjustments…** opens a small panel over the top right of the canvas — not a modal, so you can keep panning and zooming while judging the change. Four sliders — **brightness**, **contrast**, **saturation**, **hue** — preview live on the full-resolution image; double-click a slider to return it to neutral. **Reset**, **Cancel**, and **OK** (applies everything as one undoable step). With a selection active, the adjustment applies to the selection only, and the panel says so.
 
+## Blur
+
+**Image → Blur…** opens the same panel with one slider on it: **Radius**, a gaussian blur of the picture, previewed live and applied as one undoable step. With a selection active it blurs the selection only — reading the pixels around it, so the blurred patch doesn't darken towards its own edge — and the panel says so. The panel opens at the radius you last used and shows it straight away; **Reset** takes it to 0, **Cancel** puts the picture back.
+
+This is not the Selection menu's [**Blur selection…**](#the-selection-menu), which softens the *selection's* edge and changes no pixel of the picture.
+
 ## Inpainting
 
 **Inpaint** fills the selected area from the surrounding image with a LaMa AI model, removing unwanted content and replacing it with a plausible continuation. It runs from the **Inpaint** button in the bar of every tool that makes a selection — the marquee and lasso (next to Fill), the text tool, and the **wand**, which is where a patch of sky, a speech balloon's inside or a logo's background is picked up in one click — or from the Selection menu; only the selected pixels change, and the result is undoable.
@@ -126,6 +132,7 @@ Two models are available (the Inpaint button's dropdown picks one): **Photo** (b
 - **Image size…** — resample to a new size with aspect-linked fields.
 - **Canvas size…** — grow with transparency or trim, with a 3×3 anchor grid; the image is never scaled.
 - **Adjustments…** — see [Adjustments](#adjustments).
+- **Blur…** — see [Blur](#blur).
 - **Upscale**, **Colorize**, **Remove artifacts**, **Remove screen tones** and **Remove background** — five submenus side by side, each listing that action's AI models and greying the ones not yet set up (or leaving them out, under the [hide-unready setting](settings.md#ai-actions)); results replace the buffer and are undoable. The Colorize submenu includes the example-based manga model, which opens the reference picker right inside the editor.
 - **Remove screen tones** converts manga screentones into smooth greyscale gradients: two neural **OpenComic descreen** models (**Compact**, near-instant, and **Lite**, a touch cleaner) plus **Descreen (FFT)**, a download-free classical filter whose one extra trick is restraint — a page with no detectable screentone only gets a gentle smoothing.
 

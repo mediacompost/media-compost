@@ -21,13 +21,13 @@ import { floodFromDistances, floodFromPixels, regionToMask, seedDistances }
 import { panForZoom, zoomPivot } from "../zoomPivot";
 import { CACHE_MAX_PX, visibleBlit } from "../canvasBlit";
 import { Adjust, NO_ADJUST, drawAdjusted, isIdentity } from "../imageAdjust";
-import { blurredCanvas } from "../canvasBlur";
+import { blurredCanvas, blurredImage } from "../canvasBlur";
 import { EditorMenus } from "./EditorMenu";
 import { Icon } from "../../shared/Icon";
 import { RefPickerOverlay } from "./RefPicker";
 import { ColorPickerPopover } from "./ColorPicker";
 import { useUI } from "../store";
-import { APP_PREFS } from "../prefs";
+import { APP_PREFS, BLUR_IMAGE_MAX } from "../prefs";
 import { bumpLibrary } from "../invalidation";
 import { evalExpr } from "../mathExpr";
 import { checkerPattern } from "../canvasChecker";
@@ -511,11 +511,18 @@ export function EditorOverlay() {
   // Live brightness/contrast/hue/saturation. The panel floats over the canvas
   // rather than sitting in a modal, so the image can still be panned and
   // zoomed while the sliders are open — judging an adjustment means looking at
-  // the part of the picture it matters in. `adjustBase` is the buffer as it was
+  // the part of the picture it matters in. `effectBase` is the buffer as it was
   // when the panel opened: every preview is computed from THAT, so dragging a
   // slider back and forth never compounds, and Cancel is a restore.
   const [adjust, setAdjust] = useState<Adjust | null>(null);
-  const adjustBase = useRef<HTMLCanvasElement | null>(null);
+  // Blurring the picture is the same panel with one slider on it, and the same
+  // snapshot rule — null = shut. It opens on the radius it was last used at
+  // and previews that straight away: the radius is the whole question, and a
+  // panel that opened neutral would make Reset and opening the same thing.
+  const [blurAmt, setBlurAmt] = useState<number | null>(null);
+  // The buffer as it was when EITHER panel opened; only one is ever open, and
+  // opening one commits the other.
+  const effectBase = useRef<HTMLCanvasElement | null>(null);
   // Error banner for editor-menu AI actions (apply/detect failures).
   const [opErr, setOpErr] = useState("");
   // Which of the item's files is loaded into the buffer; null = the active
@@ -2439,7 +2446,7 @@ export function EditorOverlay() {
   // snapshot: the selection keeps the adjusted pixels, everything outside it
   // keeps the originals.
   const previewAdjust = (a: Adjust) => {
-    const base = adjustBase.current;
+    const base = effectBase.current;
     if (!base) return;
     const p = pixelRef.current.getContext("2d")!;
     p.save();
@@ -2465,16 +2472,27 @@ export function EditorOverlay() {
     redraw();
   };
 
-  const openAdjust = () => {
+  /** The buffer as it stands, for a panel to compute every preview from.
+   *  Taking it is also where the OTHER panel is committed: only one snapshot
+   *  exists, so opening a second panel over a live preview would snapshot the
+   *  preview and leave the first with nothing to cancel back to. Keeping what
+   *  it shows is what somebody who has gone from one to the other means. */
+  const snapEffectBase = () => {
+    if (adjust) closeAdjust(true);
+    if (blurAmt != null) closeBlur(true);
     const snap = document.createElement("canvas");
     snap.width = dims.w; snap.height = dims.h;
     snap.getContext("2d")!.drawImage(pixelRef.current, 0, 0);
-    adjustBase.current = snap;
+    effectBase.current = snap;
+  };
+
+  const openAdjust = () => {
+    snapEffectBase();
     setAdjust({ ...NO_ADJUST });
   };
 
   const closeAdjust = (keep: boolean) => {
-    const base = adjustBase.current;
+    const base = effectBase.current;
     const a = adjust;
     if (base && a) {
       // Undo has to capture the image as it was BEFORE the adjustment, and the
@@ -2490,8 +2508,87 @@ export function EditorOverlay() {
         redraw();
       }
     }
-    adjustBase.current = null;
+    effectBase.current = null;
     setAdjust(null);
+  };
+
+  // Blurring the whole picture, from the same snapshot. `blurredImage` is the
+  // edge-clamped blur — blurring a canvas plainly mixes in the transparency
+  // outside it and hands back a photograph with a see-through frame.
+  const drawBlur = (px: number) => {
+    const base = effectBase.current;
+    if (!base) return;
+    const p = pixelRef.current.getContext("2d")!;
+    p.save();
+    p.globalCompositeOperation = "source-over";
+    p.clearRect(0, 0, dims.w, dims.h);
+    p.drawImage(base, 0, 0);          // untouched, and outside any selection
+    if (px >= 1) {
+      let soft: HTMLCanvasElement = blurredImage(base, px);
+      if (hasSelection) {
+        // The blur READS from outside the selection — a blur that could only
+        // see the selected pixels would darken its own edge — and only writes
+        // inside it.
+        const tmp = document.createElement("canvas");
+        tmp.width = dims.w; tmp.height = dims.h;
+        const tc = tmp.getContext("2d")!;
+        tc.drawImage(soft, 0, 0);
+        tc.globalCompositeOperation = "destination-in";
+        tc.drawImage(maskRef.current, 0, 0);
+        soft = tmp;
+      }
+      p.drawImage(soft, 0, 0);
+    }
+    p.restore();
+    redraw();
+  };
+
+  // A full-resolution gaussian is heavy enough to outrun a slider drag —
+  // and where `ctx.filter` is a no-op it is the pixel loop in `canvasBlur`,
+  // not the GPU — so the renders are COALESCED: the number moves on the
+  // event, the picture on the next frame, at the last radius asked for.
+  const blurFrame = useRef<number | null>(null);
+  const blurWanted = useRef(0);
+  const previewBlur = (px: number) => {
+    blurWanted.current = px;
+    if (blurFrame.current != null) return;
+    blurFrame.current = requestAnimationFrame(() => {
+      blurFrame.current = null;
+      drawBlur(blurWanted.current);
+    });
+  };
+  const settleBlur = () => {
+    if (blurFrame.current != null) cancelAnimationFrame(blurFrame.current);
+    blurFrame.current = null;
+  };
+
+  const openBlur = () => {
+    snapEffectBase();
+    const px = APP_PREFS.blurImagePx.read();
+    setBlurAmt(px);
+    previewBlur(px);
+  };
+
+  const closeBlur = (keep: boolean) => {
+    settleBlur();
+    const base = effectBase.current;
+    const px = blurAmt;
+    if (base && px != null) {
+      // Undo captures the picture BEFORE the blur, and the buffer holds the
+      // preview — so put the snapshot back, record that, then re-apply.
+      const p = pixelRef.current.getContext("2d")!;
+      p.clearRect(0, 0, dims.w, dims.h);
+      p.drawImage(base, 0, 0);
+      if (keep && px >= 1) {
+        pushHistory();
+        drawBlur(px);
+        APP_PREFS.blurImagePx.write(px);
+      } else {
+        redraw();
+      }
+    }
+    effectBase.current = null;
+    setBlurAmt(null);
   };
 
   const fillSelection = () => {
@@ -3932,11 +4029,12 @@ export function EditorOverlay() {
 
   // ---- save ----
   const doSave = async (mode: "overwrite" | "derived" = "overwrite"): Promise<boolean> => {
-    // An adjustment still being previewed is what is on screen, so it is
-    // what a save means — but the preview lives in the buffer with no undo
-    // entry behind it. Commit it the way OK does, so the file and the history
-    // agree about what was saved.
+    // An adjustment or a blur still being previewed is what is on screen, so
+    // it is what a save means — but the preview lives in the buffer with no
+    // undo entry behind it. Commit it the way OK does, so the file and the
+    // history agree about what was saved.
     if (adjust) closeAdjust(true);
+    if (blurAmt != null) closeBlur(true);
     // A pending crop tab: the first save CREATES the item (discarding the
     // tab never creates anything).
     if (editorItemId != null && editorItemId < 0) {
@@ -4711,6 +4809,7 @@ export function EditorOverlay() {
                 onResizeImage={resizeImage}
                 onResizeCanvas={resizeCanvas}
                 onAdjust={openAdjust}
+                onBlurImage={openBlur}
                 onApplyModel={(kind, model, needsReference) => {
                   if (needsReference) setRefPick({ kind, model });
                   else void applyModel(kind, model);
@@ -4952,90 +5051,53 @@ export function EditorOverlay() {
               Working…
             </div>
           )}
-          {/* Adjustments — a panel over the top-right of the canvas, not a
-              modal: the picture underneath stays pannable and zoomable, which
-              is the only way to judge an adjustment on the part that matters. */}
+          {/* The two live effects — brightness/contrast/saturation/hue, and
+              the blur — draw through ONE panel over the top-right of the
+              canvas. Not a modal: the picture underneath stays pannable and
+              zoomable, which is the only way to judge either of them on the
+              part that matters. */}
           {adjust && (
-            <div style={{
-              position: "absolute", right: 14, top: 12, zIndex: 60, width: 250,
-              background: "var(--surface-float)", border: "1px solid var(--border)",
-              borderRadius: "var(--r-6)", boxShadow: "var(--shadow-2)",
-              padding: "10px 12px 12px",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-                <Icon name="tune" size={16} color="var(--accent)" />
-                <span style={{ fontSize: "var(--fs-3)", fontWeight: 600, color: "var(--text-bright)" }}>
-                  Adjustments
-                </span>
-                <span style={{ flex: 1 }} />
-                {hasSelection && (
-                  <span style={{ fontSize: "var(--fs-1)", color: "var(--accent)" }}>selection</span>
-                )}
-              </div>
-              {([
+            <EffectPanel
+              icon="tune" title="Adjustments" onSelection={hasSelection}
+              sliders={([
                 ["brightness", "Brightness", -100, 100],
                 ["contrast", "Contrast", -100, 100],
                 ["saturation", "Saturation", -100, 100],
                 ["hue", "Hue", -180, 180],
-              ] as const).map(([key, label, min, max]) => (
-                <div key={key} style={{ marginBottom: 7 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
-                    <span style={{ flex: 1, fontSize: "var(--fs-2)", color: "var(--muted)" }}>{label}</span>
-                    <span style={{ fontFamily: "var(--mono)", fontSize: "var(--fs-1)",
-                      color: adjust[key] ? "var(--text-2)" : "var(--muted-3)" }}>
-                      {adjust[key] > 0 ? "+" : ""}{adjust[key]}{key === "hue" ? "°" : ""}
-                    </span>
-                  </div>
-                  <input
-                    type="range" min={min} max={max} step={1} value={adjust[key]}
-                    onChange={(e) => {
-                      const next = { ...adjust, [key]: Number(e.target.value) };
-                      setAdjust(next);
-                      previewAdjust(next);
-                    }}
-                    // Double-click a slider to put that one back to neutral —
-                    // the usual way out of "I have gone too far on this one".
-                    onDoubleClick={() => {
-                      const next = { ...adjust, [key]: 0 };
-                      setAdjust(next);
-                      previewAdjust(next);
-                    }}
-                    style={{ width: "100%", accentColor: "var(--accent)" }}
-                  />
-                </div>
-              ))}
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10 }}>
-                <button
-                  onClick={() => { setAdjust({ ...NO_ADJUST }); previewAdjust(NO_ADJUST); }}
-                  disabled={isIdentity(adjust)}
-                  style={{ height: 26, padding: "0 9px", borderRadius: "var(--r-3)", fontSize: "var(--fs-2)",
-                    fontFamily: "inherit", cursor: isIdentity(adjust) ? "default" : "pointer",
-                    border: "1px solid var(--border-strong)", background: "transparent",
-                    color: isIdentity(adjust) ? "var(--muted-3)" : "var(--text-2)" }}
-                >
-                  Reset
-                </button>
-                <span style={{ flex: 1 }} />
-                <button
-                  onClick={() => closeAdjust(false)}
-                  style={{ height: 26, padding: "0 11px", borderRadius: "var(--r-3)", fontSize: "var(--fs-2)",
-                    fontFamily: "inherit", cursor: "pointer",
-                    border: "1px solid var(--border-strong)", background: "transparent",
-                    color: "var(--text-2)" }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => closeAdjust(true)}
-                  style={{ height: 26, padding: "0 13px", borderRadius: "var(--r-3)", fontSize: "var(--fs-2)",
-                    fontWeight: 600, fontFamily: "inherit", cursor: "pointer",
-                    border: "1px solid var(--accent)", background: "var(--accent)",
-                    color: "var(--on-accent)" }}
-                >
-                  OK
-                </button>
-              </div>
-            </div>
+              ] as const).map(([key, label, min, max]) => ({
+                key, label, min, max, value: adjust[key],
+                text: `${adjust[key] > 0 ? "+" : ""}${adjust[key]}${key === "hue" ? "°" : ""}`,
+                onChange: (v: number) => {
+                  const next = { ...adjust, [key]: v };
+                  setAdjust(next);
+                  previewAdjust(next);
+                },
+                onNeutral: () => {
+                  const next = { ...adjust, [key]: 0 };
+                  setAdjust(next);
+                  previewAdjust(next);
+                },
+              }))}
+              neutral={isIdentity(adjust)}
+              onReset={() => { setAdjust({ ...NO_ADJUST }); previewAdjust(NO_ADJUST); }}
+              onCancel={() => closeAdjust(false)}
+              onOk={() => closeAdjust(true)}
+            />
+          )}
+          {blurAmt != null && (
+            <EffectPanel
+              icon="lens_blur" title="Blur" onSelection={hasSelection}
+              sliders={[{
+                key: "radius", label: "Radius", min: 0, max: BLUR_IMAGE_MAX,
+                value: blurAmt, text: `${blurAmt} px`,
+                onChange: (v: number) => { setBlurAmt(v); previewBlur(v); },
+                onNeutral: () => { setBlurAmt(0); previewBlur(0); },
+              }]}
+              neutral={blurAmt < 1}
+              onReset={() => { setBlurAmt(0); previewBlur(0); }}
+              onCancel={() => closeBlur(false)}
+              onOk={() => closeBlur(true)}
+            />
           )}
 
           {/* Zoom controls, overlaid at the bottom-right. The reset button shows
@@ -5372,6 +5434,100 @@ function SliderProp({ label, value, min, max, unit, onChange, inputValue, inputM
         style={{ width: 46, height: 24, borderRadius: "var(--r-2)", border: "none", background: "var(--panel-2)", color: "var(--text-2)", padding: "0 5px", fontFamily: "var(--mono)", fontSize: "var(--fs-2)" }}
       />
       <span style={{ fontFamily: "var(--mono)", fontSize: "var(--fs-2)", color: "var(--muted)", width: 18 }}>{unit}</span>
+    </div>
+  );
+}
+
+/**
+ * The floating panel a LIVE EFFECT is judged on: Adjustments' four sliders and
+ * the Image menu's blur are the same thing with a different list of numbers on
+ * it, so they are one drawing. It sits over the top-right of the canvas rather
+ * than in a modal, and it says when the effect is confined to the selection.
+ *
+ * Each slider returns to neutral on a DOUBLE-CLICK — the usual way out of "I
+ * have gone too far on this one" — and the panel's own Reset takes all of
+ * them there at once. Cancel puts the picture back; OK applies the lot as one
+ * undoable step.
+ */
+function EffectPanel({ icon, title, onSelection, sliders, neutral, onReset, onCancel, onOk }: {
+  icon: string;
+  title: string;
+  /** Whether the effect is confined to a selection — the panel says so. */
+  onSelection: boolean;
+  sliders: {
+    key: string; label: string; min: number; max: number; value: number;
+    /** The value as it reads on screen, sign and unit and all. */
+    text: string;
+    onChange: (v: number) => void;
+    onNeutral: () => void;
+  }[];
+  /** True while the effect changes nothing — Reset has nothing to do. */
+  neutral: boolean;
+  onReset: () => void;
+  onCancel: () => void;
+  onOk: () => void;
+}) {
+  const btn: React.CSSProperties = {
+    height: 26, borderRadius: "var(--r-3)", fontSize: "var(--fs-2)",
+    fontFamily: "inherit", border: "1px solid var(--border-strong)",
+    background: "transparent", color: "var(--text-2)",
+  };
+  return (
+    <div style={{
+      position: "absolute", right: 14, top: 12, zIndex: 60, width: 250,
+      background: "var(--surface-float)", border: "1px solid var(--border)",
+      borderRadius: "var(--r-6)", boxShadow: "var(--shadow-2)",
+      padding: "10px 12px 12px",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+        <Icon name={icon} size={16} color="var(--accent)" />
+        <span style={{ fontSize: "var(--fs-3)", fontWeight: 600, color: "var(--text-bright)" }}>
+          {title}
+        </span>
+        <span style={{ flex: 1 }} />
+        {onSelection && (
+          <span style={{ fontSize: "var(--fs-1)", color: "var(--accent)" }}>selection</span>
+        )}
+      </div>
+      {sliders.map((s) => (
+        <div key={s.key} style={{ marginBottom: 7 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+            <span style={{ flex: 1, fontSize: "var(--fs-2)", color: "var(--muted)" }}>{s.label}</span>
+            <span style={{ fontFamily: "var(--mono)", fontSize: "var(--fs-1)",
+              color: s.value ? "var(--text-2)" : "var(--muted-3)" }}>
+              {s.text}
+            </span>
+          </div>
+          <input
+            type="range" min={s.min} max={s.max} step={1} value={s.value}
+            onChange={(e) => s.onChange(Number(e.target.value))}
+            onDoubleClick={s.onNeutral}
+            style={{ width: "100%", accentColor: "var(--accent)" }}
+          />
+        </div>
+      ))}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10 }}>
+        <button
+          onClick={onReset}
+          disabled={neutral}
+          style={{ ...btn, padding: "0 9px", cursor: neutral ? "default" : "pointer",
+            color: neutral ? "var(--muted-3)" : "var(--text-2)" }}
+        >
+          Reset
+        </button>
+        <span style={{ flex: 1 }} />
+        <button onClick={onCancel} style={{ ...btn, padding: "0 11px", cursor: "pointer" }}>
+          Cancel
+        </button>
+        <button
+          onClick={onOk}
+          style={{ ...btn, padding: "0 13px", fontWeight: 600, cursor: "pointer",
+            border: "1px solid var(--accent)", background: "var(--accent)",
+            color: "var(--on-accent)" }}
+        >
+          OK
+        </button>
+      </div>
     </div>
   );
 }
