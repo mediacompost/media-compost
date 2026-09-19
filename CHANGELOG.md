@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.0
 
 - The library grid's **Show sequenced** toggle is now **Fold sequences**, on
   by default: a sequence's members give way to the sequence itself where both

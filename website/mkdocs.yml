@@ -167,7 +167,7 @@ extra:
   # package's own three copies (`tests/ui/test_version.py`); the published
   # site is built from a tag, so what it shows is that release rather than
   # the `.devN` main carries in between.
-  version_number: "1.0.2.dev0"
+  version_number: "1.1.0"
 
 markdown_extensions:
   - admonition
