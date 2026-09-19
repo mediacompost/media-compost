@@ -4404,10 +4404,15 @@ export function EditorOverlay() {
             ]} />
         </div>
         {/* The window's own ✕, LAST and with no divider before it: it ends the
-            row rather than starting a group. It goes through `guardedClose`
-            like everything else that can lose an unsaved buffer — this is the
-            only visible way out now that a single tab shows no strip. */}
-        <WindowCloseBtn t={english} onClose={() => guardedClose(closeEditor)} />
+            row rather than starting a group. This is the only visible way out
+            now that a single tab shows no strip, so it asks what Escape asks
+            (`requestClose`): with a second tab open, whether to close the
+            WINDOW or just this tab. It used to close the window outright —
+            the same press, on the same control, meaning "close everything" to
+            the mouse and "which of them?" to the keyboard, and with several
+            pictures open the mouse answer was the destructive one. Either
+            answer still guards every unsaved buffer on its way out. */}
+        <WindowCloseBtn t={english} onClose={requestClose} />
       </div>
 
       {/* body: canvas with the tool palette floating over it */}

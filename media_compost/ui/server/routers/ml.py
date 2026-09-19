@@ -380,21 +380,26 @@ async def inpaint(image: UploadFile, mask: UploadFile,
                   model: str = FastForm("big_lama")):
     """Inpaint the masked region of an image with LaMa (the editor's inpaint
     tool). ``mask`` marks the region to fill (its alpha, or luminance if opaque);
-    only masked pixels change. ``model`` picks the checkpoint: ``big_lama``
-    (photographic) or ``anime_lama`` (illustrations/line art). Returns a PNG.
-    Synchronous + kept warm — this is an interactive editor operation, not a
-    queued job."""
+    only masked pixels change, and a partly-selected one changes partly.
+    ``model`` picks the checkpoint: ``big_lama`` (photographic) or
+    ``anime_lama`` (illustrations/line art). Returns a PNG. Synchronous + kept
+    warm — this is an interactive editor operation, not a queued job."""
     from ... import inpaint as inpaint_mod
     from PIL import Image
 
     src = Image.open(io.BytesIO(await image.read()))
     mk = Image.open(io.BytesIO(await mask.read()))
     # Selection mask: prefer the alpha channel (the editor paints opaque white on
-    # a transparent canvas), else luminance; binarize to a hole mask.
+    # a transparent canvas), else luminance.
     m = mk.getchannel("A") if mk.mode in ("RGBA", "LA") else mk.convert("L")
-    m = m.point(lambda v: 255 if v >= 128 else 0).convert("L")
+    # IT IS NOT BINARISED. It used to be — `>= 128` — which threw away every
+    # soft edge the editor can produce: a feathered selection (**Blur
+    # selection**, whose whole purpose is to stop an inpaint ending in a
+    # visible line) was cut off dead at its 50% contour, and an anti-aliased
+    # ellipse or lasso got a stepped one. `run_lama` reads it as an alpha and
+    # decides for itself what to tell the model.
     if m.size != src.size:
-        m = m.resize(src.size)
+        m = m.resize(src.size, Image.BILINEAR)
     rgb = src.convert("RGB")
     if model not in inpaint_mod.LAMA_MODELS:
         raise HTTPException(400, f"unknown inpainting model {model!r}")
