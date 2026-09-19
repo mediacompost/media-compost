@@ -3132,6 +3132,18 @@ export function EditorOverlay() {
 
   const onDown = (e: React.MouseEvent) => {
     e.preventDefault();
+    // A PRESS ON THE PICTURE TAKES THE KEYBOARD BACK. The `preventDefault`
+    // above is what stops a drag selecting the page around the canvas — and
+    // it also cancels the focus change a mousedown makes, so a props-bar
+    // field that had been typed in (the wand's Grow, either Tolerance box, a
+    // brush size, a crop ratio) went on holding focus for the rest of the
+    // session, however many times the canvas was pressed afterwards. Every
+    // window shortcut asks `isTypingTarget` and stands down over a field, so
+    // Space stopped panning and M, W, ⌘Z and Delete stopped working, with
+    // nothing on screen saying why: the caret is in the bar, not where the
+    // eye is. Blurring commits the field, which is what clicking away means.
+    const focused = document.activeElement as HTMLElement | null;
+    if (focused && isTypingTarget({ target: focused })) focused.blur();
     // A GESTURE BEGINS: the cached backdrop and veil in `redraw` are only
     // ever reused within one, so this single line is the whole of their
     // invalidation. Everything the gesture then does — paint, drag a
@@ -4581,6 +4593,13 @@ export function EditorOverlay() {
                 + "NEW area is grown: extending a selection leaves what was "
                 + "already in it alone."}
               onChange={setWandGrow} />
+            {/* The reason to wand-select a patch of sky, a speech balloon or
+                a logo's background in the first place: paint it out. Same
+                button as the select and text tools', same warm LaMa
+                endpoint, behind the same divider that separates what
+                changes PIXELS from what only changes the selection. */}
+            <div style={{ width: 1, height: 24, flex: "0 0 1px", background: "var(--border-strong)" }} />
+            {inpaintButton()}
           </>
         )}
         {tool === "brush" && (
