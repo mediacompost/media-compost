@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## 1.1.0
 
 - The library grid's **Show sequenced** toggle is now **Fold sequences**, on
