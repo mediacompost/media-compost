@@ -1,11 +1,12 @@
-"""The version is written in four files, and this is what holds them equal.
+"""The version is written in five files, and this is what holds them equal.
 
-`pyproject.toml`, `media_compost/__init__.py`, `frontend/package.json` and
-`website/mkdocs.yml` each carry the number, nothing derives one from another,
-and a release bump is the moment they drift: the wheel then says one thing and
-the app running out of it another, silently. `scripts/bump_version.py` owns
-the list of files and rewrites them together; this test imports that list, so
-a fifth copy added to the script is covered here without a second list.
+`pyproject.toml`, `media_compost/__init__.py`, `frontend/package.json`,
+`frontend/package-lock.json` (twice over) and `website/mkdocs.yml` each carry
+the number, nothing derives one from another, and a release bump is the moment
+they drift: the wheel then says one thing and the app running out of it
+another, silently. `scripts/bump_version.py` owns the list of files and
+rewrites them together; this test imports that list, so a sixth copy added to
+the script is covered here without a second list.
 
 It moves `CHANGELOG.md`'s top section on the same two gestures, and that is
 held here too: the release renames `## Unreleased` to the number, the dev bump
@@ -33,7 +34,7 @@ def _script():
 
 def test_every_copy_of_the_version_agrees():
     found = _script().read_all(REPO)
-    assert len(found) == 4, found
+    assert len(found) == 5, found
     assert len(set(found.values())) == 1, found
 
 
@@ -51,10 +52,15 @@ def test_the_package_reports_the_same_number():
 
 
 def test_the_bump_rewrites_every_copy_and_nothing_else(tmp_path):
-    """Round trip over a copy of the four files: the number moves, the rest is bytes-identical."""
+    """Round trip over a copy of the five files: the number moves, the rest is bytes-identical.
+
+    The replace is bounded by the file's OWN count, so a pattern that grew a
+    match it was not written for — the lock file has 55 dependency `"version"`
+    lines a looser one would rewrite — fails here rather than shipping.
+    """
     mod = _script()
     before: dict[str, str] = {}
-    for rel, _ in mod.SPELLINGS:
+    for rel, _, _ in mod.SPELLINGS:
         src = REPO / rel
         dst = tmp_path / rel
         dst.parent.mkdir(parents=True, exist_ok=True)
@@ -63,11 +69,12 @@ def test_the_bump_rewrites_every_copy_and_nothing_else(tmp_path):
     current = next(iter(mod.read_all(tmp_path).values()))
     mod.write_all("9.8.7.dev3", tmp_path)
     assert set(mod.read_all(tmp_path).values()) == {"9.8.7.dev3"}
-    for rel, _ in mod.SPELLINGS:
+    for rel, _, count in mod.SPELLINGS:
         after = (tmp_path / rel).read_text(encoding="utf-8")
-        assert after.replace("9.8.7.dev3", current, 1) == before[rel], rel
+        assert after.count("9.8.7.dev3") == count, rel
+        assert after.replace("9.8.7.dev3", current, count) == before[rel], rel
     mod.write_all(current, tmp_path)
-    for rel, _ in mod.SPELLINGS:
+    for rel, _, _ in mod.SPELLINGS:
         assert (tmp_path / rel).read_text(encoding="utf-8") == before[rel], rel
 
 
@@ -194,7 +201,7 @@ def test_the_dev_bump_reopens_the_section_and_only_once():
 
 
 def _tree(mod, tmp_path, log=LOG):
-    for rel, _ in mod.SPELLINGS:
+    for rel, _, _ in mod.SPELLINGS:
         dst = tmp_path / rel
         dst.parent.mkdir(parents=True, exist_ok=True)
         dst.write_text((REPO / rel).read_text(encoding="utf-8"), encoding="utf-8")

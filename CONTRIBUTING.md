@@ -331,7 +331,7 @@ git push
 
 **Checklist**
 
-- [ ] `scripts/bump_version.py --release` run — the four copies of the
+- [ ] `scripts/bump_version.py --release` run — the five copies of the
       version agree (`--check`) and none of them says `.dev` any more.
 - [ ] A migration step appended to `migrations.MIGRATIONS` **if** the database
       schema changed — that append *is* the version bump, since

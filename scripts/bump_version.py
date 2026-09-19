@@ -1,15 +1,25 @@
 #!/usr/bin/env python3
 """Move the package version, in every file that spells it.
 
-THE NUMBER LIVES IN FOUR PLACES and nothing derives one from another:
+THE NUMBER LIVES IN FIVE PLACES and nothing derives one from another:
 `pyproject.toml` (the wheel), `media_compost/__init__.py` (`__version__`,
 which the server's own title and the trainer's `adapter_config.json` read),
-`frontend/package.json` (the bundle) and `website/mkdocs.yml`
+`frontend/package.json` (the bundle), `frontend/package-lock.json` (npm's
+copy of that one, twice over) and `website/mkdocs.yml`
 (`extra.version_number`, what the site's install commands and footer say).
-Four edits on release day is how they drift, and the drift is silent: a
+Five edits on release day is how they drift, and the drift is silent: a
 wheel says one thing and the app running out of it says another.
 
-    scripts/bump_version.py                 print the four numbers
+THE LOCK IS HERE BECAUSE IT WAS THE COPY NOBODY MOVED. It is not hand-edited
+— npm rewrites it from `package.json` — so it drifted the moment a release
+bumped the four and then sat wrong until somebody happened to run `npm`, which
+rewrote it as an unexplained change in whatever they were doing. It carries
+the number TWICE, at the top and again under `packages.""`, and it is matched
+through the `"name"` line above each: every dependency in the file has a
+`"version"` line of its own, 55 of them here, and an indentation-anchored
+pattern would have rewritten all of them.
+
+    scripts/bump_version.py                 print the five numbers
     scripts/bump_version.py --check         exit 1 unless they agree (the test)
     scripts/bump_version.py 1.1.0.dev0      set every copy
     scripts/bump_version.py --next-dev      1.0.0 -> 1.0.1.dev0, the post-release bump
@@ -43,7 +53,7 @@ after that bump would refuse to install over a main build, and the number on
 main would have to go down — which reads as a mistake in every log that has it.
 
 Stdlib only, and `tests/ui/test_version.py` imports it by file path, so the
-file list here is the one the test holds — a fifth copy added to the tree
+file list here is the one the test holds — a sixth copy added to the tree
 needs to be added HERE, and the test then covers it.
 """
 
@@ -55,12 +65,18 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
-# (path, the one line that carries the number — anchored, one capture group)
-SPELLINGS: list[tuple[str, str]] = [
-    ("pyproject.toml", r'^version = "([^"]+)"$'),
-    ("media_compost/__init__.py", r'^__version__ = "([^"]+)"$'),
-    ("frontend/package.json", r'^  "version": "([^"]+)",$'),
-    ("website/mkdocs.yml", r'^  version_number: "([^"]+)"$'),
+# (path, the line that carries the number — anchored, one capture group — and
+# HOW MANY lines in that file carry it). The count is explicit rather than
+# "at least one": a pattern that started matching a line it was not written
+# for is the failure this list exists to prevent, and it is caught by the
+# number changing rather than by somebody reading the diff.
+SPELLINGS: list[tuple[str, str, int]] = [
+    ("pyproject.toml", r'^version = "([^"]+)"$', 1),
+    ("media_compost/__init__.py", r'^__version__ = "([^"]+)"$', 1),
+    ("frontend/package.json", r'^  "version": "([^"]+)",$', 1),
+    ("frontend/package-lock.json",
+     r'^ *"name": "media-compost-frontend",\n *"version": "([^"]+)",$', 2),
+    ("website/mkdocs.yml", r'^  version_number: "([^"]+)"$', 1),
 ]
 
 # PEP 440's public shape as this project uses it: X.Y.Z, optionally .devN.
@@ -90,18 +106,22 @@ def read_all(root: pathlib.Path | None = None) -> dict[str, str]:
     """
     root = ROOT if root is None else root
     found: dict[str, str] = {}
-    for rel, pattern in SPELLINGS:
+    for rel, pattern, count in SPELLINGS:
         text = (root / rel).read_text(encoding="utf-8")
         hits = re.findall(pattern, text, flags=re.M)
-        if len(hits) != 1:
-            raise SystemExit(f"{rel}: expected exactly one version line, found {len(hits)}")
+        if len(hits) != count:
+            raise SystemExit(f"{rel}: expected {count} version line(s), found {len(hits)}")
+        # A file that spells it twice must agree with itself before it is
+        # compared with anything else.
+        if len(set(hits)) != 1:
+            raise SystemExit(f"{rel}: its own copies disagree: {sorted(set(hits))}")
         found[rel] = hits[0]
     return found
 
 
 def write_all(version: str, root: pathlib.Path | None = None) -> None:
     root = ROOT if root is None else root
-    for rel, pattern in SPELLINGS:
+    for rel, pattern, count in SPELLINGS:
         path = root / rel
         text = path.read_text(encoding="utf-8")
 
@@ -110,8 +130,8 @@ def write_all(version: str, root: pathlib.Path | None = None) -> None:
             return m.group(0)[: m.start(1) - m.start(0)] + version + m.group(0)[m.end(1) - m.start(0):]
 
         new, n = re.subn(pattern, keep_shape, text, flags=re.M)
-        if n != 1:
-            raise SystemExit(f"{rel}: expected exactly one version line, found {n}")
+        if n != count:
+            raise SystemExit(f"{rel}: expected {count} version line(s), found {n}")
         path.write_text(new, encoding="utf-8")
 
 
