@@ -4,6 +4,12 @@
 
 ### Features
 
+- The image editor's **Image** menu lists **Remove artifacts**, **Remove
+  screen tones** and **Remove background** beside Upscale and Colorize,
+  instead of under a **Remove** of their own: each is one action with its
+  models under it, exactly as those two are, and the grouping row put the
+  word "Remove" on the way to a model twice and the models themselves two
+  flyouts deep.
 - The image editor's ✕ asks what Escape asks: with a second picture open,
   whether to close the window or only this tab. It closed the window outright,
   so the same control meant "close everything" to the mouse and "which of

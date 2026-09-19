@@ -9,7 +9,8 @@ import { RowMenu, type RowAction } from "./shared/RowMenu";
 /**
  * The image editor's action-bar menus: an **Image** menu (rotate, image /
  * canvas size dialogs) plus one menu button per buffer-level AI action —
- * Upscale, Colorize, Remove artifacts, Remove background — and a **Select**
+ * Upscale, Colorize, Remove artifacts, Remove screen tones, Remove
+ * background, each with its models under it — and a **Select**
  * menu (detector-driven text/watermark selection). Only models that are
  * ready to run (deps + downloaded weights) are clickable; reference-guided
  * models are excluded — there's no reference flow inside the editor.
@@ -132,11 +133,18 @@ export function EditorMenus({
       children: modelRows("upscale" as JobKind) },
     { icon: "palette", label: "Colorize", onClick: () => {},
       children: modelRows("colorize" as JobKind, { withReference: true }) },
-    { icon: "ink_eraser", label: "Remove", onClick: () => {}, children: [
-      { icon: "deblur", label: "Remove artifacts", onClick: () => {}, children: modelRows("restore" as JobKind) },
-      { icon: "texture", label: "Remove screen tones", onClick: () => {}, children: modelRows("descreen" as JobKind) },
-      { icon: "background_replace", label: "Remove background", onClick: () => {}, children: modelRows("bg_removal" as JobKind) },
-    ] },
+    // The three removals stand BESIDE Upscale and Colorize, not under a
+    // **Remove** of their own: each is one buffer-level action with a list of
+    // models under it, exactly as those two are, and the grouping row bought
+    // nothing — every child said "Remove …" already, so the word appeared
+    // twice on the way to a model and each of the three sat two flyouts deep
+    // where the neighbours it belongs with sat one.
+    { icon: "deblur", label: "Remove artifacts", onClick: () => {},
+      children: modelRows("restore" as JobKind) },
+    { icon: "texture", label: "Remove screen tones", onClick: () => {},
+      children: modelRows("descreen" as JobKind) },
+    { icon: "background_replace", label: "Remove background", onClick: () => {},
+      children: modelRows("bg_removal" as JobKind) },
   ];
   const selectActions: RowAction[] = [
     ...row({ icon: "abc", label: "Select text", note: "Detect text regions and select them", enabled: detectorReady("text"), onClick: () => onSelectRegions("text") }),
