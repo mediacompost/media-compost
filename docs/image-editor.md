@@ -114,7 +114,9 @@ Colors carry **alpha**: a color's alpha is the stroke's opacity cap, and erasing
 
 ## Inpainting
 
-**Inpaint** fills the selected area from the surrounding image with a LaMa AI model, removing unwanted content and replacing it with a plausible continuation. It runs from the **Inpaint** button in the selection tool's bar (next to Fill) or from the Selection menu; only the selected pixels change, and the result is undoable.
+**Inpaint** fills the selected area from the surrounding image with a LaMa AI model, removing unwanted content and replacing it with a plausible continuation. It runs from the **Inpaint** button in the bar of every tool that makes a selection — the marquee and lasso (next to Fill), the text tool, and the **wand**, which is where a patch of sky, a speech balloon's inside or a logo's background is picked up in one click — or from the Selection menu; only the selected pixels change, and the result is undoable.
+
+**A partly-selected pixel is partly filled**, so **Blur selection…** is the answer to a seam you can still see: soften the mask's edge first and the fill meets the original gradually instead of at a line. The model's own tone is corrected against the pixels around the hole, so a fill dropped into a sky, a wall or a screentone sits at the tone of what surrounds it.
 
 Two models are available (the Inpaint button's dropdown picks one): **Photo** (big-lama) for photographic content and **Anime / illustration** (a line-art and screentone fine-tune of it) for illustrations, manga, and line art. A variant is greyed until its weights are downloaded in [Settings → Actions](settings.md).
 
@@ -124,8 +126,8 @@ Two models are available (the Inpaint button's dropdown picks one): **Photo** (b
 - **Image size…** — resample to a new size with aspect-linked fields.
 - **Canvas size…** — grow with transparency or trim, with a 3×3 anchor grid; the image is never scaled.
 - **Adjustments…** — see [Adjustments](#adjustments).
-- **Upscale**, **Colorize**, and **Remove** submenus list the AI models, greying the ones not yet set up (or leaving them out, under the [hide-unready setting](settings.md#ai-actions)); results replace the buffer and are undoable. The Colorize submenu includes the example-based manga model, which opens the reference picker right inside the editor.
-- The **Remove** menu has three sections — **Remove artifacts**, **Remove screen tones**, and **Remove background**. The screen-tones section converts manga screentones into smooth greyscale gradients: two neural **OpenComic descreen** models (**Compact**, near-instant, and **Lite**, a touch cleaner) plus **Descreen (FFT)**, a download-free classical filter whose one extra trick is restraint — a page with no detectable screentone only gets a gentle smoothing.
+- **Upscale**, **Colorize**, **Remove artifacts**, **Remove screen tones** and **Remove background** — five submenus side by side, each listing that action's AI models and greying the ones not yet set up (or leaving them out, under the [hide-unready setting](settings.md#ai-actions)); results replace the buffer and are undoable. The Colorize submenu includes the example-based manga model, which opens the reference picker right inside the editor.
+- **Remove screen tones** converts manga screentones into smooth greyscale gradients: two neural **OpenComic descreen** models (**Compact**, near-instant, and **Lite**, a touch cleaner) plus **Descreen (FFT)**, a download-free classical filter whose one extra trick is restraint — a page with no detectable screentone only gets a gentle smoothing.
 
 ## The Selection menu
 
@@ -137,7 +139,7 @@ Two models are available (the Inpaint button's dropdown picks one): **Photo** (b
 
 - **Save** (or `⌘/Ctrl+S`) saves the buffer **as a new file on the item** — the file you edited is kept intact as a prior version, and the new one becomes the item's active file, so thumbnails update immediately everywhere. The button is enabled only while the buffer actually differs from the last saved state — undoing every change back to it disables Save again.
 - The Save button's **chevron** menu offers **Save to a new item** (the edit becomes a standalone item, linked back to this one and carrying its tags, captions, and the rest — the original is left entirely alone) and **Revert to saved** (throws away unsaved edits — itself undoable).
-- The window's **✕** in the header — or a tab's own ✕ — closes, guarding unsaved edits with a save/discard/cancel prompt. Switching the mode to Annotate is guarded the same way.
+- The window's **✕** in the header — or a tab's own ✕ — closes, guarding unsaved edits with a save/discard/cancel prompt. Switching the mode to Annotate is guarded the same way. With several tabs open the header's ✕ asks the same question `Escape` does: close the **window** or just this **tab**.
 - **`Escape` steps down before it closes**: it first cancels an active transform, then clears a pending crop rectangle, then clears the selection — only then does it start closing. With several tabs open it asks whether to close the **window** or just the **tab**, and then guards unsaved changes. Closing the browser tab itself falls back to the browser's native unsaved-changes confirmation.
 
 ## Editing older versions
