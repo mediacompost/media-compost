@@ -264,6 +264,7 @@ With test sampling on, the prompts render every N steps into the job's timeline 
 
 - A round appears in the timeline **the moment it starts rendering**: one tile per prompt as dark placeholders, each image replacing its placeholder as it lands, with a "3 / 8" count in the round's header. While a job is sampling, the timeline refreshes faster so the tiles fill in live.
 - A round is ordered against the other timeline events by the time it started rendering, so it sits where it actually happened.
+- **The last step always gets a round** when test sampling is on, whatever the interval worked out to — the pictures the run ended on are the ones the whole setting exists to show. It is rendered after the result is saved, so a pause arriving mid-round costs nothing but the pictures still to come.
 - A round that was already rendered is **not rendered again** on resume — replayed steps would produce identical images. Change a prompt, size, seed, or sampler setting and the round re-renders, because then it would not.
 - A pause never leaves a half-rendered round behind: a resume finishes it first, before training continues.
 
@@ -272,6 +273,8 @@ Clicking a sample opens a quick-look lightbox whose subtitle names the prompt as
 ## Checkpoints
 
 Checkpoints save at the cadence set on the Checkpoints page — every N steps, or every N epochs (full passes over the dataset; the equivalent step count is worked out at run start and printed in the job's log) — and appear in the timeline. A checkpoint still on disk shows its file size with **download** (as a zip) and **delete** buttons; an auto-pruned one leaves the timeline.
+
+**A finished run always has a checkpoint at its last step**, whatever the cadence worked out to: 250 steps every 100 saves at 100 and 200, and the state anybody actually wants — the one the run ended on — would otherwise be the only one with no entry. It is the same weights as the job's result, written where every other checkpoint is written, so continuing from it, comparing it with an earlier one and downloading it all work the same way. (With checkpointing switched off nothing extra is written: the result is then the only copy, which is what switching it off asks for.)
 
 ### Retention
 

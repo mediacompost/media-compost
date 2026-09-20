@@ -123,6 +123,9 @@ def run(io, config: dict, resume: bool = False) -> None:
 
     lr = float(hyper.get("lr", 1e-4))
     tau = max(1.0, total / 3.0)
+    # What the cadences have already done for a step, so the finish below
+    # does not do it twice — the real loop's `snap_at` / `sampled_at`.
+    snap_at = sampled_at = -1
     step = start
     while step < io.total_steps:
         step += 1
@@ -158,18 +161,33 @@ def run(io, config: dict, resume: bool = False) -> None:
         if ckpt_every and step % ckpt_every == 0 and step < io.total_steps:
             _snapshot(io, step, ckpt_keep)
             _save_checkpoint(io, step)
+            snap_at = step
         if sample_every and prompts and step % sample_every == 0:
             io.write_state("sampling", step=step)
             d = io.sample_dir(step)
             for i, prompt in enumerate(prompts):
                 _make_sample(d / f"p{i:02d}.png", prompt, step,
                              seed=seed * 1000 + i)
+            sampled_at = step
             io.write_state("training", step=step)
         time.sleep(0.05)
 
     _save_checkpoint(io, io.total_steps)
     with open(io.output_dir() / "model.safetensors", "wb") as f:
         f.write(b"fake-lora-weights")
+    # A FINISHED RUN HAS A CHECKPOINT AND A SAMPLE ROUND AT ITS LAST STEP,
+    # whatever the cadences worked out to — `loop._finish_run`, mirrored
+    # here for the same reason the cadences above are: a manager or API test
+    # asking what a completed job left behind must see what the product
+    # leaves behind.
+    if ckpt_every and snap_at != io.total_steps:
+        _snapshot(io, io.total_steps, ckpt_keep)
+    if sample_every and prompts and sampled_at != io.total_steps:
+        io.write_state("sampling", step=io.total_steps)
+        d = io.sample_dir(io.total_steps)
+        for i, prompt in enumerate(prompts):
+            _make_sample(d / f"p{i:02d}.png", prompt, io.total_steps,
+                         seed=seed * 1000 + i)
 
 
 def main() -> int:

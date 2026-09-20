@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **A finished training run always has a checkpoint and a sample round at
+  its last step.** A cadence is arithmetic — 250 steps every 100 saves at
+  100 and 200 — so the state anybody actually wants, the one the run ended
+  on, was the only one with no entry in the timeline. Both are written at
+  the end now, whatever the cadences worked out to, and neither is repeated
+  where the cadence already landed there. The result is saved first, so a
+  pause arriving during the closing sample round costs nothing but the
+  pictures still to come. With checkpointing switched off nothing extra is
+  written: the run's result is then the only copy, which is what switching
+  it off asks for.
 - A training job no longer fails because a picture it trains on was edited
   away underneath it. Merging or deleting a file, or trashing the item,
   used to leave the run's dataset naming a path that is not there, and the

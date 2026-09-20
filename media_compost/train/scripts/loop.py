@@ -31,7 +31,7 @@ import images
 import latentio
 import membudget
 import profiling
-from train import JobIO, PauseRequested
+from train import Cancelled, JobIO, PauseRequested
 
 
 # ---- device / dtype ---------------------------------------------------------
@@ -991,6 +991,12 @@ def run(io: JobIO, config: dict, resume: bool = False) -> None:
     # worth saving. Re-writing an identical multi-GB checkpoint was most of
     # what made "Pause" slow on a job that had barely started.
     ckpt_at = start_step
+    # And the two the END OF THE RUN asks about: a finished run gets a
+    # snapshot and a sample round at its last step whatever the cadences say
+    # (below), so each has to know whether the cadence already did it. -1
+    # rather than `start_step`, because a resumed run's first step is one
+    # neither of them has answered for.
+    snap_at = sampled_at = -1
     # Off unless MEDIA_COMPOST_TRAIN_PROFILE names a number of steps; see
     # profiling.py. Every `mark` below is a no-op then.
     prof = profiling.StepProfiler(io.dir, device)
@@ -1275,7 +1281,7 @@ def run(io: JobIO, config: dict, resume: bool = False) -> None:
                 with ema_mod.maybe_applied(ema):
                     engine.save_weights(snap)
                 _checkpoint_last(io, engine, optimizer, step, ema=ema)
-                ckpt_at = step
+                ckpt_at = snap_at = step
                 progress["phase"] = "training"
                 io.write_state("training", step=step)
 
@@ -1300,6 +1306,7 @@ def run(io: JobIO, config: dict, resume: bool = False) -> None:
                         _checkpoint_last(io, engine, optimizer, step,
                                          ema=ema, timed=True)
                     raise
+                sampled_at = step
                 progress["phase"] = "training"
                 # The round's image count would otherwise stay on the state
                 # as the step's note — the micro loop only overwrites it when
@@ -1345,13 +1352,73 @@ def run(io: JobIO, config: dict, resume: bool = False) -> None:
         progress["run"] = False
         _report_peak_memory(device, at_least=prof.high)
 
-    _checkpoint_last(io, engine, optimizer, io.total_steps, ema=ema)
+    _finish_run(io, engine, optimizer, ema, final=io.total_steps,
+                ckpt_every=ckpt_every, ckpt_keep=ckpt_keep,
+                ckpt_keep_every=ckpt_keep_every, snap_at=snap_at,
+                sample_every=sample_every, sampling=sampling,
+                sampled_at=sampled_at)
+
+
+def _finish_run(io: JobIO, engine, optimizer, ema, *, final: int,
+                ckpt_every: int, ckpt_keep: int, ckpt_keep_every: int,
+                snap_at: int, sample_every: int, sampling: dict,
+                sampled_at: int) -> None:
+    """Everything a COMPLETED run leaves behind, in the order it must land in.
+
+    The result first — the resume point and the job's own output — and then
+    the two things the cadences may have missed.
+
+    **A FINISHED RUN HAS A CHECKPOINT AND A SAMPLE ROUND AT ITS LAST STEP**
+    (owner 2026-09), whatever the cadences worked out to. A cadence is
+    arithmetic — 250 steps every 100 checkpoints at 100 and 200 — and the end
+    of a run is not a multiple of anything, so the one state anybody actually
+    wants to look at was the one state with no entry of its own. Asked for
+    here rather than by relaxing the cadence's own `step < io.total_steps`,
+    because it must also cover a last step the cadence never came near, and
+    because the RESULT goes first: a stop arriving in the middle of the
+    closing round must not cost the run what it spent its hours on.
+
+    Each is gated on its feature being ON. Checkpointing switched off means
+    "the result is the only copy I want", and `output/` IS that copy byte for
+    byte — a snapshot beside it would be a second copy of a full finetune's
+    weights for somebody who asked for none.
+    """
+    _checkpoint_last(io, engine, optimizer, final, ema=ema)
     # ONE call: `save_weights` writes both the trainer's own copy (so a later
     # job can start from this result) and the portable file other tools load.
     # Every step checkpoint gets exactly the same pair, which is what makes
     # picking an earlier checkpoint a choice rather than a conversion job.
     with ema_mod.maybe_applied(ema):
         engine.save_weights(io.output_dir())
+
+    if ckpt_every and snap_at != final:
+        io.write_state("checkpoint", step=final)
+        snap = io.snapshot_step(final, ckpt_keep, ckpt_keep_every, ckpt_every)
+        # The averaged weights, like every other snapshot (`last/` above keeps
+        # the raw ones). `snapshot_step` never prunes what it just wrote.
+        with ema_mod.maybe_applied(ema):
+            engine.save_weights(snap)
+    if sample_every and sampling.get("prompts") and sampled_at != final:
+        io.write_state("sampling", step=final)
+        try:
+            with ema_mod.maybe_applied(ema):
+                _generate_samples(
+                    io, engine, sampling, final,
+                    # The progress thread has stopped with the loop, so this
+                    # round publishes its own count — as the step-0 baseline
+                    # does, and for the same reason.
+                    note=lambda text: io.write_state("sampling", step=final,
+                                                     note=text))
+        except (PauseRequested, Cancelled):
+            # Asked to stop during the closing round. Everything the run
+            # produced is already on disk, so it is FINISHED — the images
+            # that landed are kept, the rest are simply not rendered, and
+            # there is no resume that would come back for them. Both are
+            # swallowed because before this round existed there was nothing
+            # out here to notice a command at all, and a job that did all its
+            # work should not end up labelled paused or canceled over the
+            # last picture of a contact sheet.
+            print("stopped during the final sample round", flush=True)
 
 
 def _tensor_bytes(p) -> int:

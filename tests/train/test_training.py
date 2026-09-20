@@ -1414,6 +1414,33 @@ def test_manager_full_run(sim_mgr):
     assert (jd / "metrics.jsonl").is_file()
 
 
+def test_a_finished_run_has_a_checkpoint_and_samples_at_its_last_step(
+        sim_mgr):
+    """A cadence is arithmetic and the end of a run is not a multiple of
+    anything: 25 steps every 10 leaves the final state — the one anybody
+    actually wants — as the only one with no entry of its own."""
+    from media_compost.train.spec import SampleConfig, SamplePrompt
+
+    cfg = _cfg(steps=25, checkpoint_every=10)
+    cfg.sampling = SampleConfig(every_n_steps=10,
+                                prompts=[SamplePrompt(prompt="a fox")])
+    uid = sim_mgr.create("ends well", cfg, "tester")
+    sim_mgr.enqueue(uid)
+    sim_mgr.queue_run()
+    rec = _wait(sim_mgr, uid, ("completed", "failed"))
+    assert rec["status"] == "completed", rec["message"]
+
+    jd = tp.job_dir(sim_mgr.dir, uid)
+    steps = sorted(int(p.name.split("-")[1])
+                   for p in (jd / "checkpoints").iterdir()
+                   if p.is_dir() and p.name.startswith("step-"))
+    assert steps[-1] == 25, f"no checkpoint at the last step: {steps}"
+    rounds = sorted(int(p.name.split("-")[1])
+                    for p in (jd / "samples").iterdir() if p.is_dir())
+    assert rounds[-1] == 25, f"no sample round at the last step: {rounds}"
+    assert list((jd / "samples" / "step-000025").glob("p*.png"))
+
+
 def test_manager_pause_resume_cancel(sim_mgr):
     uid = sim_mgr.create("pr", _cfg(steps=400), "tester")
     sim_mgr.enqueue(uid)
@@ -1806,31 +1833,31 @@ def test_api_checkpoints(train_client):
         time.sleep(0.2)
 
     cks = c.get(f"/api/train/jobs/{uid}/checkpoints").json()["checkpoints"]
-    # Cadence snapshots existed at 10/20/30 (40 = final step, no snapshot);
-    # keep-last-1 pruned all but the newest. Step 40 is the RESUME POINT —
-    # `checkpoints/last`, written when the run finished — which the timeline
-    # lists like any other checkpoint.
+    # Cadence snapshots at 10/20/30, then the finish writes the LAST STEP's
+    # (40, which the cadence itself skips), and keep-last-1 leaves that one.
+    # The pruned steps are still listed — the timeline marks where a
+    # checkpoint was saved — and step 40 is also the RESUME POINT, so its row
+    # says BOTH: `snapshot` is what makes it a real checkpoint to the app,
+    # `resume` is what stops it being offered as one to keep.
     assert [k["step"] for k in cks] == [10, 20, 30, 40]
     assert [k["step"] for k in cks if k["resume"]] == [40]
-    # Of the cadence snapshots only the newest survived keep-last-1; the
-    # resume point is its own directory and is listed besides.
-    existing = [k for k in cks if k["exists"] and not k["resume"]]
-    assert len(existing) == 1 and existing[0]["step"] == 30
-    assert existing[0]["size"] > 0
+    existing = [k for k in cks if k["exists"]]
+    assert [k["step"] for k in existing] == [40]
+    assert existing[0]["snapshot"] and existing[0]["size"] > 0
     assert all(k["size"] == 0 for k in cks if not k["exists"])
 
-    dl = c.get(f"/api/train/jobs/{uid}/checkpoints/30/download")
+    dl = c.get(f"/api/train/jobs/{uid}/checkpoints/40/download")
     assert dl.status_code == 200
     assert dl.headers["content-type"] == "application/zip"
     assert len(dl.content) > 0
     assert c.get(f"/api/train/jobs/{uid}/checkpoints/10/download") \
         .status_code == 404
 
-    assert c.delete(f"/api/train/jobs/{uid}/checkpoints/30").json() == {"ok": True}
+    # Deleting the last step takes the SNAPSHOT; the resume point underneath
+    # it stays, and is then undeletable — it is what continuing the job reads.
+    assert c.delete(f"/api/train/jobs/{uid}/checkpoints/40").json() == {"ok": True}
     cks = c.get(f"/api/train/jobs/{uid}/checkpoints").json()["checkpoints"]
-    # Every cadence snapshot is gone; the resume point stays (it is what
-    # continuing the job reads, and it refuses deletion).
-    assert not any(k["exists"] for k in cks if not k["resume"])
+    assert not any(k["snapshot"] for k in cks)
     resume = [k for k in cks if k["resume"]]
     assert len(resume) == 1 and resume[0]["exists"]
     assert c.delete(
