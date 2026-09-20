@@ -872,16 +872,19 @@ def job_events(uid: str, tr: Trainer = Depends(get_trainer)):
                 except (TypeError, ValueError):
                     continue
                 _, secs = _clock_at(clock, step)
+                data = d.get("data") or {}
                 changes = [
                     TrainSettingChange(field=str(c.get("field") or ""),
                                        old=str(c.get("old") or ""),
                                        new=str(c.get("new") or ""))
-                    for c in ((d.get("data") or {}).get("changes") or [])
+                    for c in (data.get("changes") or [])
                     if isinstance(c, dict)
                 ]
-                out.append(TrainEventOut(kind=kind, step=step, t=t,
-                                         train_seconds=round(secs, 1),
-                                         changes=changes))
+                out.append(TrainEventOut(
+                    kind=kind, step=step, t=t,
+                    train_seconds=round(secs, 1), changes=changes,
+                    added=int(data.get("added") or 0),
+                    removed=int(data.get("removed") or 0)))
     except OSError:
         pass
     return TrainEventsOut(events=out)

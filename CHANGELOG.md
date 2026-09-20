@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- A training job no longer fails because a picture it trains on was edited
+  away underneath it. Merging or deleting a file, or trashing the item,
+  used to leave the run's dataset naming a path that is not there, and the
+  job ended on a file-not-found — at the next resume, or partway through
+  the run. Now: **a resume asks the dataset query again**, so the run
+  continues against the library as it is, and where that answer differs the
+  job's timeline says **Dataset changed** with how many items came and went.
+  A picture that goes while a run is going is skipped with a line in the
+  log; only losing every one of them ends the run.
 - Opening a big library no longer answers the first views with "The server is
   busy reading the library": the queue that keeps library-wide reads from
   racing each other used to refuse anything that had waited fifteen seconds,

@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import subprocess
 import time
 from pathlib import Path
@@ -580,32 +579,11 @@ def test_rebuilding_drops_the_job_s_own_latents(lib_with_video, tmp_path):
     assert list((jd / "frames").rglob("*.jpg"))
 
 
-def test_a_job_whose_frames_are_gone_is_materialized_again(tmp_path: Path):
-    """The other half of the same rule, from the other end.
-
-    A resume reuses the manifest, which is only sound while the files it
-    names are there — and a finished run's frames are deliberately thrown
-    away. Continuing such a job with more steps would otherwise launch it at
-    a dataset of missing paths.
-    """
-    from media_compost.train import paths as tp
-    from media_compost.train.manager import TrainingManager
-
-    cfg = UiConfig(data_dir=tmp_path / "data")
-    lib = Library(cfg)
-    mgr: TrainingManager = lib.training
-    jd = tmp_path / "job"
-    (jd / "frames").mkdir(parents=True)
-    tp.manifest_path(jd).write_text("{}", encoding="utf-8")
-
-    tp.write_json(tp.config_path(jd), {"video": {"include": False}})
-    assert mgr._dataset_ready(jd), "a run with no films needs no frames"
-
-    tp.write_json(tp.config_path(jd), {"video": {"include": True}})
-    assert mgr._dataset_ready(jd)
-    shutil.rmtree(jd / "frames")
-    assert not mgr._dataset_ready(jd)
-
-    (jd / "frames").mkdir()
-    tp.manifest_path(jd).unlink()
-    assert not mgr._dataset_ready(jd), "and no manifest is no dataset at all"
+# A JOB WHOSE FRAMES WERE RECLAIMED used to be the one case that made a
+# resume build its dataset again — `TrainingManager._dataset_ready`, which
+# asked whether the previous run's scratch was still there. Every resume
+# rebuilds now (the library it names goes on changing while a job waits), so
+# there is nothing left to ask and the test that asked it is gone with the
+# method; `tests/train/test_dataset_refresh.py` holds the rule that replaced
+# it. The frames themselves are still cached per film, which is what keeps
+# the rebuild cheap — the test above this one.

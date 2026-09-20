@@ -184,6 +184,11 @@ const CATALOG: Catalog = {
   "Backward": "Hacia atrás",
   "warmup": "calentamiento",
   "Settings changed": "Ajustes cambiados",
+  "Dataset changed": "Conjunto de datos modificado",
+  "{n} items added":
+    { one: "{n} elemento añadido", other: "{n} elementos añadidos" },
+  "{n} items removed":
+    { one: "{n} elemento eliminado", other: "{n} elementos eliminados" },
   "Measured over the last steps of this run": "Medido sobre los últimos pasos de esta ejecución",
   "about {d} left": "quedan unos {d}",
   "The images this run trains on, sorted into aspect-ratio buckets": "Las imágenes con las que entrena esta ejecución, ordenadas en cubos de proporción",

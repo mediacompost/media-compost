@@ -55,6 +55,17 @@ def _now() -> float:
     return time.time()
 
 
+def _manifest_item_ids(path: Path) -> set[int] | None:
+    """The LIBRARY items a written manifest names, or None where there is no
+    readable manifest at that path (a first run, or a job folder whose scratch
+    was reclaimed) — which is not the same answer as "it named none"."""
+    data = tp.read_json(path)
+    if not isinstance(data, dict):
+        return None
+    return {int(it["item_id"]) for it in (data.get("items") or [])
+            if isinstance(it, dict) and it.get("item_id")}
+
+
 class _Prep:
     """A dataset being materialized on its own thread, for one job."""
 
@@ -65,6 +76,10 @@ class _Prep:
         self.manifest: dict | None = None
         self.error: BaseException | None = None
         self.stop = False
+        # The item ids the manifest being replaced named, or None where there
+        # was no manifest to replace. Read on the prep thread, beside the
+        # build, and spent by `_finish_prepare` on the timeline entry.
+        self.before: set[int] | None = None
 
 
 class TrainingManager:
@@ -986,10 +1001,17 @@ class TrainingManager:
         kind = "resumed" if resume else "started"
         tp.append_event(jd, kind, int(rec.get("step") or 0))
         tp.append_log_banner(jd, kind, int(rec.get("step") or 0))
-        if resume and self._dataset_ready(jd):
-            # Nothing to materialize — the manifest of the interrupted run is
-            # still there, and its frames with it.
-            return self._launch(uid, device, resume=True)
+        # A RESUME BUILDS THE DATASET AGAIN, it does not reuse the old one.
+        # The manifest names stored library files, and the library goes on
+        # being used while a job sits paused: merge two files of an item or
+        # delete one and the path this run was started with is not there any
+        # more, which the trainer met as a FileNotFoundError on its first
+        # encode. Asking the query again answers with the library as it is
+        # now — the item is still matched, under whatever its active file is
+        # today — and what came and went is recorded in the timeline by
+        # `_finish_prepare`, since a resume that quietly trains on a
+        # different set of pictures is worse than one that says so.
+        #
         # The dataset is built on its own thread and the device is held
         # meanwhile: reading the library (and unpacking videos into frames)
         # takes anywhere from a moment to minutes, and the tick's lock is what
@@ -1004,24 +1026,6 @@ class TrainingManager:
         self._on_device[uid] = device
         prep.thread.start()
         return True
-
-    def _dataset_ready(self, jd: Path) -> bool:
-        """Whether the last run's dataset is still on disk to be resumed onto.
-
-        A resume reuses the manifest rather than building another one, and
-        that is only sound while the files it names are there. Every path in a
-        manifest is a stored library file except one: a video's frames are
-        scratch in the job folder, thrown away when the job finishes — so a
-        FINISHED job continued with more steps has a checkpoint to resume from
-        and nothing left to train on. Only the frames are asked about; the
-        folder exists whenever a run built one, empty or not.
-        """
-        if not tp.manifest_path(jd).is_file():
-            return False
-        cfg = tp.read_json(tp.config_path(jd)) or {}
-        if not (cfg.get("video") or {}).get("include"):
-            return True
-        return (jd / "frames").is_dir()
 
     def _stop_prep(self, uid: str) -> None:
         """Ask a job's dataset thread to stop at the next frame it looks at."""
@@ -1045,6 +1049,15 @@ class TrainingManager:
                     self._write(uid, rec)
 
         try:
+            # WHAT THE LAST RUN TRAINED ON, read before the file is
+            # overwritten: the difference is what `_finish_prepare` puts in
+            # the timeline. Items rather than entries — one picture makes an
+            # entry per resolution, per caption and per degraded copy, and
+            # "three more entries" is not a thing anybody did to the library.
+            # Only for a RESUME: a first run has nothing to compare against,
+            # and this is a parse of the whole file.
+            if prep.resume:
+                prep.before = _manifest_item_ids(tp.manifest_path(jd))
             # Its OWN handle on the library, through the public API. This runs
             # on a thread of its own, off the manager lock, and the whole
             # point of reading the library this way is that the dataset
@@ -1112,6 +1125,23 @@ class TrainingManager:
         }
         rec["phase_note"] = ""
         self._write(uid, rec)
+        # WHAT CHANGED UNDER A RESUMED RUN. The query is asked again on every
+        # resume, so a job picked up after a week of library work may train on
+        # a different set of pictures than it was started with — and the one
+        # place that can ever say so is here, between the two answers. Only
+        # when something moved: an event per resume saying "nothing changed"
+        # is a timeline nobody reads. A first run has nothing to compare
+        # against and writes none.
+        if prep.resume and prep.before is not None:
+            now = {int(it["item_id"]) for it in items if it.get("item_id")}
+            added, removed = len(now - prep.before), len(prep.before - now)
+            if added or removed:
+                tp.append_event(self._dir(uid), "dataset",
+                                int(rec.get("step") or 0),
+                                {"added": added, "removed": removed})
+                tp.append_log(self._dir(uid), (
+                    f"dataset rebuilt for this resume: {added} item(s) added, "
+                    f"{removed} removed"))
         self._launch(uid, prep.device, resume=prep.resume)
 
     def _launch(self, uid: str, device: str, resume: bool) -> bool:

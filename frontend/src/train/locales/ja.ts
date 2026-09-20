@@ -184,6 +184,11 @@ const CATALOG: Catalog = {
   "Backward": "逆伝播",
   "warmup": "ウォームアップ",
   "Settings changed": "設定を変更",
+  "Dataset changed": "データセットが変更されました",
+  "{n} items added":
+    { other: "{n} 件のアイテムを追加" },
+  "{n} items removed":
+    { other: "{n} 件のアイテムを削除" },
   "Measured over the last steps of this run": "この実行の直近のステップで測定",
   "about {d} left": "残り約 {d}",
   "The images this run trains on, sorted into aspect-ratio buckets": "この実行が学習する画像、縦横比バケット別",

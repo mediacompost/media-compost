@@ -10,7 +10,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, TrainCheckpoint, TrainEvent, TrainSample, TrainSampleRound } from "./api";
 import { Icon } from "../shared/Icon";
 import { confirm } from "../shared/ConfirmModal";
-import { useT, useLang } from "./i18n";
+import { useT, useTn, useLang } from "./i18n";
 import { Lightbox, LightboxImage } from "./Lightbox";
 import { fmtDur, fmtSize } from "./util";
 import { useDateFormatters } from "../shared/time";
@@ -41,6 +41,11 @@ const EVENT_META: Record<string, { icon: string; label: string; color: string }>
   failed: { icon: "error", label: "Training failed", color: "var(--red-text)" },
   canceled: { icon: "stop", label: "Training canceled", color: "var(--muted)" },
   edited: { icon: "edit", label: "Settings changed", color: "var(--muted)" },
+  // A RESUME ASKS THE DATASET QUERY AGAIN, and this is the only place that
+  // can say the answer moved: the pictures behind every step after this
+  // point are not quite the ones behind the steps before it.
+  dataset: { icon: "photo_library", label: "Dataset changed",
+             color: "var(--muted)" },
 };
 
 export function SampleTimeline({ uid, active, phase = "", status = "" }: {
@@ -53,6 +58,7 @@ export function SampleTimeline({ uid, active, phase = "", status = "" }: {
   status?: string;
 }) {
   const t = useT();
+  const tn = useTn();
   const lang = useLang();
   const { formatUnix } = useDateFormatters();
   const qc = useQueryClient();
@@ -429,6 +435,24 @@ export function SampleTimeline({ uid, active, phase = "", status = "" }: {
                       {formatUnix(ev.t)}
                     </span>
                   </div>
+                  {/* A rebuilt dataset says how much of it moved — in
+                      ITEMS, which is what somebody did to the library; the
+                      entries a picture makes are this run's arithmetic. */}
+                  {ev.kind === "dataset" && (
+                    <div style={{
+                      marginLeft: 21, marginTop: 2,
+                      fontSize: "var(--fs-1)", color: "var(--muted)",
+                    }}>
+                      {[
+                        (ev.added ?? 0) > 0 && tn(
+                          { one: "1 item added", other: "{n} items added" },
+                          ev.added ?? 0),
+                        (ev.removed ?? 0) > 0 && tn(
+                          { one: "1 item removed", other: "{n} items removed" },
+                          ev.removed ?? 0),
+                      ].filter(Boolean).join(", ")}
+                    </div>
+                  )}
                   {/* An edit says WHAT changed: the settings no longer
                       necessarily describe the run behind this point, so the
                       timeline carries the difference. */}

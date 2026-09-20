@@ -184,6 +184,11 @@ const CATALOG: Catalog = {
   "Backward": "역전파",
   "warmup": "웜업",
   "Settings changed": "설정 변경됨",
+  "Dataset changed": "데이터셋 변경됨",
+  "{n} items added":
+    { other: "{n}개 항목 추가됨" },
+  "{n} items removed":
+    { other: "{n}개 항목 제거됨" },
   "Measured over the last steps of this run": "이 실행의 최근 스텝에서 측정됨",
   "about {d} left": "약 {d} 남음",
   "The images this run trains on, sorted into aspect-ratio buckets": "이 실행이 학습하는 이미지, 종횡비 버킷으로 분류됨",

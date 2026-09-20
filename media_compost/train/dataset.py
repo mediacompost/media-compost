@@ -236,9 +236,9 @@ def build_manifest(lib, config: dict, job_dir: Path, progress=None,
     items = {it.id: it for it in selected}
     videos = [i for i in selected_ids if items[i].kind == "video"]
     if cfg.video.include:
-        # The folder is made even when no video matched, because its presence
-        # is how the manager tells a dataset whose frames are still on disk
-        # from one whose scratch has been reclaimed (see `_dataset_ready`).
+        # The folder is made even when no video matched: `_sweep_frames`
+        # below is what keeps a film's extracted frames across builds, and a
+        # run that takes frames must have somewhere to have kept them.
         frames_root.mkdir(parents=True, exist_ok=True)
         _sweep_frames(frames_root, {items[i].uid for i in videos})
     # ONE transaction around the whole loop. `Library._do` commits per call

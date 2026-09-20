@@ -184,6 +184,11 @@ const CATALOG: Catalog = {
   "Backward": "反向",
   "warmup": "预热",
   "Settings changed": "设置已更改",
+  "Dataset changed": "数据集已更改",
+  "{n} items added":
+    { other: "新增 {n} 个条目" },
+  "{n} items removed":
+    { other: "移除 {n} 个条目" },
   "Measured over the last steps of this run": "按此次训练最近的步测得",
   "about {d} left": "约剩 {d}",
   "The images this run trains on, sorted into aspect-ratio buckets": "此次训练所用的图像，按宽高比桶分类",

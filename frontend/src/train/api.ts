@@ -754,13 +754,17 @@ export interface TrainSampleRound {
 }
 
 export interface TrainEvent {
-  // started | resumed | paused | completed | failed | canceled | edited
+  // started | resumed | paused | completed | failed | canceled | edited |
+  // dataset
   kind: string;
   step: number;
   t: number;
   train_seconds: number;
   /** "edited" only: the settings that changed, old → new. */
   changes?: { field: string; old: string; new: string }[];
+  /** "dataset" only: items the rebuilt query gained and lost on a resume. */
+  added?: number;
+  removed?: number;
 }
 
 export const api = {

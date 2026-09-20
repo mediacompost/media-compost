@@ -291,13 +291,19 @@ class TrainSettingChange(BaseModel):
 
 
 class TrainEventOut(BaseModel):
-    # started | resumed | paused | completed | failed | canceled | edited
+    # started | resumed | paused | completed | failed | canceled | edited |
+    # dataset
     kind: str
     step: int
     t: float
     train_seconds: float = 0
     # "edited" only: which settings changed, old → new.
     changes: list[TrainSettingChange] = []
+    # "dataset" only: items the rebuilt query gained and lost. Written when a
+    # resume finds the library changed under the run — never otherwise, so
+    # both being 0 does not happen.
+    added: int = 0
+    removed: int = 0
 
 
 class TrainEventsOut(BaseModel):

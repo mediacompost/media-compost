@@ -184,6 +184,11 @@ const CATALOG: Catalog = {
   "Backward": "Passe arrière",
   "warmup": "échauffement",
   "Settings changed": "Réglages modifiés",
+  "Dataset changed": "Jeu de données modifié",
+  "{n} items added":
+    { one: "{n} élément ajouté", other: "{n} éléments ajoutés" },
+  "{n} items removed":
+    { one: "{n} élément retiré", other: "{n} éléments retirés" },
   "Measured over the last steps of this run": "Mesuré sur les derniers pas de ce run",
   "about {d} left": "environ {d} restant",
   "The images this run trains on, sorted into aspect-ratio buckets": "Les images de ce run, triées en buckets de rapport d'aspect",

@@ -124,6 +124,60 @@ def _frame_ref(io, path: str) -> str:
         return ""
 
 
+# ---- a picture that is not there any more ----------------------------------
+
+
+def drop_entries(manifest: dict, dead: set[int]) -> None:
+    """Take entries out of everything this run DRAWS from, leaving `items`
+    itself alone.
+
+    Every pool and both validation lists name an entry by its POSITION in
+    ``items``, so removing the entry itself would renumber the rest and hand
+    the run somebody else's pixels under these prompts. The entry stays where
+    it is, marked, and is simply in nothing: the same mechanism a held-out
+    validation image already rides on.
+
+    Every list here is shortened IN PLACE: the run reads the pools and the
+    two validation lists into locals of its own long before the last of these
+    calls, and a fresh list would leave those holding the entries this one
+    just dropped.
+    """
+    items = manifest.get("items") or []
+    for i in dead:
+        items[i]["missing"] = True
+    groups = manifest.get("groups") or []
+    for g in groups:
+        g["items"][:] = [j for j in g.get("items") or [] if j not in dead]
+    groups[:] = [g for g in groups if g["items"]]
+    for key in ("val_items", "stable_items"):
+        if manifest.get(key):
+            manifest[key][:] = [j for j in manifest[key] if j not in dead]
+
+
+def vanished_entries(manifest: dict) -> list[int]:
+    """Entries whose source file is not on disk any more.
+
+    A manifest is a list of stored library paths and it is built once, while
+    the library goes on being used: merge two files of an item or delete one
+    and the file this run was told to train on is gone. The run does not
+    depend on it — one picture of several hundred — so it is dropped with a
+    line saying so, where opening it raised a FileNotFoundError that ended
+    the job. A resume rebuilds the manifest for the same reason, and this is
+    what covers the window between the two: the rest of the run, during which
+    the library is still being worked in.
+    """
+    return [i for i, it in enumerate(manifest.get("items") or [])
+            if not os.path.exists(str(it.get("path") or ""))]
+
+
+def _say_dropped(items: list[dict], dead: list[int], why: str) -> None:
+    names = ", ".join(Path(str(items[i].get("path") or "")).name
+                      for i in dead[:3])
+    more = "" if len(dead) <= 3 else f", +{len(dead) - 3} more"
+    print(f"skipping {len(dead)} training image(s) — {why} ({names}{more})",
+          flush=True)
+
+
 # ---- latent cache --------------------------------------------------------------
 
 
@@ -160,12 +214,18 @@ class LatentSource:
         self.rng = rng
         self.dir = io.dir / "latents"
 
-    def prepare(self, on_progress=None) -> None:
+    def prepare(self, on_progress=None, on_missing=None) -> None:
         """Encode every item once (plus a flipped copy when flipping is on).
 
         `on_progress(done, total)` is called as it goes: this is the longest
         stretch of a run before the first step, and the app has nothing else
         to report from it.
+
+        `on_missing(index)` is called for an item whose file cannot be read.
+        Encoding a few hundred images takes minutes, and the library is in
+        use throughout — so a picture deleted or merged away WHILE this pass
+        runs is an ordinary thing to meet, and the caller takes it out of the
+        run rather than losing the job to it.
         """
         if not self.cache:
             return
@@ -177,13 +237,24 @@ class LatentSource:
             self.io.check_control()
             if on_progress is not None and (idx % 5 == 0 or idx == total - 1):
                 on_progress(idx + 1, total)
+            if it.get("missing"):
+                continue  # already dropped from the run; nothing to encode
             flips = (False, True) if (self.flip_p > 0 and self.may_flip(idx)) \
                 else (False,)
             for flipped in flips:
                 path = self._path(idx, flipped)
                 if path.exists():
                     continue  # already cached (this run, or an earlier job)
-                lat, mask = self._encode(it, flipped)
+                try:
+                    lat, mask = self._encode(it, flipped)
+                except OSError as exc:
+                    # The source went while this pass was running. One
+                    # picture, and the run has the rest of them.
+                    if on_missing is None:
+                        raise
+                    print(f"cannot read {it.get('path')}: {exc}", flush=True)
+                    on_missing(idx)
+                    break
                 path.parent.mkdir(parents=True, exist_ok=True)
                 # Write via a temp file: another job may be reading this same
                 # shared cache entry while we fill it. Per-PID name, because
@@ -606,6 +677,16 @@ def run(io: JobIO, config: dict, resume: bool = False) -> None:
     manifest = io.load_manifest()
     if not manifest.get("items"):
         raise ValueError("dataset manifest is empty — no items matched")
+    # BEFORE ANYTHING IS BUILT FROM IT: what the manifest names may not be
+    # there any more (see `vanished_entries`).
+    gone = vanished_entries(manifest)
+    if gone:
+        _say_dropped(manifest["items"], gone, "no longer in the library")
+        drop_entries(manifest, set(gone))
+        if not manifest.get("groups"):
+            raise ValueError(
+                "none of this run's images are in the library any more — "
+                "they were deleted or merged away since the job was made")
     minfo = manifest.get("model") or {}
 
     hyper = config.get("hyper", {})
@@ -763,8 +844,29 @@ def run(io: JobIO, config: dict, resume: bool = False) -> None:
     io.write_state("caching_latents")
     # Encoding a few hundred images takes minutes with nothing else to show
     # for it, so the count travels with the phase.
+    unreadable: list[int] = []
     latents.prepare(on_progress=lambda done, total: io.write_state(
-        "caching_latents", note=f"{done} / {total}"))
+        "caching_latents", note=f"{done} / {total}"),
+        on_missing=unreadable.append)
+    if unreadable:
+        # A picture that went while the cache was being filled. The SAMPLER is
+        # built again rather than edited: it is derived from the pools, and
+        # rebuilding it from the shortened ones is the same call with the same
+        # rng, where reaching into its buckets and masses is four invariants
+        # to keep in step. The run's LENGTH is left where it was: an epoch
+        # was resolved into steps above, and a picture or two either way is
+        # not a reason to move a number the schedule is already running on.
+        _say_dropped(manifest["items"], unreadable, "unreadable")
+        drop_entries(manifest, set(unreadable))
+        if not manifest.get("groups"):
+            raise ValueError("none of this run's images could be read")
+        sampler = compose.Sampler(manifest["items"], manifest["groups"], rng,
+                                  weight_mode=config.get("weight_mode",
+                                                         "sampling"))
+        # Both validation lists were shortened in place with the pools; a
+        # run whose whole hold-out went has nothing left to score.
+        if not (val_entries or stable_entries):
+            val_every = 0
     engine.after_latent_cache(cached=latents.cache)  # may free the VAE
 
     params = engine.trainable_params(float(hyper.get("lr", 1e-4)))
