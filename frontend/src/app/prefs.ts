@@ -36,6 +36,13 @@ export const APP_PREFS = {
   showHiddenItems: boolPref("mc.showHiddenItems", false),
   qaEnabled: boolPref("mc.qaEnabled", true),
   qaMode: boolPref("mc.qaMode", false),
+  /** WHAT THE SIDEBAR'S TAB BUTTONS CARRY: the icon and the tab's name, one
+   *  or the other. It was a boolean "icons only", whose off position had no
+   *  name of its own and no room for the third answer. */
+  sidebarTabsShow: strPref<"both" | "icon" | "name">(
+    "mc.sidebarTabsShow", "both", ["both", "icon", "name"]),
+  /** The boolean it replaced, READ ONCE to carry an existing setting over —
+   *  "1" is the `icon` answer. Nothing writes it any more. */
   sidebarTabsIconsOnly: boolPref("mc.sidebarTabsIconsOnly", false),
   // The tree's open branches: "0" has always meant SHUT, so these invert.
   kindsOpen: boolPref("mc.kindsOpen", true, { inverted: true }),

@@ -170,7 +170,14 @@ const OPEN_TABS_KEY = "mc.sidebarTabs";
 // still reachable (and still openable) from the ⋯ menu, which is the whole
 // point of hiding one — eleven buttons for a library that only ever uses six.
 const HIDDEN_TABS_KEY = "mc.sidebarTabsHidden";
-// Whether the strip drops the tabs' names and shows their icons alone.
+/** WHAT A TAB BUTTON CARRIES. `both` is the default; the other two are for a
+ *  narrow sidebar (the icons alone) and for a library whose tabs are told
+ *  apart by their words rather than by eleven similar glyphs (the names
+ *  alone). It was a boolean "icons only", whose off position had no name of
+ *  its own and no room for the third answer. */
+type TabShow = "both" | "icon" | "name";
+const TABS_SHOW_KEY = "mc.sidebarTabsShow";
+/** The boolean it replaced, read once so an existing setting carries over. */
 const ICON_TABS_KEY = "mc.sidebarTabsIconsOnly";
 /** How tall the ⋯ menu would like to be, and the breathing room it keeps from
  *  the window edge. It scrolls past the first and never crosses the second. */
@@ -209,18 +216,23 @@ function loadHiddenTabs(): Set<TabId> {
 function saveHiddenTabs(hidden: Set<TabId>): void {
   try { storage.set(HIDDEN_TABS_KEY, JSON.stringify([...hidden])); } catch { /* ignore */ }
 }
-function loadIconTabs(): boolean {
-  try { return storage.get(ICON_TABS_KEY) === "1"; } catch { return false; }
+function loadTabShow(): TabShow {
+  try {
+    const v = storage.get(TABS_SHOW_KEY);
+    if (v === "both" || v === "icon" || v === "name") return v;
+    // Nothing said yet: the old switch, if it was on, is the `icon` answer.
+    return storage.get(ICON_TABS_KEY) === "1" ? "icon" : "both";
+  } catch { return "both"; }
 }
-function saveIconTabs(on: boolean): void {
-  try { storage.set(ICON_TABS_KEY, on ? "1" : "0"); } catch { /* ignore */ }
+function saveTabShow(v: TabShow): void {
+  try { storage.set(TABS_SHOW_KEY, v); } catch { /* ignore */ }
 }
 
 /** The sidebar's tab strip. Plain click selects a single tab; ⌘/Ctrl-click keeps
  *  the others open too (multi-open). Only `tabs` (the currently available ones)
  *  are rendered, minus any the ⋯ menu has been told to hide. */
 function SidebarTabs({ tabs, open, onPick, counts, warn, hidden, onHidden,
-                      iconsOnly, onIconsOnly }: {
+                      show, onShow }: {
   tabs: TabId[];
   open: Set<TabId>;
   onPick: (id: TabId, additive: boolean) => void;
@@ -231,10 +243,12 @@ function SidebarTabs({ tabs, open, onPick, counts, warn, hidden, onHidden,
   warn?: Partial<Record<TabId, boolean>>;
   hidden: Set<TabId>;
   onHidden: (next: Set<TabId>) => void;
-  iconsOnly: boolean;
-  onIconsOnly: (next: boolean) => void;
+  show: TabShow;
+  onShow: (next: TabShow) => void;
 }) {
   const t = useT();
+  const iconsOnly = show === "icon";
+  const nameOnly = show === "name";
   const combo = IS_MAC ? "⌘" : "Ctrl";
   const [menu, setMenu] = useState(false);
   // WHAT THE MENU CHANGES APPLIES AT ONCE — you tick an eye and that tab
@@ -302,14 +316,14 @@ function SidebarTabs({ tabs, open, onPick, counts, warn, hidden, onHidden,
               // reads as a smaller button rather than the same button with
               // less in it.
               gap: 5,
-              padding: !iconsOnly ? "0 8px" : badge ? "0 7px" : "0 11px",
+              padding: !iconsOnly ? "0 9px" : badge ? "0 7px" : "0 11px",
               border: `1px solid ${active ? "var(--accent)" : "var(--border)"}`,
               background: active ? "var(--accent-dim)" : "transparent",
               color: active ? "var(--accent)" : "var(--muted)",
               fontSize: "var(--fs-2)", fontWeight: 600,
             }}
           >
-            <Icon name={meta.icon} size={16} style={{ flex: "0 0 auto" }} />
+            {!nameOnly && <Icon name={meta.icon} size={16} style={{ flex: "0 0 auto" }} />}
             {/* Without the label the `title` is the only thing left naming the
                 tab — which it already was for the ⋯ button, and is why every
                 one of these carries one. The COUNT stays either way: it is not
@@ -388,32 +402,44 @@ function SidebarTabs({ tabs, open, onPick, counts, warn, hidden, onHidden,
                 );
               })}
               {/* Below a rule, because it is about the STRIP rather than about
-                  any one tab — the rows above each name a tab, this names the
-                  bar they sit in. The tick rides in the eye's column (the other
-                  toggle here) and keeps its width when off, or the label steps
-                  sideways as the state changes. */}
-              {/* The settings row stays LAST in reading order whichever way
-                  the menu opens. Only the TABS reverse — that is what keeps
-                  the first of them nearest the ⋯ you just pressed — and a
-                  setting that moved to the top when the menu flipped would be
-                  a third place for it to be. */}
+                  any one tab — the rows above each name a tab, these name what
+                  the bar they sit in puts on them. A HEADING over them, or
+                  three more rows with ticks read as three more tabs. The tick
+                  rides in the eye's column and every row keeps its width
+                  whether ticked or not, so nothing steps sideways as the
+                  answer moves.
+                  These stay LAST in reading order whichever way the menu
+                  opens. Only the TABS reverse — that is what keeps the first
+                  of them nearest the ⋯ you just pressed — and a setting that
+                  moved to the top when the menu flipped would be a third
+                  place for it to be. */}
               <div style={{ height: 1, background: "var(--menu-border)", margin: "5px 6px" }} />
-              <div style={{ display: "flex", alignItems: "center", gap: 6, borderRadius: "var(--r-3)", paddingRight: 2 }}>
-                <button
-                  className="hoverable"
-                  onClick={() => onIconsOnly(!iconsOnly)}
-                  title={t("Show the tabs as icons alone, without their names")}
-                  style={{ display: "flex", alignItems: "center", gap: 7, flex: 1, minWidth: 0, padding: "6px 8px", borderRadius: "var(--r-3)", border: "none", background: "transparent", cursor: "pointer", color: "var(--text-2)", fontSize: "var(--fs-3)", textAlign: "left" }}
-                >
-                  <Icon name="text_fields" size={15} color="var(--muted-2)" style={{ flex: "0 0 auto" }} />
-                  <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {t("Icons only")}
+              <SectionHeading sm style={{ padding: "2px 8px 4px" }}>{t("Tabs show")}</SectionHeading>
+              {/* TRANSLATED HERE, not in the table: `t()` is harvested by
+                  reading the SOURCE for its literals, so a table of keys
+                  passed through it is invisible to `i18nCoverage` and ships
+                  in English in seven languages. */}
+              {([
+                ["both", t("Icon and name"), t("Show both the tab's icon and its name")],
+                ["icon", t("Icon only"), t("Show the tabs as icons alone, without their names")],
+                ["name", t("Name only"), t("Show the tabs as names alone, without their icons")],
+              ] as const).map(([id, label, hint]) => (
+                <div key={id} style={{ display: "flex", alignItems: "center", gap: 6, borderRadius: "var(--r-3)", paddingRight: 2 }}>
+                  <button
+                    className="hoverable"
+                    onClick={() => onShow(id)}
+                    title={hint}
+                    style={{ display: "flex", alignItems: "center", gap: 7, flex: 1, minWidth: 0, padding: "6px 8px", borderRadius: "var(--r-3)", border: "none", background: "transparent", cursor: "pointer", color: "var(--text-2)", fontSize: "var(--fs-3)", textAlign: "left" }}
+                  >
+                    <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {label}
+                    </span>
+                  </button>
+                  <span style={{ flex: "0 0 auto", display: "flex", alignItems: "center", justifyContent: "center", width: 24, height: 24 }}>
+                    {show === id && <Icon name="check" size={15} color="var(--accent)" />}
                   </span>
-                </button>
-                <span style={{ flex: "0 0 auto", display: "flex", alignItems: "center", justifyContent: "center", width: 24, height: 24 }}>
-                  {iconsOnly && <Icon name="check" size={15} color="var(--accent)" />}
-                </span>
-              </div>
+                </div>
+              ))}
             </div>
           </AnchoredDropdown>
         )}
@@ -1093,8 +1119,8 @@ export function PropertiesPanel() {
   // menu" would be a promise the panel breaks.
   const [hiddenTabs, setHiddenTabs] = useState<Set<TabId>>(loadHiddenTabs);
   useEffect(() => { saveHiddenTabs(hiddenTabs); }, [hiddenTabs]);
-  const [iconTabs, setIconTabs] = useState<boolean>(loadIconTabs);
-  useEffect(() => { saveIconTabs(iconTabs); }, [iconTabs]);
+  const [tabShow, setTabShow] = useState<TabShow>(loadTabShow);
+  useEffect(() => { saveTabShow(tabShow); }, [tabShow]);
   // The effective open set: drop tabs that aren't currently available, and never
   // show nothing — fall back to General (always available).
   const openSet = useMemo(() => {
@@ -1462,7 +1488,7 @@ export function PropertiesPanel() {
             <SidebarTabs tabs={availableTabs} open={openSet} onPick={pickTab} counts={tabCounts}
                          warn={tabWarn}
                          hidden={hiddenTabs} onHidden={setHiddenTabs}
-                         iconsOnly={iconTabs} onIconsOnly={setIconTabs} />
+                         show={tabShow} onShow={setTabShow} />
           </div>
         )}
 

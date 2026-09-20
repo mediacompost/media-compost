@@ -23,6 +23,10 @@
 - A colour picked with the image editor's pipette now shows up in the colour
   picker's **Recent** row, like one chosen in the picker itself. A drag
   records the colour it ended on, not every colour it crossed.
+- The library sidebar's tab strip has three answers instead of a switch:
+  **Icon and name**, **Icon only** and **Name only**, under *Tabs show* in
+  the ⋯ menu. The old **Icons only** tick had no name for its off position
+  and no room for the third one; a setting already on carries over.
 - The library sidebar's preview, collapsed, is now a row: a small square
   thumbnail on the left with the item's name beside it, instead of a
   full-width preview squashed to 80 px with the name on its own line
