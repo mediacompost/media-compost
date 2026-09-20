@@ -3,6 +3,7 @@ import { useEscape } from "../../shared/useEscape";
 import { MenuRow } from "../../shared/MenuRow";
 import { storage } from "../../shared/storage";
 import { RECORD_ICON } from "../../shared/metaEnums";
+import { Chevron } from "../../shared/Chevron";
 import { Chip } from "../../shared/Chip";
 import { IconButton, iconButtonStyle } from "../../shared/IconButton";
 import { Loading, Trouble } from "../../shared/Loading";
@@ -1927,7 +1928,7 @@ export function ItemGrid() {
                 }}
               >
                 <Icon name="bookmarks" size={18} />
-                <Icon name="expand_more" size={17} />
+                <Chevron />
               </button>
               {marksOpen && (
                 <BookmarksMenu
@@ -2501,7 +2502,7 @@ function SortMenu({ field, dir, dirs, disabled, fixedLabel, onPick, t }: {
   const face = <>
     {label}
     {arrow && <Icon name={arrow} size={16} color="var(--muted-2)" />}
-    <Icon name="expand_more" size={18} color="var(--muted-2)" />
+    <Chevron />
   </>;
   if (disabled) {
     return (
@@ -2760,7 +2761,7 @@ function QuickActionsMenu({ t, onRemoveWatermarks, lastAction, lastAvailable,
           fontSize: "var(--fs-3)", border: "1px solid var(--border-strong)",
           background: "var(--panel-2)", color: "var(--text-3)",
         }}
-        label={<Icon name="expand_more" size={17} />} />
+        label={<Chevron />} />
       {addingRanking && (
         <RankingEditOverlay ranking={null}
           onClose={() => setAddingRanking(false)}

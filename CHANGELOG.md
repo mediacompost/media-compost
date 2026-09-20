@@ -29,6 +29,11 @@
   appears as soon as there is one: it lists the marks the current view
   holds, with a thumbnail and a ✕ each, and picking one selects the picture
   and scrolls the grid to it.
+- The dropdown chevrons over the library grid are one grey again: the sort
+  and Group by drew theirs muted while the bookmarks, quick-actions and
+  media-kind buttons let theirs inherit the button's text colour, so one row
+  of controls carried three different greys. `shared/Chevron` is the one
+  drawing now.
 - The library sidebar's tab strip has three answers instead of a switch:
   **Icon and name**, **Icon only** and **Name only**, under *Tabs show* in
   the ⋯ menu. The old **Icons only** tick had no name for its off position

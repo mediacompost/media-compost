@@ -7,6 +7,7 @@
 import React from "react";
 
 import { Icon } from "../../../shared/Icon";
+import { Chevron } from "../../../shared/Chevron";
 import { useT } from "../../i18n";
 import type { Kind } from "../../store";
 import { RowMenu, type RowAction } from "./RowMenu";
@@ -59,7 +60,7 @@ export function MediaKindMenu({ selected, onToggle, title, extra = [] }: {
       }}
       label={<>
         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
-        <Icon name="expand_more" size={17} />
+        <Chevron />
       </>} />
   );
 }

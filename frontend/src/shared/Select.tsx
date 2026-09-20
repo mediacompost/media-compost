@@ -9,7 +9,7 @@
  *  builds its own (a disabled option with a reason after its label).
  */
 import React from "react";
-import { Icon } from "./Icon";
+import { Chevron } from "./Chevron";
 
 export function Select({ value, onChange, options, groups, children, disabled,
                          minWidth = 170, height = 32, bare, style, title,
@@ -69,9 +69,8 @@ export function Select({ value, onChange, options, groups, children, disabled,
                                 ...wrapStyle }}>
       {leading}
       {select}
-      <Icon name="expand_more" size={16} color="var(--muted-2)"
-            style={{ position: "absolute", right: 8, top: "50%",
-                     transform: "translateY(-50%)", pointerEvents: "none" }} />
+      <Chevron style={{ position: "absolute", right: 8, top: "50%",
+                        transform: "translateY(-50%)", pointerEvents: "none" }} />
     </div>
   );
 }
