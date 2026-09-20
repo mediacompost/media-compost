@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Evaluate no longer shows half-drawn pictures. A generated image was
+  written straight into the run's folder, which the app lists while the
+  generation is still going — so a 1024 px PNG, which takes about 40 ms and
+  grows in steps, could be fetched mid-write and drawn as the top of the
+  picture with white below (the browser decodes a truncated PNG happily,
+  and the thumbnailer, which does not, silently falls back to serving the
+  raw file). Pictures are now written through a temporary name and renamed
+  into place, so one is either there complete or not there at all — the
+  rule the trainer's own test samples have followed since they met the same
+  thing.
 - **A finished training run always has a checkpoint and a sample round at
   its last step.** A cadence is arithmetic — 250 steps every 100 saves at
   100 and 200 — so the state anybody actually wants, the one the run ended

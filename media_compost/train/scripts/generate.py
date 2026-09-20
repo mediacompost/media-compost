@@ -454,8 +454,40 @@ def _render(run_dir: Path, spec: dict, pipe, t0: float) -> None:
             # Three digits: the listing sorts by NAME, and mixing widths would
             # put p100 before p99. Runs written before this stay internally
             # consistent — a run never mixes the two.
-            img.save(out_dir / f"p{done + j:03d}.png")
+            _save_image(img, out_dir / f"p{done + j:03d}.png")
         done += k
+
+
+def _save_image(img, path: Path) -> None:
+    """One finished picture, ATOMICALLY.
+
+    The run's folder is listed by the server WHILE the generation is still
+    going (`EvalManager.readable` takes every `.png` in it) and the app asks
+    for each name the moment it appears — so a picture written in place is
+    offered to the browser while it is still being written. Measured: a
+    1024 px PNG takes ~40 ms and grows in 128 KB steps, which is fifteen
+    sizes a reader can catch it at. What that reader gets is a truncated
+    file, and both halves of the path make it WORSE than an error: PIL
+    refuses it, so the thumbnailer falls back to serving the raw bytes, and
+    a browser decodes those happily — full width and height, pixels down to
+    the row the file stopped at, white below. That is the "half the picture,
+    the rest white" thumbnail, and it stays on screen because nothing asks
+    for the image again once it has loaded.
+
+    Written through a temp name and renamed, which is what the trainer's own
+    sample writer has done since it met exactly this. The name is
+    `.pNNN.png.tmp`: a leading dot AND a suffix that is not `.png`, so
+    neither the listing nor the thumbnail glob can see it, and the rename
+    makes the picture appear complete or not at all.
+    """
+    # Lazily, and deliberately: this module is also loaded BY PATH (the
+    # tests do, `train.py`'s own state writer documents the same trap), and
+    # there its directory is not on `sys.path`.
+    import atomicio
+
+    tmp = path.with_name(f".{path.name}.tmp")
+    img.save(tmp, "PNG")   # the name has no usable extension for Pillow
+    atomicio.replace(tmp, path)
 
 
 # How long a loaded model waits for more work before the process exits. The

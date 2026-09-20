@@ -52,7 +52,13 @@ def main() -> int:
             time.sleep(0.4)
             img = Image.new("RGB", (32, 32),
                             tuple(rng.randrange(256) for _ in range(3)))
-            img.save(run_dir / "images" / f"p{i:02d}.png")
+            # Through a temp name, like the real generator: the server lists
+            # this folder while the run is going, and a picture written in
+            # place is offered to a reader half-written.
+            out = run_dir / "images" / f"p{i:02d}.png"
+            tmp = out.with_name(f".{out.name}.tmp")
+            img.save(tmp, "PNG")
+            os.replace(tmp, out)
     except Exception as exc:  # noqa: BLE001
         _write_state(run_dir, "failed", error=str(exc))
         return 1
