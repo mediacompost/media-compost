@@ -23,6 +23,12 @@
 - A colour picked with the image editor's pipette now shows up in the colour
   picker's **Recent** row, like one chosen in the picker itself. A drag
   records the colour it ended on, not every colour it crossed.
+- The wand no longer answers with a grid of disconnected single pixels when
+  its **Grow** is set: growing a mask ran one pass per bit of the amount, at
+  that bit's own offset, so a grow of 8 over a speckle the wand had found
+  stamped nine copies eight pixels apart instead of padding it. Grow and
+  Shrink selection had it too — 2, 4, 8, 16 and 32 were the pure cases, and a
+  find big enough to close the gaps hid the rest.
 - The paint-bucket cursor points where the paint lands: its hotspot was the
   bucket's own corner, so the bucket sat over the pointer and the fill
   started down and to the right of where it was aimed. (The other tools'

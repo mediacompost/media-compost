@@ -23,6 +23,7 @@ import { CACHE_MAX_PX, visibleBlit } from "../canvasBlit";
 import { Adjust, NO_ADJUST, drawAdjusted, isIdentity } from "../imageAdjust";
 import { blurredCanvas, blurredImage } from "../canvasBlur";
 import { sharpenedImage } from "../imageSharpen";
+import { growMaskBy } from "../growMask";
 import { EditorMenus } from "./EditorMenu";
 import { Icon } from "../../shared/Icon";
 import { RefPickerOverlay } from "./RefPicker";
@@ -212,51 +213,6 @@ function paintedCanvas(w: number, h: number,
 
 /** The eight neighbours, which are the structuring element below: growing by
  *  one takes in every pixel touching the mask, corners included. */
-const MASK_SHIFTS = [[1, 0], [-1, 0], [0, 1], [0, -1],
-                     [1, 1], [1, -1], [-1, 1], [-1, -1]] as const;
-
-/**
- * GROW (`amount > 0`) OR SHRINK (`amount < 0`) A MASK BY WHOLE PIXELS, in
- * place — one dilation (union of the eight shifts) or erosion (their
- * intersection) per pixel asked for, which is the construction the ants
- * outline already uses for its one-pixel ring.
- *
- * Done by DOUBLING rather than by `amount` passes. The neighbourhood is a
- * square, and squares compose — growing by 4 and then by 2 is growing by 6 —
- * so the bits of `amount` are enough: nine rounds of eight draws covers 500 px
- * where the plain loop wanted four thousand. That is what makes it affordable
- * on the wand's path, where it runs inside a gesture that re-floods the whole
- * picture on every frame of a tolerance drag.
- *
- * Alpha is carried rather than thresholded (`destination-in` multiplies it),
- * so a soft-edged selection stays soft. The canvas edge is OUTSIDE the mask:
- * shifting brings transparency in, so a shrink eats in from the picture's own
- * border as it does from any other edge.
- */
-function growMaskBy(mask: HTMLCanvasElement, amount: number): void {
-  const n = Math.abs(Math.round(amount));
-  if (!n) return;
-  const w = mask.width, h = mask.height;
-  const mctx = mask.getContext("2d")!;
-  const tmp = document.createElement("canvas");
-  tmp.width = w; tmp.height = h;
-  const tctx = tmp.getContext("2d")!;
-  for (let step = 1; step <= n; step *= 2) {
-    if (!(n & step)) continue;
-    tctx.clearRect(0, 0, w, h);
-    tctx.drawImage(mask, 0, 0);
-    if (amount > 0) {
-      for (const [dx, dy] of MASK_SHIFTS) mctx.drawImage(tmp, dx * step, dy * step);
-    } else {
-      mctx.save();
-      mctx.globalCompositeOperation = "destination-in";
-      for (const [dx, dy] of MASK_SHIFTS) mctx.drawImage(tmp, dx * step, dy * step);
-      mctx.restore();
-    }
-  }
-}
-
-
 /** The text tool's outlines, in the ANNOTATOR's text colour — the same green
  *  a text box wears on the other half of this window, because it is the same
  *  box. Spelled as a literal rather than `var(--green)`: this is canvas
