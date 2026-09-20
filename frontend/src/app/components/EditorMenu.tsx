@@ -32,6 +32,7 @@ export function EditorMenus({
   onAdjust,
   onBlurImage,
   onSharpenImage,
+  onApplyBackground,
   onApplyModel,
   onSelectRegions,
   onCropToSelection,
@@ -58,6 +59,9 @@ export function EditorMenus({
   onBlurImage: () => void;
   /** Open the live sharpen panel. */
   onSharpenImage: () => void;
+  /** Put the background color behind the picture (asks for one if the
+   *  background is transparent). */
+  onApplyBackground: () => void;
   // needsReference marks a reference-guided model — the editor opens the
   // reference picker before applying.
   onApplyModel: (kind: JobKind, model: string, needsReference?: boolean) => void;
@@ -130,6 +134,16 @@ export function EditorMenus({
     ...row({ icon: "rotate_right", label: "Rotate right", note: "90° clockwise", enabled: true, onClick: () => onRotate(1) }),
     ...row({ icon: "photo_size_select_large", label: "Image size…", note: `${dims.w}×${dims.h} px — resample the image`, enabled: true, onClick: () => setDialog("image"), separated: true }),
     ...row({ icon: "aspect_ratio", label: "Canvas size…", note: "Grow or trim the canvas without scaling", enabled: true, onClick: () => setDialog("canvas") }),
+    // Beside Canvas size…, because it is the other half of that thought: you
+    // grow the canvas and it comes up transparent, and this is what puts
+    // something there. (It is not the Fill tool either — that paints OVER
+    // what it covers; this goes UNDER, so the picture is untouched and only
+    // its transparency changes.)
+    ...row({ icon: "wallpaper", label: "Apply background color",
+             note: hasSelection
+               ? "Place the background color behind the selection"
+               : "Place the background color behind the picture",
+             enabled: true, onClick: onApplyBackground }),
     ...row({ icon: "tune", label: "Adjustments…",
              note: hasSelection
                ? "Brightness, contrast, hue, saturation — on the selection"

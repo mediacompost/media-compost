@@ -124,6 +124,12 @@ This is not the Selection menu's [**Blur selection…**](#the-selection-menu), w
 
 **Image → Sharpen…** is the same panel again, with **Amount** (per cent — 100 adds the picture's own detail back once over) and **Radius** (the size of the detail being lifted; small, because sharpening a photograph means its texture). It is an unsharp mask: the picture minus a blurred copy of itself *is* the detail, so adding that back is what "sharper" means. Live preview, one undoable step, the selection only where there is one — and double-clicking the Radius puts it back to its default rather than to zero, a radius having no neutral.
 
+## Background color
+
+**Image → Apply background color** puts the background color *behind* the picture: opaque pixels are untouched and transparency becomes the color, with half-transparent pixels blending — so a soft-edged cut-out lands on it cleanly rather than with a fringe. With a selection active it fills only there. It is undoable like any other edit.
+
+If the background color is transparent there is nothing to put behind anything, so the action **asks**: the background swatch's own picker opens with a line saying what the color is for, and the fill happens when you close it on a color. Closing it without picking one does nothing.
+
 ## Inpainting
 
 **Inpaint** fills the selected area from the surrounding image with a LaMa AI model, removing unwanted content and replacing it with a plausible continuation. It runs from the **Inpaint** button in the bar of every tool that makes a selection — the marquee and lasso (next to Fill), the text tool, and the **wand**, which is where a patch of sky, a speech balloon's inside or a logo's background is picked up in one click — or from the Selection menu; only the selected pixels change, and the result is undoable.
@@ -137,6 +143,7 @@ Two models are available (the Inpaint button's dropdown picks one): **Photo** (b
 - **Rotate left / Rotate right**.
 - **Image size…** — resample to a new size with aspect-linked fields.
 - **Canvas size…** — grow with transparency or trim, with a 3×3 anchor grid; the image is never scaled.
+- **Apply background color** — see [Background color](#background-color).
 - **Adjustments…** — see [Adjustments](#adjustments).
 - **Blur…** — see [Blur](#blur).
 - **Sharpen…** — see [Sharpen](#sharpen).

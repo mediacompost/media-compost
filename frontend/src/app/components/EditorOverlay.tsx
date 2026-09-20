@@ -2883,6 +2883,53 @@ export function EditorOverlay() {
     redraw();
   };
 
+  /**
+   * PUT A SOLID COLOUR BEHIND THE PICTURE — the background colour, over the
+   * whole picture or, where there is one, the selection.
+   *
+   * `destination-over` is the whole of it: the fill lands UNDER what is
+   * already there, so a photograph is unchanged and a cut-out's transparency
+   * becomes the colour. Half-transparent pixels blend, which is what makes it
+   * the answer to a soft-edged cut-out on a white page — and a colour with an
+   * alpha of its own is honoured, so it can be laid on as a wash.
+   */
+  const applyBackground = (hex: string) => {
+    pushHistory();
+    const paint = (c: CanvasRenderingContext2D) => {
+      c.fillStyle = hex;
+      c.fillRect(0, 0, dims.w, dims.h);
+    };
+    if (hasSelection) {
+      applyClipped(paint, "destination-over");
+    } else {
+      const p = pixelRef.current.getContext("2d")!;
+      p.save();
+      p.globalCompositeOperation = "destination-over";
+      paint(p);
+      p.restore();
+    }
+    redraw();
+  };
+
+  /**
+   * The menu's **Apply background color**. With no background colour set
+   * there is nothing to put behind anything — `bgColor` is null, which is
+   * what the swatch's slash means — so the action ASKS, by opening that
+   * swatch's own picker with a line saying what the answer is for, and
+   * applies when the picker closes on a colour. The picker is where the
+   * background colour is chosen anyway; a dialog of its own would be a
+   * second colour picker to keep in step with the first.
+   *
+   * Closing it without picking (Escape, or a press outside) leaves the
+   * colour transparent and does nothing, which is the way out.
+   */
+  const [bgAsked, setBgAsked] = useState(false);
+  const requestApplyBackground = () => {
+    if (bgColor) { applyBackground(bgColor); return; }
+    setBgAsked(true);
+    setPickerFor("bg");
+  };
+
   // ---- inpaint (LaMa) ----
   // The big-lama weights must be downloaded for the tool to run; gate on that.
   const { data: modelCache } = useQuery({ queryKey: ["model-cache"], queryFn: api.modelCache });
@@ -4866,6 +4913,7 @@ export function EditorOverlay() {
                 onAdjust={() => openEffect("adjust")}
                 onBlurImage={() => openEffect("blur")}
                 onSharpenImage={() => openEffect("sharpen")}
+                onApplyBackground={requestApplyBackground}
                 onApplyModel={(kind, model, needsReference) => {
                   if (needsReference) setRefPick({ kind, model });
                   else void applyModel(kind, model);
@@ -4938,7 +4986,10 @@ export function EditorOverlay() {
                   the same thing, so there is no separate reset button. */}
               <div className="mc-tool-btn" style={{ position: "relative" }}>
                 <button
-                  onClick={() => setPickerFor(pickerFor === "bg" ? null : "bg")}
+                  onClick={() => {
+                    setBgAsked(false);
+                    setPickerFor(pickerFor === "bg" ? null : "bg");
+                  }}
                   style={{
                     width: 30, height: 30, borderRadius: "var(--r-4)", padding: 0,
                     border: `2px solid ${pickerFor === "bg" ? "var(--accent)" : "var(--border-strong)"}`,
@@ -4960,7 +5011,16 @@ export function EditorOverlay() {
                     // swatch's slash and the erase-to-transparent path key on,
                     // and an `#rrggbb00` stored verbatim reached neither.
                     onPick={(c) => setBgColor(/00$/i.test(c) ? null : c)}
-                    onClose={() => setPickerFor(null)}
+                    onClose={() => {
+                      setPickerFor(null);
+                      // The picker was opened BY the action: a colour is the
+                      // answer, a transparent close is "never mind".
+                      if (bgAsked && bgColor) applyBackground(bgColor);
+                      setBgAsked(false);
+                    }}
+                    note={bgAsked
+                      ? "Pick a color to put behind the picture."
+                      : undefined}
                   />
                 )}
               </div>

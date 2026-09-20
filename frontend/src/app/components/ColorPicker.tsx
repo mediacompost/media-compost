@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { storage } from "../../shared/storage";
 import { SectionHeading } from "../../shared/SectionHeading";
 import { Icon } from "../../shared/Icon";
@@ -102,6 +102,7 @@ export function ColorPickerPopover({
   onPick,
   onClose,
   anchor,
+  note,
 }: {
   value: string;            // #rrggbb or #rrggbbaa
   onPick: (hex: string) => void;   // live, on every change
@@ -109,6 +110,11 @@ export function ColorPickerPopover({
   /** The swatch that opened it: a press on it is the caller's toggle, not
    *  a press outside. */
   anchor?: React.RefObject<HTMLElement | null>;
+  /** One line above the square, for a caller that opened this popover to ASK
+   *  something — "pick a colour to put behind the picture" — rather than
+   *  because the swatch was pressed. Without it the popover looks the same
+   *  either way and the question is one nobody was asked. */
+  note?: string;
 }) {
   // Keep HSV as the source of truth so the SV square doesn't jump when the
   // RGB round-trip is lossy (e.g. at s=0 every hue maps to the same grey).
@@ -143,6 +149,23 @@ export function ColorPickerPopover({
   // it is the caller's and is named `within` so its own press is a toggle.
   const panel = useRef<HTMLDivElement>(null);
   useMenuDismiss(true, close, { within: [panel, ...(anchor ? [anchor] : [])] });
+
+  // IT HANGS DOWN FROM THE SWATCH, AND THE SWATCHES ARE AT THE BOTTOM OF THE
+  // PALETTE. Opened from the background swatch in a short window the panel
+  // ran off the bottom edge and took its Done button with it — the whole
+  // control the popover is closed by. So it is lifted by whatever it
+  // overflows, never past the top of the window, which is the flip every
+  // other menu here gets from `AnchoredDropdown`. Measured after layout and
+  // re-measured when the content changes height (the note, the recents row).
+  const [lift, setLift] = useState(0);
+  useLayoutEffect(() => {
+    const el = panel.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const over = r.bottom + lift - (window.innerHeight - 8);
+    const next = over > 0 ? Math.min(over, Math.max(0, r.top + lift - 8)) : 0;
+    if (Math.abs(next - lift) > 0.5) setLift(next);
+  }, [lift, note, recents.length, mode]);
 
   // Shared drag handler for the SV square and the two sliders.
   const dragArea = (
@@ -189,12 +212,17 @@ export function ColorPickerPopover({
         ref={panel}
         onMouseDown={(e) => e.stopPropagation()}
         style={{
-          position: "absolute", left: "calc(100% + 10px)", top: 0, zIndex: 31, width: 232,
+          position: "absolute", left: "calc(100% + 10px)", top: -lift, zIndex: 31, width: 232,
           background: "var(--surface-float)", border: "1px solid var(--menu-border)",
           borderRadius: "var(--r-7)", boxShadow: "var(--shadow-2)", padding: 10,
           display: "flex", flexDirection: "column", gap: 8,
         }}
       >
+        {note && (
+          <div style={{ fontSize: "var(--fs-2)", color: "var(--muted)", lineHeight: 1.3 }}>
+            {note}
+          </div>
+        )}
         {/* SV square. Picking a color at 0% alpha would be invisible — moving
             the point restores full opacity so the pick always shows. */}
         <div

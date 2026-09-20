@@ -23,6 +23,13 @@
 - A colour picked with the image editor's pipette now shows up in the colour
   picker's **Recent** row, like one chosen in the picker itself. A drag
   records the colour it ended on, not every colour it crossed.
+- The image editor's **Image** menu has an **Apply background color**: it
+  puts the background swatch's colour behind the picture, so a cut-out's
+  transparency becomes that colour and everything opaque is left alone. With
+  a selection it fills only there, and with the background colour still
+  transparent it asks for one first.
+- The colour picker lifts itself off the bottom of the window instead of
+  running past it, which in a short window took its Done button with it.
 - The wand no longer answers with a grid of disconnected single pixels when
   its **Grow** is set: growing a mask ran one pass per bit of the amount, at
   that bit's own offset, so a grow of 8 over a speckle the wand had found
