@@ -11,6 +11,10 @@ import { confirm } from "../shared/ConfirmModal";
 import { activeLang, fillVars, translate } from "../shared/i18nCore";
 import { isSettingsPage, readPlace, scopeFromPlace, VIEW_PATHS } from "./location";
 import {
+  parseBookmarks, removeBookmark as dropBookmark, serializeBookmarks,
+  toggleBookmark as toggleIn,
+} from "./bookmarks";
+import {
   HISTORY_CAP, HISTORY_MAX_ENTRY, navWindow, pushHistory, sameEntry,
   selectionUpdate,
 } from "./selection";
@@ -701,6 +705,19 @@ interface UIState {
   /** The same gesture for a CATEGORY: the Tags view, its Sets sub-tab, that
    *  set picked, and the trail for the tree to open and select. */
   showCategoryInTagSet: (setId: number, trail: string[]) => void;
+  /** THE MARKED ITEMS, newest first — see `app/bookmarks.ts`. */
+  bookmarks: number[];
+  /** Mark the item, or take its mark off. */
+  toggleBookmark: (itemId: number) => void;
+  removeBookmark: (itemId: number) => void;
+  /** Go to a mark: select the picture and ask the grid to bring it into
+   *  view. The dropdown only offers the marks the view on screen holds, so
+   *  there is no view to put back — going to one is a scroll. */
+  goToBookmark: (itemId: number) => void;
+  /** The item the grid should bring into view, once it can. Cleared by the
+   *  grid when it has. */
+  scrollToItem: number | null;
+  clearScrollToItem: () => void;
   setHistoryFilter: (ids: number[]) => void;
   setOverlay: (o: Overlay) => void;
   setSearch: (s: string) => void;
@@ -869,6 +886,19 @@ function saveQaSelected(i: number | null): void {
   } catch {
     /* ignore */
   }
+}
+
+// THE BOOKMARKS — the items marked to come back to (`app/bookmarks.ts`).
+// Personal working state like the Quick Assign sets, and remembered the
+// same way.
+const BOOKMARKS_KEY = "mc.bookmarks";
+
+function loadBookmarks(): number[] {
+  try { return parseBookmarks(storage.get(BOOKMARKS_KEY)); } catch { return []; }
+}
+
+function saveBookmarks(list: number[]): void {
+  try { storage.set(BOOKMARKS_KEY, serializeBookmarks(list)); } catch { /* ignore */ }
 }
 
 function loadExpanded(): Record<number, boolean> {
@@ -1561,6 +1591,29 @@ export const useUI = create<UIState>((set) => ({
 
   // Programmatic selection (e.g. clicking a derived/original link): remember the
   // prior selection so the Back button can restore it.
+  bookmarks: loadBookmarks(),
+  toggleBookmark: (itemId) => set((st) => {
+    const bookmarks = toggleIn(st.bookmarks, itemId);
+    saveBookmarks(bookmarks);
+    return { bookmarks };
+  }),
+  removeBookmark: (itemId) => set((st) => {
+    const bookmarks = dropBookmark(st.bookmarks, itemId);
+    saveBookmarks(bookmarks);
+    return { bookmarks };
+  }),
+  goToBookmark: (itemId) => {
+    // THROUGH THE SELECTION'S OWN SETTER. A selection is two fields — the
+    // list and the SET the cards are drawn from (`selWrite`) — plus the
+    // range anchor and the back/forward stack, so writing `selectedItems`
+    // alone left the picture selected as far as the sidebar was concerned
+    // and unselected as far as the grid was: the panel filled in, the card
+    // wore no ring.
+    useUI.getState().setSelectedItems([itemId]);
+    set({ scrollToItem: itemId });
+  },
+  scrollToItem: null,
+  clearScrollToItem: () => set({ scrollToItem: null }),
   setSelectedItems: (ids) =>
     set((s) => {
       const w = selWrite(s, ids);

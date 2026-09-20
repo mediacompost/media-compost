@@ -125,6 +125,10 @@ READ_ONLY_POSTS = frozenset({
     # for when the other end has scrolled out of the loaded pages. Same body
     # as the search, and it writes nothing.
     "/api/items/ids",
+    # Where one item sits in the view's order — what a bookmark needs to
+    # scroll to what it points at. The same body again, and it writes
+    # nothing.
+    "/api/items/index",
     # The tag-grid overlay's batch feed — the tag-batch session feed's
     # sibling, and a read for the same reason: it scores and sorts, and
     # every write of a session goes through the assign endpoint.

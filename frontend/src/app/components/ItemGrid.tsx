@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useEscape } from "../../shared/useEscape";
+import { MenuRow } from "../../shared/MenuRow";
 import { storage } from "../../shared/storage";
 import { RECORD_ICON } from "../../shared/metaEnums";
 import { Chip } from "../../shared/Chip";
-import { IconButton } from "../../shared/IconButton";
+import { IconButton, iconButtonStyle } from "../../shared/IconButton";
 import { Loading, Trouble } from "../../shared/Loading";
 import { EmptyState } from "../../shared/EmptyState";
 import { escapeDepth } from "../../shared/escapeStack";
@@ -11,8 +12,8 @@ import { LAYER } from "../../shared/layers";
 import { Select } from "../../shared/Select";
 import { isTypingTarget } from "../../shared/typingTarget";
 import { confirm } from "../../shared/ConfirmModal";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, fmtDuration, GroupNode, ItemOut, ItemPage, ItemSlim, JobKind, TaskInfo } from "../api";
+import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { api, fmtDuration, GroupNode, ItemOut, ItemPage, ItemSearchBody, ItemSlim, JobKind, TaskInfo } from "../api";
 import { chunks } from "../bulk";
 import { Icon } from "../../shared/Icon";
 import { MediaKindMenu } from "./shared/MediaKindMenu";
@@ -242,6 +243,12 @@ export function ItemGrid() {
   const anchorItem = useUI((s) => s.anchorItem);
   const search = useUI((s) => s.search);
   const gridSize = useUI((s) => s.gridSize);
+  const bookmarks = useUI((s) => s.bookmarks);
+  const toggleBookmark = useUI((s) => s.toggleBookmark);
+  const removeBookmark = useUI((s) => s.removeBookmark);
+  const goToBookmark = useUI((s) => s.goToBookmark);
+  const scrollToItem = useUI((s) => s.scrollToItem);
+  const clearScrollToItem = useUI((s) => s.clearScrollToItem);
   const sortField = useUI((s) => s.sortField);
   const setSortField = useUI((s) => s.setSortField);
   const sortDir = useUI((s) => s.sortDir);
@@ -256,9 +263,13 @@ export function ItemGrid() {
   // The section a jump just landed on, flashed once with `.mc-flash`.
   const [flashKey, setFlashKey] = useState<string | null>(null);
   const [jumpOpen, setJumpOpen] = useState(false);
+  const [marksOpen, setMarksOpen] = useState(false);
+  const marksBtn = useRef<HTMLButtonElement>(null);
+  const marksRect = useAnchorRect(marksBtn, marksOpen);
   const jumpBtn = useRef<HTMLButtonElement>(null);
   const jumpRect = useAnchorRect(jumpBtn, jumpOpen);
   useMenuDismiss(jumpOpen, () => setJumpOpen(false), { within: [jumpBtn] });
+  useMenuDismiss(marksOpen, () => setMarksOpen(false), { within: [marksBtn] });
   const flashTimer = useRef<number | undefined>(undefined);
   const tagHighlight = useUI((s) => s.tagHighlight);
   const groupHighlight = useUI((s) => s.groupHighlight);
@@ -1307,6 +1318,42 @@ export function ItemGrid() {
       scEl.scrollTop = toPhys(bottom - scEl.clientHeight + PAD);
   };
 
+  /**
+   * BRINGING A BOOKMARK INTO VIEW. The store has put its scope back and
+   * selected the picture; the row it is on is the grid's half of the answer,
+   * and usually not one the grid knows — the loaded pages are the ones near
+   * the viewport, and the mark is somewhere else. So: the pages first (free,
+   * and the common case for a mark in the view you are already in), then the
+   * server, which is the only thing that can say where an item sits in an
+   * order it did not draw.
+   *
+   * It waits for the view to be READY: the scope change re-queries, and a
+   * scroll computed against the old total would land nowhere. Cleared
+   * whatever the answer is, including "this view does not hold it" — an
+   * unanswered request that stayed armed would fire again on the next
+   * layout change.
+   */
+  useEffect(() => {
+    if (scrollToItem == null || !view.ready || columns < 1) return;
+    let alive = true;
+    const at = view.indexOfId(scrollToItem);
+    if (at >= 0) {
+      scrollRowIntoView(at);
+      clearScrollToItem();
+      return;
+    }
+    void api.itemIndexes(viewReq, [scrollToItem])
+      .then((got) => {
+        if (!alive) return;
+        const idx = got.indices[0];
+        if (idx != null) scrollRowIntoView(idx);
+      })
+      .catch(() => { /* no answer is no scroll */ })
+      .finally(() => { if (alive) clearScrollToItem(); });
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scrollToItem, view.ready, columns, layout]);
+
   // THE ONE ORDINARY GROUP THE VIEW IS SCOPED TO, or null. The Delete key
   // and the context menu's "Remove from …" row both ask this, so the two
   // cannot disagree about when taking a picture out of a group is a thing
@@ -1483,6 +1530,7 @@ export function ItemGrid() {
   // ONE definition of a card, shared by the grouped and ungrouped branches:
   // the two differ only in how they place blocks, and a second copy of ~90
   // lines of handlers is a second place for a click to behave differently.
+  const bookmarked = useMemo(() => new Set(bookmarks), [bookmarks]);
   const renderCard = (it: ItemOut, idx: number) => (
               <ItemCard
                 // The OCCURRENCE, inside a sequence view: a book's repeated
@@ -1508,6 +1556,7 @@ export function ItemGrid() {
                     : null
                 }
                 pointed={pointedItemIds.includes(it.id)}
+                bookmarked={bookmarked.has(it.id)}
                 // A ROW IN THE SIDEBAR IS ABOUT THIS CARD. Every tag
                 // currently selected in the sidebar's tag list, *with the
                 // same sign* — counting group-inherited tags too (eff_tags /
@@ -1856,6 +1905,42 @@ export function ItemGrid() {
               </div>
             )}
           </div>
+
+          {/* THE BOOKMARKS — beside the order controls, because that is what
+              they are about: not what the view holds, but a place in it
+              somebody marked. Icon only, and only while there is one to
+              show: a control that opens an empty list is a control that
+              does nothing. */}
+          {bookmarks.length > 0 && (
+            <div style={{ position: "relative" }}>
+              {/* A DROPDOWN SAYS SO. The recipe is `iconButtonStyle`'s —
+                  the sanctioned way for a menu to draw its own trigger —
+                  with the chevron every other menu button here carries. */}
+              <button
+                ref={marksBtn}
+                onClick={() => setMarksOpen((v) => !v)}
+                title={t("Bookmarks")}
+                style={{
+                  ...iconButtonStyle({ size: 34, bordered: true, fill: "panel",
+                                       tone: "text", active: marksOpen }),
+                  width: "auto", gap: 4, padding: "0 8px",
+                }}
+              >
+                <Icon name="bookmarks" size={18} />
+                <Icon name="expand_more" size={17} />
+              </button>
+              {marksOpen && (
+                <BookmarksMenu
+                  rect={marksRect}
+                  bookmarks={bookmarks}
+                  req={viewReq}
+                  t={t}
+                  onPick={(id) => { setMarksOpen(false); goToBookmark(id); }}
+                  onRemove={(id) => removeBookmark(id)}
+                />
+              )}
+            </div>
+          )}
 
           {/* Flexible gap: sort stays left, media + filters + size push right. */}
           <div style={{ flex: 1 }} />
@@ -2269,6 +2354,31 @@ export function ItemGrid() {
                   setClipTick((v) => v + 1);
                 },
               });
+            }
+            // MARK THIS PICTURE — and ONE PICTURE ONLY (owner 2026-09): a
+            // bookmark is a place, and a place is one picture, so with
+            // several of them in the menu the row is not offered at all.
+            // Every other row here acts on the whole selection because what
+            // it does is the same thing done N times; "come back to these
+            // forty" is not that, and a row that quietly marked the one
+            // under the pointer while the menu said "40 items" would be
+            // answering a different question from the one on screen.
+            // (Right-clicking a card OUTSIDE the selection is a menu about
+            // that card alone — `ctxTargets` — so the row is offered there.)
+            if (n === 1) {
+              const one = targets[0];
+              if (one) {
+                const on = bookmarked.has(one.id);
+                actions.push({
+                  icon: on ? "bookmark_remove" : "bookmark_add",
+                  label: on ? t("Remove bookmark") : t("Add bookmark"),
+                  separated: true,
+                  onClick: () => {
+                    setCtxMenu(null);
+                    toggleBookmark(one.id);
+                  },
+                });
+              }
             }
             // OUT OF THIS GROUP — the Delete key made findable, which is
             // what this menu is for (owner 2026-09). Offered on exactly the
@@ -2689,6 +2799,7 @@ function fitBox(w: number, h: number): { width: string; height: string } {
 
 function ItemCard({
   item, cellW, selected, secondary, dropSide, pointed, rowMatch, qaAssigned,
+  bookmarked,
   onClick, onDoubleClickCard, onQaRemove, onDragStartCard, onContextMenuCard,
   onDragOverCard, onDropCard, onDragEndCard,
 }: {
@@ -2710,6 +2821,8 @@ function ItemCard({
    *  is about this picture. */
   rowMatch: boolean;
   qaAssigned: boolean;
+  /** Marked to come back to — see `app/bookmarks.ts`. */
+  bookmarked: boolean;
   onClick: (e: React.MouseEvent) => void;
   onDoubleClickCard: () => void;
   onQaRemove: (e: React.MouseEvent) => void;
@@ -2867,6 +2980,17 @@ function ItemCard({
             <Icon name="check" size={16} className="qa-badge-check" />
             <Icon name="close" size={16} className="qa-badge-close" />
           </div>
+        )}
+        {/* MARKED TO COME BACK TO. Bottom-left, the one corner nothing else
+            uses: the quick-assign tick is top-left, the file count top-right
+            and the sequence/length badges bottom-right. A glyph and no
+            number — what it says is yes. */}
+        {bookmarked && (
+          <Chip tone="overlay" size="md"
+                title={t("Bookmarked")}
+                style={{ position: "absolute", left: 7, bottom: 7 }}>
+            <Icon name="bookmark" size={13} />
+          </Chip>
         )}
         {/* Source-file count: the *total* number of selectable source files
             (active + alternates), so an item with 3 files shows "3". */}
@@ -3091,6 +3215,94 @@ function RankingsIndex({ columns, cellW }: {
  * Built from the SAME runs array the grid lays out, so it can never offer a
  * section the grid does not have.
  */
+/**
+ * THE BOOKMARKS DROPDOWN — the marks THIS VIEW HOLDS (owner 2026-09).
+ *
+ * Not all of them: a list of places you cannot get to from here is a list
+ * that reads as broken, and the answer to "which of these are in this view"
+ * is the same one request as "what row is this one on" — `POST
+ * /api/items/index`, asked once when the menu opens, for every mark at once.
+ * A mark whose picture the view does not hold comes back null and is left
+ * out; the others carry their row with them, so picking one is a scroll and
+ * not a second round trip.
+ *
+ * A MARK IS AN ITEM AND NOTHING ELSE, so the name and the thumbnail are read
+ * from the item — through `["item", id]`, the key the sidebar's own detail
+ * query uses, so a picture that has been looked at is already in hand and a
+ * renamed one is never listed under its old name. Only for the rows that
+ * are SHOWN: a mark outside this view is a row nobody will read.
+ */
+function BookmarksMenu({ rect, bookmarks, req, t, onPick, onRemove }: {
+  rect: DOMRect | null;
+  bookmarks: number[];
+  /** The view as the page query asks it — the one the marks are tested
+   *  against. */
+  req: ItemSearchBody;
+  t: (s: string) => string;
+  onPick: (itemId: number) => void;
+  onRemove: (itemId: number) => void;
+}) {
+  const { data, isPending } = useQuery({
+    queryKey: ["bookmark-indexes", JSON.stringify(req), bookmarks.join(",")],
+    queryFn: () => api.itemIndexes(req, bookmarks),
+    // One answer per open: the view is not moving while the menu is over it.
+    staleTime: 30_000,
+  });
+  const here = bookmarks.filter((_, i) => data?.indices[i] != null);
+  const rows = useQueries({
+    queries: here.map((id) => ({
+      queryKey: ["item", id],
+      queryFn: () => api.item(id),
+      staleTime: 30_000,
+    })),
+  });
+  return (
+    <AnchoredDropdown rect={rect} minWidth={260}>
+      <div style={{ maxHeight: 360, overflowY: "auto" }}>
+        {isPending ? (
+          <div style={{ padding: "8px 10px", color: "var(--muted)", fontSize: "var(--fs-2)" }}>
+            {t("Looking…")}
+          </div>
+        ) : here.length === 0 ? (
+          <div style={{ padding: "8px 10px", color: "var(--muted)", fontSize: "var(--fs-2)" }}>
+            {t("No bookmarks in this view")}
+          </div>
+        ) : here.map((id, i) => {
+          const it = rows[i]?.data;
+          return (
+            <MenuRow key={id} onClick={() => onPick(id)} title={it?.name}
+                     trailing={
+                       <IconButton icon="close" size={22} glyph={14} tone="muted"
+                         title={t("Remove bookmark")}
+                         onClick={(e) => { e.stopPropagation(); onRemove(id); }} />
+                     }>
+              {/* The picture is the row: a list of file names says far less
+                  about "where was I" than the thumbnails do. */}
+              {it?.active_file_id != null ? (
+                <img src={api.thumbUrl(it.active_file_id, it.rotation ?? 0, it.thumb_token)}
+                     alt=""
+                     style={{ width: 28, height: 28, flex: "0 0 auto", objectFit: "cover",
+                              borderRadius: "var(--r-2)", background: "var(--panel-3)" }} />
+              ) : (
+                <span style={{ width: 28, height: 28, flex: "0 0 auto", display: "flex",
+                               alignItems: "center", justifyContent: "center",
+                               borderRadius: "var(--r-2)", background: "var(--panel-3)",
+                               color: "var(--muted-3)" }}>
+                  <Icon name="collections_bookmark" size={15} />
+                </span>
+              )}
+              <span style={{ flex: 1, minWidth: 0, overflow: "hidden",
+                             textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {it?.name ?? "…"}
+              </span>
+            </MenuRow>
+          );
+        })}
+      </div>
+    </AnchoredDropdown>
+  );
+}
+
 function JumpMenu({ groupBy, runs, lang, t, onPick, rect }: {
   groupBy: string;
   runs: GroupRun[];

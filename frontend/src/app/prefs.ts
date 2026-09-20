@@ -92,6 +92,7 @@ export const APP_PREF_KEYS: Record<string, string> = {
   "mc.settingsPage": "the Settings page last open",
   "mc.expandedGroups": "which sidebar groups are unfolded (JSON)",
   "mc.qaSets": "the quick-assign sets (qaSets.ts)",
+  "mc.bookmarks": "the library's bookmarks, and the view each was made in (bookmarks.ts)",
   "mc.qaSelected": "which quick-assign set is picked",
   "mc.sidebarTabs": "the sidebar's open tabs (JSON)",
   "mc.sidebarTabsHidden": "the sidebar's hidden tabs (JSON)",

@@ -90,6 +90,8 @@ Beside the sort is a **Group by** dropdown, whose choices follow the sort: a dat
 
 Beside the dropdown, a **Jump to** button opens the section index. For date groupings it stacks year › month however fine the sections themselves are — grouping a decade by day is thousands of sections, and a flat list of those is exactly what the index is for — while first letters, megapixel bands and colours list flat with their counts. Picking one scrolls the grid to that section and flashes its header.
 
+Beside them, a **bookmarks** dropdown appears once there is a bookmark to show — see [Bookmarks](#bookmarks) below.
+
 Changing the grouping returns the grid to the top. Everything else behaves as it always did: the marquee, the arrow keys, Cmd/Ctrl+A and the selection all work across section boundaries as though the sections were not there.
 
 At the right end of the same row:
@@ -159,6 +161,14 @@ Right-clicking a grid item opens a context menu:
 - **Hide/Show** and **Move to trash** (in the Trash view: a permanent **Delete**, which asks first).
 
 When the clicked item is part of the current selection, the actions target all selected items (the menu shows the count); when it is not, the clicked item alone is the target and the selection is left untouched.
+
+## Bookmarks
+
+Right-clicking an item offers **Add bookmark** — a picture to come back to. The card wears a ribbon in its bottom-left corner while it is marked, and the same menu row takes the mark off again. A mark is the item and nothing else: it is marked or it is not, and the row is offered for **one** picture — with several selected it is not there, since a place is one picture. (Right-clicking a card outside the selection is a menu about that card alone, so the row is offered there.)
+
+Beside the sort and grouping controls, a **bookmarks** dropdown (icon only) appears as soon as there is one. It lists **the bookmarks this view holds** — a place you cannot get to from here would be a row that does nothing — with a thumbnail, the picture's name, and a ✕ that takes the mark off. Picking one selects the picture and scrolls the grid to it.
+
+Bookmarks live in the browser, beside the other remembered settings — they are a place somebody is in the middle of working through, not a fact about the picture, so they do not travel to another machine with the library.
 
 ## Sequences
 

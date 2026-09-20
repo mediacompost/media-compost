@@ -332,6 +332,33 @@ class ItemIdRangeRequest(ItemSearchRequest):
     count: int = 0
 
 
+class ItemIndexRequest(ItemSearchRequest):
+    """WHERE THESE ITEMS SIT in the view's order — the flat indices the grid
+    pages by, and `null` for one the view does not hold at all.
+
+    What the bookmarks need, and they need both halves of it: which of them
+    this view even contains (that is the list the dropdown shows) and, for
+    the one that is picked, which row to scroll to. The browser can answer
+    neither — it holds the pages it has drawn, and the order is the sort's
+    rather than the id's.
+
+    Several ids at once because the first question is about all of them: one
+    request per bookmark would be one walk of the view per bookmark.
+
+    A read-only POST, named in `build.READ_ONLY_POSTS`."""
+
+    item_ids: list[int] = []
+
+
+class ItemIndexes(BaseModel):
+    #: One answer per id in the request, IN THAT ORDER: the item's position
+    #: in this view counted from 0, or null where the view does not hold it
+    #: (hidden, trashed, or simply not in this scope). Null is an ANSWER —
+    #: the caller leaves that bookmark out rather than scrolling somewhere
+    #: arbitrary.
+    indices: list[int | None] = []
+
+
 class ItemIdRange(BaseModel):
     ids: list[int] = []
     #: How long the range REALLY is. `ids` is capped (see the endpoint), and

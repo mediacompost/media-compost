@@ -67,6 +67,8 @@ from ..schemas import (
     ItemGroupRunsRequest,
     ItemIdRange,
     ItemIdRangeRequest,
+    ItemIndexRequest,
+    ItemIndexes,
     ItemMerge,
     ItemSlim,
     ItemMetadataOut,
@@ -733,6 +735,61 @@ def _item_id_range_sync(body: "ItemIdRangeRequest", s: Session):
             .join(tbl, tbl.c.item_id == Item.id)
             .order_by(*order).limit(want).offset(start)).scalars().all()
     return ItemIdRange(ids=[int(i) for i in rows], total=total)
+
+
+@router.post("/index", response_model=ItemIndexes)
+async def item_index(request: Request, body: "ItemIndexRequest",
+                     s: Session = Depends(get_session),
+                     lib: Library = Depends(get_library)):
+    """Where these items sit in this view's order — see `ItemIndexRequest`.
+
+    Through `dbgate` with the rest: it walks the view's order exactly as the
+    range above it does.
+    """
+    return await dbgate.guarded(request, _item_index_sync, body, s)
+
+
+def _item_index_sync(body: "ItemIndexRequest", s: Session):
+    """The positions proper — see `item_index`.
+
+    A WINDOW FUNCTION over the same ordered select the page query uses, so
+    the answers are the rows the grid would draw and not a second opinion
+    about the order. The FIRST occurrence where a sequence view repeats an
+    item: the grid's cards are occurrences, and what a bookmark points at is
+    the picture.
+    """
+    _check_similar(body.query)
+    want = [int(i) for i in body.item_ids if int(i) > 0]
+    if not want:
+        return ItemIndexes(indices=[None] * len(body.item_ids))
+    res = Resolver(s)
+    base = search.search_filtered(
+        s, **search.scope_of(body), query=body.query, resolver=res)
+    occ = body.sequence is not None
+    order = prefilter.order_by_for(body.sort, body.sequence,
+                                   ranking=base.ranking)
+    pos = (func.row_number().over(order_by=order) - 1).label("pos")
+    if base.residue is None:
+        sel = prefilter.base_select([Item.id.label("id"), pos], body.sequence,
+                                    base.where, occurrences=occ,
+                                    ranking=base.ranking)
+    else:
+        # The residue path walks the per-connection temp table, the way the
+        # range above and `_page_response` do — its matches are decided in
+        # Python.
+        tbl = prefilter.materialize_matches(s, base.matched_ids(s, res))
+        sel = (prefilter.base_select([Item.id.label("id"), pos], body.sequence,
+                                     [], occurrences=occ, ranking=base.ranking)
+               .join(tbl, tbl.c.item_id == Item.id))
+    numbered = sel.subquery()
+    at: dict[int, int] = {}
+    for chunk in chunked(want):
+        for iid, p in s.execute(
+                select(numbered.c.id, func.min(numbered.c.pos))
+                .where(numbered.c.id.in_(chunk))
+                .group_by(numbered.c.id)):
+            at[int(iid)] = int(p)
+    return ItemIndexes(indices=[at.get(int(i)) for i in body.item_ids])
 
 
 @router.post("/query", response_model=ItemPage)

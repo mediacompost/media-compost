@@ -23,6 +23,12 @@
 - A colour picked with the image editor's pipette now shows up in the colour
   picker's **Recent** row, like one chosen in the picker itself. A drag
   records the colour it ended on, not every colour it crossed.
+- **Bookmarks.** Right-clicking an item in the library offers *Add
+  bookmark* — a picture to come back to — and the card wears a ribbon while
+  it is marked. Beside the sort and grouping controls, a bookmarks dropdown
+  appears as soon as there is one: it lists the marks the current view
+  holds, with a thumbnail and a ✕ each, and picking one selects the picture
+  and scrolls the grid to it.
 - The library sidebar's tab strip has three answers instead of a switch:
   **Icon and name**, **Icon only** and **Name only**, under *Tabs show* in
   the ⋯ menu. The old **Icons only** tick had no name for its off position

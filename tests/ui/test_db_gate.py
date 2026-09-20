@@ -160,13 +160,14 @@ def test_the_slot_comes_back_however_the_work_ends():
 def test_every_read_that_walks_the_library_goes_through_the_gate():
     """A read added here without the gate is one that races the others, and
     nothing about its own answer says so — the cost lands on every OTHER
-    request. Counted off the source, since the five endpoints differ in
+    request. Counted off the source, since the six endpoints differ in
     shape: the page query, the facet counts, the scope listing, the section
-    runs and the id range."""
+    runs, the id range and the item index (where a bookmark's picture sits
+    in this view)."""
     import inspect
 
     from media_compost.ui.server.routers import items as items_router
 
     src = inspect.getsource(items_router)
-    assert src.count("return await dbgate.guarded(") == 5, \
+    assert src.count("return await dbgate.guarded(") == 6, \
         "an items read stopped going through the gate, or a new one skipped it"

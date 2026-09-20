@@ -705,6 +705,12 @@ const CATALOG: Catalog = {
     "Implikationen",
   "implies…":
     "impliziert …",
+  "Bookmarks": "Lesezeichen",
+  "Add bookmark": "Lesezeichen setzen",
+  "Remove bookmark": "Lesezeichen entfernen",
+  "Bookmarked": "Mit Lesezeichen",
+  "Looking…": "Wird gesucht…",
+  "No bookmarks in this view": "Keine Lesezeichen in dieser Ansicht",
   "Jump to":
     "Springe zu",
   "Remove this implication":

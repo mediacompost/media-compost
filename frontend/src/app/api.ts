@@ -1543,6 +1543,16 @@ export const api = {
    *  only what it has drawn, so the items between two positions are a
    *  question only the server can answer. `total` is how long the range
    *  really is; `ids` is capped server-side. */
+  /** WHERE THESE ITEMS SIT in a view's order — one answer per id, in the
+   *  order they were asked for, `null` for an item the view does not hold.
+   *  What the bookmarks need: which of them this view contains, and which
+   *  row to scroll the picked one to. */
+  itemIndexes: (body: ItemSearchBody, itemIds: number[]) =>
+    req<{ indices: (number | null)[] }>("/api/items/index", {
+      method: "POST",
+      body: JSON.stringify({ ...body, item_ids: itemIds,
+                             groups: (body.groups ?? []).join(",") }),
+    }),
   itemIdRange: (body: ItemSearchBody, start: number, count: number) =>
     req<{ ids: number[]; total: number }>("/api/items/ids", {
       method: "POST",
