@@ -37,8 +37,26 @@ on the reasoning that a queue that deep was a burst whose senders had moved on
 — which was true and is now handled precisely, by letting them leave. What is
 left in the queue is callers still waiting for an answer, and answering one of
 those 503 costs MORE than making it wait: the frontend retries, and the retry
-is the same walk again. So the wait is long, and reaching it means something
-is stuck rather than busy.
+is the same walk again.
+
+AND THAT IS WHY THE DEADLINE MEASURES A GATE THAT HAS STOPPED, NEVER ONE THAT
+IS MERELY SLOW. It used to be a plain per-request stopwatch — wait fifteen
+seconds, be refused — which reads as a burst-shedding rule however it is
+worded, and on a big library at LAUNCH it is one: the first view costs a walk
+per sidebar badge beside the page's own, nothing is memoized yet, the file is
+not in the page cache, and the tail of that fan-out is refused for having
+waited while the queue drained perfectly well in front of it. Measured on the
+1.2M-item library: 150 walks arriving at once, the gate steadily handing over
+a slot every ~0.27 s, **96 of them refused** — and each refusal is three more
+of the same walk, since the frontend retries a 5xx. So the clock is the GATE's
+and it is reset by every handover: a queue that is moving refuses nobody,
+however deep it is, and reaching `QUEUE_WAIT` means no read has started or
+finished in all that time. That is a wedge, not a burst.
+
+What it cannot tell apart is a wedge and ONE walk that genuinely runs longer
+than `QUEUE_WAIT` while every slot is held — which is why the number is minutes
+rather than seconds now. Nothing here should take that long, and a read that
+does is a bug the 503 is allowed to report.
 """
 
 from __future__ import annotations
@@ -51,9 +69,11 @@ from starlette.concurrency import run_in_threadpool
 #: How many library-wide reads run at once.
 SLOTS = asyncio.Semaphore(2)
 
-#: Seconds a read may wait for a slot before it is refused — a backstop, see
-#: the module docstring. Requests whose caller has gone do not wait at all.
-QUEUE_WAIT = 15.0
+#: Seconds the GATE may go without handing a slot over before the reads
+#: waiting on it are refused — a backstop, see the module docstring. NOT how
+#: long one request may wait: a queue that is moving refuses nobody, however
+#: deep it is, and requests whose caller has gone do not wait at all.
+QUEUE_WAIT = 120.0
 
 #: How often, while queueing, a waiting request asks whether its caller is
 #: still there. A poll, because that is the only shape `is_disconnected`
@@ -67,11 +87,32 @@ GONE = 499
 
 _BUSY = "The server is busy reading the library; try again in a moment."
 
+#: When the gate last moved — the loop clock at the most recent handover, in
+#: or out. The waiters read it rather than their own stopwatch, so the
+#: deadline is the GATE's: it says how long everything has been stuck, not how
+#: long one of them has been patient.
+_MOVED_AT = 0.0
+
+
+def _moved() -> None:
+    """A slot changed hands. Called on both sides of every handover — taken
+    and given back — since either says the gate is alive."""
+    global _MOVED_AT
+    _MOVED_AT = asyncio.get_running_loop().time()
+
+
+def _release() -> None:
+    """Give a slot back, and say so."""
+    SLOTS.release()
+    _moved()
+
 
 async def _slot_for(request: Request) -> bool:
     """Wait for a slot. True when it is ours, False when the caller hung up
-    first; ``asyncio.TimeoutError`` past `QUEUE_WAIT`."""
+    first; ``asyncio.TimeoutError`` once the GATE has not moved for
+    `QUEUE_WAIT` — see the module docstring for why that is the clock."""
     loop = asyncio.get_running_loop()
+    seen = _MOVED_AT
     deadline = loop.time() + QUEUE_WAIT
     acquire = asyncio.ensure_future(SLOTS.acquire())
     got = False
@@ -80,9 +121,15 @@ async def _slot_for(request: Request) -> bool:
             done, _ = await asyncio.wait({acquire}, timeout=DISCONNECT_POLL)
             if done:
                 got = True
+                _moved()
                 return True
             if await request.is_disconnected():
                 return False
+            if seen != _MOVED_AT:
+                # Somebody got in or got out while we waited: the queue is
+                # draining, so start the patience over.
+                seen = _MOVED_AT
+                deadline = loop.time() + QUEUE_WAIT
             if loop.time() >= deadline:
                 raise asyncio.TimeoutError
     finally:
@@ -93,7 +140,7 @@ async def _slot_for(request: Request) -> bool:
         if not got:
             if acquire.done():
                 if not acquire.cancelled() and acquire.exception() is None:
-                    SLOTS.release()
+                    _release()
             else:
                 acquire.cancel()
 
@@ -102,9 +149,9 @@ async def guarded(request: Request, fn, *args):
     """Run ``fn(*args)`` on the threadpool, a library walk at a time.
 
     Returns whatever ``fn`` returns, or a `Response` — 499 when the caller
-    went away while queueing, 503 past `QUEUE_WAIT`. A handler declared with
-    a ``response_model`` may return either; FastAPI passes a Response through
-    untouched.
+    went away while queueing, 503 once the gate has not moved at all for
+    `QUEUE_WAIT`. A handler declared with a ``response_model`` may return
+    either; FastAPI passes a Response through untouched.
     """
     if await request.is_disconnected():
         return Response(status_code=GONE)
@@ -121,4 +168,4 @@ async def guarded(request: Request, fn, *args):
             return Response(status_code=GONE)
         return await run_in_threadpool(fn, *args)
     finally:
-        SLOTS.release()
+        _release()

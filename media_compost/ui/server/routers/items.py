@@ -364,31 +364,39 @@ async def facets(
     THROUGH `dbgate` LIKE THE PAGE QUERY: Untagged and Ungrouped are an
     `EXISTS` probe per item — a quarter to half a second at a million — and an
     edit invalidates all three of these at once, beside the grid's pages.
-    Left to race them each one took FIFTEEN seconds."""
+    Left to race them each one took FIFTEEN seconds.
+
+    AND REMEMBERED THE WAY THE PAGE'S OWN TOTAL IS (`scope_count`), which it
+    was not: this is the same question — count the items a scope admits — and
+    it was the one asking it that paid in full every single time, while the
+    grid's total beside it answered from the memo in 7 ms. Measured at 1.2M
+    items, three times in a row each: Ungrouped 0.46/0.46/0.46 s, Untagged
+    0.30/0.30/0.30. Three of the five library walks a LAUNCH fires are these,
+    and every edit invalidates all three again; now they cost that once per
+    revision, like everything else that scans the library for a number."""
     return await dbgate.guarded(
-        request, _facets_sync, s, groups, ungrouped, trash, kind, sequence,
-        hide_sequenced, fold_sequenced, hidden, show_hidden, pending,
-        pending_kind, untagged)
+        request, _facets_sync, s, lib, groups, ungrouped, trash, kind,
+        sequence, hide_sequenced, fold_sequenced, hidden, show_hidden,
+        pending, pending_kind, untagged)
 
 
-def _facets_sync(s: Session, groups: str, ungrouped: bool, trash: bool,
-                 kind: str, sequence: Optional[int], hide_sequenced: bool,
-                 fold_sequenced: bool, hidden: bool, show_hidden: bool,
-                 pending: bool, pending_kind: str, untagged: bool):
+def _facets_sync(s: Session, lib: Library, groups: str, ungrouped: bool,
+                 trash: bool, kind: str, sequence: Optional[int],
+                 hide_sequenced: bool, fold_sequenced: bool, hidden: bool,
+                 show_hidden: bool, pending: bool, pending_kind: str,
+                 untagged: bool):
     """The count proper — see `facets`."""
-    from sqlalchemy import func
-
     cands = search.search_filtered(s, groups, ungrouped, trash,
                              kind=kind, sequence=sequence,
                              hide_sequenced=hide_sequenced,
                              fold_sequenced=fold_sequenced, hidden=hidden,
                              show_hidden=show_hidden, pending=pending,
                              pending_kind=pending_kind, untagged=untagged)
-    count = s.execute(
-        select(func.count()).select_from(
-            prefilter.base_select([Item.id], cands.sequence,
-                                  cands.where).subquery())
-    ).scalar_one()
+    # No search travels with a scope, so there is no residue: `cands.where`
+    # IS the whole question, and the statement is what `scope_count` keys on.
+    count = scope_count(
+        s, lib.db,
+        prefilter.base_select([Item.id], cands.sequence, cands.where))
     return {"count": int(count or 0)}
 
 

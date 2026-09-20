@@ -91,7 +91,9 @@ def test_a_caller_that_leaves_while_queueing_gives_its_slot_back():
 
 
 def test_a_live_caller_past_the_wait_is_refused_rather_than_queued_forever():
-    """The backstop — reaching it means something is stuck, not busy."""
+    """The backstop — reaching it means the gate has not moved AT ALL for
+    `QUEUE_WAIT`, which is stuck rather than busy. Both slots are held here
+    and nobody gives one back, which is exactly that."""
     ran = []
 
     async def scenario():
@@ -112,6 +114,39 @@ def test_a_live_caller_past_the_wait_is_refused_rather_than_queued_forever():
     assert out.status_code == 503
     assert out.headers.get("Retry-After") == "1"
     assert ran == []
+
+
+def test_a_queue_that_is_moving_refuses_nobody_however_deep_it_is():
+    """The LAUNCH shape: more walks than slots, every one of them finishing,
+    and the tail of the fan-out waiting far longer than `QUEUE_WAIT`.
+
+    Refusing those is what made a big library's first seconds a row of 503s
+    — the module docstring has the measurement (96 of 150 refused while the
+    gate handed a slot over every 0.27 s, each refusal three more of the same
+    walk because the frontend retries a 5xx). The deadline belongs to the
+    GATE: it is reset by every handover, so depth alone never refuses.
+    """
+    import time
+
+    def work(n):
+        time.sleep(0.05)
+        return n
+
+    async def scenario():
+        return await asyncio.gather(*(
+            dbgate.guarded(_Caller(), work, n) for n in range(24)))
+
+    old_wait = dbgate.QUEUE_WAIT
+    # Far below what the tail of this queue waits (~0.55 s) and well above
+    # the gap between two handovers (~0.025 s), which is the whole
+    # distinction: slow is not stuck.
+    dbgate.QUEUE_WAIT = 0.3
+    try:
+        out = _run(scenario)
+    finally:
+        dbgate.QUEUE_WAIT = old_wait
+    assert out == list(range(24)), \
+        [x for x in out if not isinstance(x, int)]
 
 
 def test_the_slot_comes_back_however_the_work_ends():

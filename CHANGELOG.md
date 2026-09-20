@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Opening a big library no longer answers the first views with "The server is
+  busy reading the library": the queue that keeps library-wide reads from
+  racing each other used to refuse anything that had waited fifteen seconds,
+  which on a cold million-item library is most of what a first load fires —
+  and a refusal costs more than the wait, since the page asks again. It now
+  refuses only a queue that has stopped moving altogether.
+- The sidebar's **Untagged**, **Ungrouped** and **Trash** counts are
+  remembered until the library changes, the way the grid's own total already
+  was. They scanned the whole library on every ask, including all three at
+  once after every edit.
 - The image editor's **Image** menu has a **Blur…**: a gaussian blur of the
   picture on one slider, previewed live and applied as one undoable step, and
   confined to the selection where there is one.

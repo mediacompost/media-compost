@@ -129,6 +129,11 @@ def test_tag_search_is_pure_sql(big):
 
 def test_facets_is_one_aggregate(big):
     client, library = big
+    # The badges go through `scope_count` now, so by this point in the module
+    # the answer may be in the memo and the shape this asserts would be a
+    # list of nothing. Move the library on so the count is recomputed — the
+    # same reason `test_stats_pending_counts_in_sql` clears its cache.
+    library.db.commits += 1
     with StatementLog(library.db.engine) as log:
         r = client.get("/api/items/facets")
     assert r.status_code == 200
@@ -438,6 +443,38 @@ def test_AND_COUNTS_ITSELF_AGAIN_once_the_library_moves(big):
     with StatementLog(library.db.engine) as log:
         client.post("/api/items/query", json={"page": 1, "page_size": 60})
     assert _counts(log), "a write must make the next view recount"
+
+
+def test_the_sidebar_BADGES_count_themselves_once_too(big):
+    """Untagged, Ungrouped and Trash are the same question the grid's total
+    is — count what a scope admits — and they were the one asking it that
+    paid in full every single time.
+
+    They are an `EXISTS` probe per item, three of the five library walks a
+    LAUNCH fires, and every edit invalidates all three at once: measured at
+    1.2M items, Ungrouped 0.46 s and Untagged 0.30 s on each of three asks
+    in a row, while the page total beside them answered from the memo in
+    7 ms. Through `scope_count` they cost that once per revision. The
+    STATEMENT is the assertion, as it is for the page's own total.
+    """
+    client, library = big
+    library.db._memo.clear()
+    for scope in ("untagged", "ungrouped", "trash"):
+        with StatementLog(library.db.engine) as log:
+            first = client.get(f"/api/items/facets?{scope}=true")
+        assert first.status_code == 200
+        assert _counts(log), f"the first {scope} look must actually count"
+
+        with StatementLog(library.db.engine) as log:
+            again = client.get(f"/api/items/facets?{scope}=true")
+        assert again.json() == first.json()
+        assert _counts(log) == [], _counts(log)
+
+    made = client.post("/api/tags", json={"name": f"moved-it-{id(client)}"})
+    assert made.status_code == 200, made.text
+    with StatementLog(library.db.engine) as log:
+        client.get("/api/items/facets?untagged=true")
+    assert _counts(log), "a write must make the next badge recount"
 
 
 def test_a_media_kind_category_counts_itself_FROM_AN_INDEX(big):
