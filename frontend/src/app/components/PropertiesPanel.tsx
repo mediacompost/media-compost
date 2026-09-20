@@ -1304,6 +1304,51 @@ export function PropertiesPanel() {
       async () => { await rawBar.onRemove(); }),
   };
 
+  // WHO THE SELECTION IS, as one node: the editable name for a single item, a
+  // count for several. It is handed to the preview where there is one, since
+  // collapsed the preview and the name are one row and only the preview knows
+  // it is collapsed; where there is none (a sequence, a file-less item, a
+  // multi-selection) the panel draws it itself, one block lower.
+  // The picture the header shows, and what stands in for it when there is
+  // none. A DETAIL STILL LOADING GETS NEITHER — an empty tile says "not yet",
+  // where a glyph would state what this is and then be replaced a frame
+  // later, which is the flicker the always-rendered header exists to end.
+  const previewFileId = single != null && detail && detail.kind !== "sequence"
+    ? detail.active_file_id ?? null : null;
+  const previewGlyph =
+    selectedItems.length > 1 ? "photo_library"
+      : detail?.kind === "sequence" ? "collections_bookmark"
+        : previewFileId == null && detail ? "hide_image"
+          : undefined;
+  const nameRow = single != null && detail ? (
+    inTrash ? (
+      // No renaming in the Trash — show the name read-only, wrapping like the
+      // editable one rather than ellipsising: this is the one place the item
+      // is named.
+      <span style={{ flex: 1, minWidth: 0, overflowWrap: "anywhere",
+        lineHeight: 1.35, padding: "3px 0" }}>
+        {detail.name}
+      </span>
+    ) : (
+      <EditableItemName
+        key={single}
+        itemId={single}
+        name={detail.name}
+        onSaved={() => {
+          qc.invalidateQueries({ queryKey: ["item"] });
+          qc.invalidateQueries({ queryKey: ["items"] });
+          // A sequence item's name is also its sequence name, shown in its
+          // members' "belongs to" panels.
+          qc.invalidateQueries({ queryKey: ["sequences"] });
+        }}
+      />
+    )
+  ) : selectedItems.length === 1 ? (
+    "…"
+  ) : (
+    `${selectedItems.length} items selected`
+  );
+
   return (
     <div
       style={{
@@ -1382,59 +1427,33 @@ export function PropertiesPanel() {
             tab bar, so the sections scroll under it — hence the size toggle in
             its bottom-left corner, for when the picture is worth more (or less)
             than the room it takes. Sequences own no preview. */}
-        {single != null && detail && detail.kind !== "sequence" && detail.active_file_id != null && (
-          <div style={{ padding: "10px 14px 0" }}>
-            <RotatablePreview
-              itemId={single}
-              fileId={detail.active_file_id}
-              rotation={detail.rotation ?? 0}
-              token={detail.thumb_token}
-              readOnly={inTrash}
-              onRotated={() => {
-                qc.invalidateQueries({ queryKey: ["item"] });
-                qc.invalidateQueries({ queryKey: ["items"] });
-                // Rotation bakes a new active file, bumping the Modified date.
-                qc.invalidateQueries({ queryKey: ["item-metadata"] });
-              }}
-            />
-          </div>
+        {/* The header — see `RotatablePreview`. Rendered for EVERY selection,
+            so it never appears and disappears as the selection moves; what
+            it holds is the picture where there is one and the kind's glyph
+            where there is not. THE NAME IS ITS TO PLACE: collapsed, the two
+            are one row, so which of the two layouts is on screen has to be
+            decided where the collapsed state lives. */}
+        {selectedItems.length > 0 && (
+          <RotatablePreview
+            itemId={single}
+            fileId={previewFileId}
+            glyph={previewGlyph}
+            rotation={detail?.rotation ?? 0}
+            token={detail?.thumb_token}
+            readOnly={inTrash}
+            onRotated={() => {
+              qc.invalidateQueries({ queryKey: ["item"] });
+              qc.invalidateQueries({ queryKey: ["items"] });
+              // Rotation bakes a new active file, bumping the Modified date.
+              qc.invalidateQueries({ queryKey: ["item-metadata"] });
+            }}
+            name={nameRow}
+          />
         )}
 
         {/* Item name / selection title — above the tab bar (and thus the scroll
             area) so the current item is always identified while its sections
             scroll. Editable for a single item; a summary for a multi-selection. */}
-        {selectedItems.length > 0 && (
-          <div style={{ padding: "6px 14px 0", display: "flex", alignItems: "flex-start", gap: 8, color: "var(--text-bright)", fontWeight: 600, fontSize: "var(--fs-3)" }}>
-            {single != null && detail ? (
-              inTrash ? (
-                // No renaming in the Trash — show the name read-only, wrapping
-                // like the editable one rather than ellipsising: this is the
-                // one place the item is named.
-                <span style={{ flex: 1, minWidth: 0, overflowWrap: "anywhere",
-                  lineHeight: 1.35, padding: "3px 0" }}>
-                  {detail.name}
-                </span>
-              ) : (
-                <EditableItemName
-                  key={single}
-                  itemId={single}
-                  name={detail.name}
-                  onSaved={() => {
-                    qc.invalidateQueries({ queryKey: ["item"] });
-                    qc.invalidateQueries({ queryKey: ["items"] });
-                    // A sequence item's name is also its sequence name, shown
-                    // in its members' "belongs to" panels.
-                    qc.invalidateQueries({ queryKey: ["sequences"] });
-                  }}
-                />
-              )
-            ) : selectedItems.length === 1 ? (
-              "…"
-            ) : (
-              `${selectedItems.length} items selected`
-            )}
-          </div>
-        )}
 
         {/* Tab bar — fixed above the scroll area, so it stays put while the
             selected item's sections scroll below it. */}
@@ -9741,6 +9760,13 @@ export function AiActionButtons({
 
 // What the preview is worth when nothing else says otherwise, and what the
 // chevron expands to when there is no bigger size to go back to.
+/** How the item's name is set, wherever it is drawn — under the preview, or
+ *  beside it while the preview is collapsed. */
+const NAME_ROW: React.CSSProperties = {
+  display: "flex", alignItems: "flex-start", gap: 8,
+  color: "var(--text-bright)", fontWeight: 600, fontSize: "var(--fs-3)",
+};
+
 const PREVIEW_DEFAULT = 240;
 // A drag that ends this close to the floor IS a collapse: nobody aims for
 // 83 px, and at that size the chevron has to offer the way back rather than
@@ -9751,10 +9777,29 @@ const PREVIEW_SNAP = 6;
 // collapse chevron sat on top of the Quick Look button.
 const PREVIEW_MIN = 80;
 const PREVIEW_MAX = 640;
+// The collapsed thumbnail's HEIGHT — the width follows the picture. A little
+// under the floor above, because nothing is laid over it here: the row beside
+// it holds the buttons.
+const PREVIEW_THUMB = 64;
 
-/** The active file's preview thumbnail with hover-overlay rotate buttons. The
- *  rotation is non-destructive (stored as metadata; the thumbnail is baked and
- *  cache-busted via the rotation value). */
+/**
+ * THE SIDEBAR'S HEADER: what is selected, as a picture and a name.
+ *
+ * Full size it is the active file's preview with hover-overlay rotate
+ * buttons (the rotation is non-destructive — stored as metadata, the
+ * thumbnail baked and cache-busted via the rotation value) and the name
+ * under it. COLLAPSED it is one row: a 64 px tile, the name beside it, the
+ * chevron at the end.
+ *
+ * IT IS RENDERED FOR EVERY SELECTION, picture or not — a sequence, a
+ * multi-selection, an item whose detail has not arrived yet — because the
+ * alternative is a header that appears and disappears as the selection
+ * moves. That was a visible flash: switching pictures in the grid took the
+ * whole row out for the ~30 ms the next item's detail was loading and
+ * everything below it jumped up and back. The tile is a fixed SQUARE for
+ * the same reason: a tile that hugged its picture changed the row's width
+ * with every selection, and the name re-wrapped each time.
+ */
 function RotatablePreview({
   itemId,
   fileId,
@@ -9762,9 +9807,14 @@ function RotatablePreview({
   token,
   readOnly,
   onRotated,
+  name,
+  glyph,
 }: {
-  itemId: number;
-  fileId: number;
+  /** null for a multi-selection: there is no one item to rotate or open. */
+  itemId: number | null;
+  /** null when there is no picture — a sequence, a file-less item, or a
+   *  detail still loading. */
+  fileId: number | null;
   rotation: number;
   /** The item's `thumb_token` — what makes the URL change when the thumbnail
    *  does. Without it, choosing a video's thumbnail left this preview showing
@@ -9773,6 +9823,14 @@ function RotatablePreview({
   token?: string;
   readOnly?: boolean;
   onRotated: () => void;
+  /** The item's name. Drawn UNDER the picture at full size and BESIDE it
+   *  while collapsed, which is why it is handed in rather than drawn by the
+   *  panel: the two layouts are one decision and it is made here. */
+  name?: React.ReactNode;
+  /** What the collapsed tile shows when there is no picture: the kind's own
+   *  glyph. Nothing at all while a detail is loading — an empty tile says
+   *  "not yet", where a glyph would say what this is and then be replaced. */
+  glyph?: string;
 }) {
   const [hover, setHover] = useState(false);
   // Displayed aspect ratio (w/h) of the loaded thumbnail, so the transparency
@@ -9861,115 +9919,191 @@ function RotatablePreview({
       <Icon name={icon} size={17} />
     </span>
   );
-  return (
+  const box = (
     <div
       ref={boxRef}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      onMouseEnter={collapsed ? undefined : () => setHover(true)}
+      onMouseLeave={collapsed ? undefined : () => setHover(false)}
+      onClick={collapsed && fileId != null && itemId != null
+        ? () => openQuickLook([itemId]) : undefined}
+      title={collapsed && fileId != null ? "Quick Look — open a large preview" : undefined}
       // Flat backdrop; the checkerboard (below) is sized to the rendered image so
       // the letterbox stays a solid colour while transparent images still show it.
-      style={{ position: "relative", isolation: "isolate", borderRadius: "var(--r-3)", overflow: "hidden", border: "1px solid var(--border)", background: "var(--panel-3)" }}
+      style={{
+        position: "relative", isolation: "isolate", borderRadius: "var(--r-3)",
+        overflow: "hidden", border: "1px solid var(--border)", background: "var(--panel-3)",
+        // Collapsed, the box HUGS the picture at a fixed height rather than
+        // taking the panel's width: that is what makes it read as a thumbnail
+        // beside a name instead of a squashed preview, and it keeps the
+        // checkerboard's own sizing exact (no letterbox to leave out).
+        ...(collapsed
+          ? { width: PREVIEW_THUMB, height: PREVIEW_THUMB, flex: "0 0 auto",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: fileId != null ? "zoom-in" : "default" }
+          : null),
+      }}
     >
-      {ratio != null && (
+      {ratio != null && fileId != null && (
         <div
           className="mc-checker"
           style={{
             position: "absolute", top: "50%", left: "50%",
-            transform: "translate(-50%, -50%)",
-            height: "100%", aspectRatio: `${ratio}`, zIndex: -1,
+            transform: "translate(-50%, -50%)", zIndex: -1,
+            aspectRatio: `${ratio}`,
+            // Sized to the RENDERED picture, which in the collapsed square is
+            // the letterboxed one: the long side fills, the short side
+            // follows the ratio. Full size the box is width-bound, so height
+            // is the side to drive it by.
+            ...(collapsed && ratio >= 1
+              ? { width: "100%", height: "auto" }
+              : { height: "100%", width: "auto" }),
           }}
         />
       )}
-      <img
-        src={api.thumbUrl(fileId, rotation, token)}
-        alt=""
-        onLoad={(e) => {
-          const im = e.currentTarget;
-          if (im.naturalWidth && im.naturalHeight) setRatio(im.naturalWidth / im.naturalHeight);
-        }}
-        style={{
-          display: "block", width: "100%", height: "auto", objectFit: "contain",
-          maxHeight: collapsed ? PREVIEW_MIN : height,
-          // Optimistic spin: rotate the preview instantly on click, animating to
-          // the target while the server bakes the rotated file in the background.
-          transform: cssRot ? `rotate(${cssRot}deg)` : undefined,
-          transition: "transform 0.15s ease",
-        }}
-      />
-      {/* Quick Look launcher — top-left, opposite the rotate controls. Opens the
-          full-size Space-bar preview of the current selection. */}
-      <div
-        style={{
-          position: "absolute", top: 6, left: 6,
-          opacity: hover ? 1 : 0, transition: "opacity 0.12s",
-          pointerEvents: hover ? "auto" : "none",
-        }}
-      >
-        <span
-          title="Quick Look — open a large preview"
-          onClick={(e) => { e.stopPropagation(); openQuickLook([itemId]); }}
-          style={{
-            width: 30, height: 30, borderRadius: "var(--r-4)", cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            background: "var(--overlay-chrome)", color: "var(--on-scrim)",
-            border: "1px solid var(--overlay-hairline)", backdropFilter: "blur(3px)",
+      {fileId != null ? (
+        <img
+          src={api.thumbUrl(fileId, rotation, token)}
+          alt=""
+          onLoad={(e) => {
+            const im = e.currentTarget;
+            if (im.naturalWidth && im.naturalHeight) setRatio(im.naturalWidth / im.naturalHeight);
           }}
-        >
-          <Icon name="visibility" size={17} />
-        </span>
-      </div>
-      {/* Bottom-left: how tall the preview may be — chevrons, since this moves
-          one edge up or down (the Quick Look button is the one that opens
-          something). Opposite the rotate pair, on the corner nothing else
-          uses. */}
-      <div
-        style={{
-          position: "absolute", bottom: 6, left: 6,
-          opacity: hover ? 1 : 0, transition: "opacity 0.12s",
-          pointerEvents: hover ? "auto" : "none",
-        }}
-      >
-        <span
-          title={
-            !collapsed ? "Collapse the preview"
-              : back > PREVIEW_MIN + PREVIEW_SNAP ? "Back to the size you set"
-                : "Expand the preview"
-          }
-          onClick={(e) => { e.stopPropagation(); toggleSize(); }}
           style={{
-            width: 30, height: 30, borderRadius: "var(--r-4)", cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            background: "var(--overlay-chrome)", color: "var(--on-scrim)",
-            border: "1px solid var(--overlay-hairline)", backdropFilter: "blur(3px)",
+            display: "block", objectFit: "contain",
+            ...(collapsed
+              ? { width: "100%", height: "100%" }
+              : { width: "100%", height: "auto", maxHeight: height }),
+            // Optimistic spin: rotate the preview instantly on click, animating to
+            // the target while the server bakes the rotated file in the background.
+            transform: cssRot ? `rotate(${cssRot}deg)` : undefined,
+            transition: "transform 0.15s ease",
           }}
-        >
-          <Icon name={collapsed ? "keyboard_arrow_down" : "keyboard_arrow_up"} size={19} />
-        </span>
-      </div>
+        />
+      ) : glyph ? (
+        <Icon name={glyph} size={26} color="var(--muted-3)" />
+      ) : null}
+      {/* The corner buttons belong to the FULL-SIZE preview: a thumbnail has
+          no room for four of them (the floor is 80 px for exactly that
+          reason), so collapsed they move into the row beside the name and
+          the picture itself becomes the Quick Look button. */}
+      {!collapsed && fileId != null && (
+        <>
+          {/* Quick Look launcher — top-left, opposite the rotate controls. Opens the
+              full-size Space-bar preview of the current selection. */}
+          <div
+            style={{
+              position: "absolute", top: 6, left: 6,
+              opacity: hover ? 1 : 0, transition: "opacity 0.12s",
+              pointerEvents: hover ? "auto" : "none",
+            }}
+          >
+            <span
+              title="Quick Look — open a large preview"
+              onClick={(e) => { e.stopPropagation(); if (itemId != null) openQuickLook([itemId]); }}
+              style={{
+                width: 30, height: 30, borderRadius: "var(--r-4)", cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: "var(--overlay-chrome)", color: "var(--on-scrim)",
+                border: "1px solid var(--overlay-hairline)", backdropFilter: "blur(3px)",
+              }}
+            >
+              <Icon name="visibility" size={17} />
+            </span>
+          </div>
+          {/* Bottom-left: how tall the preview may be — chevrons, since this moves
+              one edge up or down (the Quick Look button is the one that opens
+              something). Opposite the rotate pair, on the corner nothing else
+              uses. */}
+          <div
+            style={{
+              position: "absolute", bottom: 6, left: 6,
+              opacity: hover ? 1 : 0, transition: "opacity 0.12s",
+              pointerEvents: hover ? "auto" : "none",
+            }}
+          >
+            <span
+              title="Collapse the preview"
+              onClick={(e) => { e.stopPropagation(); toggleSize(); }}
+              style={{
+                width: 30, height: 30, borderRadius: "var(--r-4)", cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: "var(--overlay-chrome)", color: "var(--on-scrim)",
+                border: "1px solid var(--overlay-hairline)", backdropFilter: "blur(3px)",
+              }}
+            >
+              <Icon name="keyboard_arrow_up" size={19} />
+            </span>
+          </div>
+          {!readOnly && (
+            <div
+              style={{
+                position: "absolute", top: 6, right: 6,
+                display: "flex", gap: 6,
+                opacity: hover ? 1 : 0, transition: "opacity 0.12s",
+                pointerEvents: hover ? "auto" : "none",
+              }}
+            >
+              {btn("left", "rotate_left", "Rotate left")}
+              {btn("right", "rotate_right", "Rotate right")}
+            </div>
+          )}
+        </>
+      )}
       {/* The bottom edge itself resizes the preview — a grab strip the full
-          width, so the drag is discoverable by the cursor alone. */}
-      <div
-        onMouseDown={startResize}
-        title="Drag to resize the preview"
-        style={{
-          position: "absolute", left: 0, right: 0, bottom: 0, height: 7,
-          cursor: "ns-resize",
-        }}
-      />
-      {!readOnly && (
+          width, so the drag is discoverable by the cursor alone. It stays on
+          the thumbnail: dragging it down is the other way back up, and the
+          layout turns into the full-size one as soon as the drag clears the
+          floor. */}
+      {fileId != null && (
         <div
+          onMouseDown={startResize}
+          title="Drag to resize the preview"
           style={{
-            position: "absolute", top: 6, right: 6,
-            display: "flex", gap: 6,
-            opacity: hover ? 1 : 0, transition: "opacity 0.12s",
-            pointerEvents: hover ? "auto" : "none",
+            position: "absolute", left: 0, right: 0, bottom: 0, height: 7,
+            cursor: "ns-resize",
           }}
-        >
-          {btn("left", "rotate_left", "Rotate left")}
-          {btn("right", "rotate_right", "Rotate right")}
-        </div>
+        />
       )}
     </div>
+  );
+
+  if (collapsed) {
+    return (
+      <div
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={{ padding: "10px 14px 0", display: "flex", alignItems: "flex-start", gap: 10 }}
+      >
+        {box}
+        <div style={{ flex: 1, minWidth: 0, ...NAME_ROW, paddingTop: 1 }}>{name}</div>
+        {/* The way back, and NOTHING ELSE. The rotate pair does not come
+            along: it is an edit to the picture, judged by looking at the
+            picture, and at 64 px there is nothing to judge — while the space
+            it would hold (reserved, since a reveal may not reflow a row) is
+            two of the name's five lines in a 300 px panel. Expanding is one
+            click, and it is the click somebody about to turn a picture makes
+            anyway. The chevron itself stays PUT rather than waiting for a
+            hover: a collapsed preview has to say how to get back. */}
+        {/* Nothing to expand where there is no picture — a sequence's tile
+            is its glyph at any size — so the chevron waits for one rather
+            than offering a bigger version of an icon. */}
+        {fileId != null && (
+          <IconButton
+            icon="keyboard_arrow_down" size={24} glyph={18} tone="muted"
+            title={back > PREVIEW_MIN + PREVIEW_SNAP ? "Back to the size you set" : "Expand the preview"}
+            onClick={toggleSize}
+            style={{ flex: "0 0 auto" }}
+          />
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {fileId != null && <div style={{ padding: "10px 14px 0" }}>{box}</div>}
+      {name != null && <div style={{ padding: "6px 14px 0", ...NAME_ROW }}>{name}</div>}
+    </>
   );
 }
 

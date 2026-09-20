@@ -23,6 +23,14 @@
 - A colour picked with the image editor's pipette now shows up in the colour
   picker's **Recent** row, like one chosen in the picker itself. A drag
   records the colour it ended on, not every colour it crossed.
+- The library sidebar's preview, collapsed, is now a row: a small square
+  thumbnail on the left with the item's name beside it, instead of a
+  full-width preview squashed to 80 px with the name on its own line
+  underneath. The thumbnail opens Quick Look; the chevron beside the name
+  expands it again. A selection with no picture of its own gets a tile too —
+  a sequence's glyph, or a stack for several items — so the header keeps its
+  shape whatever is selected, and the sidebar no longer jumps as you move
+  through the grid.
 - The image editor's **Image** menu has an **Apply background color**: it
   puts the background swatch's colour behind the picture, so a cut-out's
   transparency becomes that colour and everything opaque is left alone. With
