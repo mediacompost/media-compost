@@ -28,8 +28,11 @@
   transparency becomes that colour and everything opaque is left alone. With
   a selection it fills only there, and with the background colour still
   transparent it asks for one first.
-- The colour picker lifts itself off the bottom of the window instead of
-  running past it, which in a short window took its Done button with it.
+- The colour picker points at the swatch it belongs to: an arrow on its
+  edge, iPad-style, since the two swatches sit one above the other and the
+  panel was the same panel either way.
+- It also lifts itself off the bottom of the window instead of running past
+  it, which in a short window took its Done button with it.
 - The wand no longer answers with a grid of disconnected single pixels when
   its **Grow** is set: growing a mask ran one pass per bit of the amount, at
   that bit's own offset, so a grow of 8 over a speckle the wand had found

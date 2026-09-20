@@ -12,6 +12,10 @@ import { useMenuDismiss } from "../../shared/useMenuDismiss";
  */
 
 const RECENT_KEY = "mc.recentColors";
+/** The arrow's side, before it is turned 45° — so it sticks out about
+ *  `ARROW / 2 * sqrt(2)` ≈ 8 px, which is the 10 px gap the panel leaves
+ *  beside the swatch less a hair. */
+const ARROW = 12;
 const RECENT_MAX = 12;
 
 // ---- conversions -----------------------------------------------------------
@@ -158,14 +162,41 @@ export function ColorPickerPopover({
   // other menu here gets from `AnchoredDropdown`. Measured after layout and
   // re-measured when the content changes height (the note, the recents row).
   const [lift, setLift] = useState(0);
+  // WHERE THE ARROW POINTS, measured rather than assumed: the panel hangs off
+  // the swatch, but the lift above moves it, so the swatch's middle is at a
+  // different height in the panel's own coordinates every time. Taken from
+  // the two rects in the SAME pass the lift is settled in — the effect
+  // re-runs on `lift`, so the second pass has the final numbers, and it is a
+  // layout effect, so neither is ever painted wrong.
+  const [arrowY, setArrowY] = useState(ARROW / 2);
   useLayoutEffect(() => {
-    const el = panel.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const over = r.bottom + lift - (window.innerHeight - 8);
-    const next = over > 0 ? Math.min(over, Math.max(0, r.top + lift - 8)) : 0;
-    if (Math.abs(next - lift) > 0.5) setLift(next);
-  }, [lift, note, recents.length, mode]);
+    // `r` already carries the lift (the panel is at `top: -lift`), so adding
+    // it back is where the panel WOULD sit unlifted — which makes this
+    // idempotent: with the lift applied the same answer comes out again.
+    const measure = () => {
+      const el = panel.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const over = r.bottom + lift - (window.innerHeight - 8);
+      const next = over > 0 ? Math.min(over, Math.max(0, r.top + lift - 8)) : 0;
+      if (Math.abs(next - lift) > 0.5) setLift(next);
+      const host = el.offsetParent?.getBoundingClientRect();
+      if (host) {
+        // Clamped inside the panel's own rounded corners: with a big lift the
+        // swatch can sit past the panel's end, and an arrow hanging in the
+        // air beside it points at nothing.
+        const y = Math.min(Math.max(host.top + host.height / 2 - r.top, ARROW),
+                           r.height - ARROW);
+        if (Math.abs(y - arrowY) > 0.5) setArrowY(y);
+      }
+    };
+    measure();
+    // A window that gets shorter under an OPEN picker is the same question
+    // asked again — and the answer it had is the one that puts it off the
+    // bottom edge.
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [lift, arrowY, note, recents.length, mode]);
 
   // Shared drag handler for the SV square and the two sliders.
   const dragArea = (
@@ -218,6 +249,25 @@ export function ColorPickerPopover({
           display: "flex", flexDirection: "column", gap: 8,
         }}
       >
+        {/* The arrow, pointing back at the swatch this popover belongs to —
+            two swatches sit one above the other and the panel is the same
+            panel either way, so without it nothing on screen says which
+            colour is being edited. A square turned 45° with only its two
+            OUTER edges drawn: it is positioned, so it paints over the
+            panel's own border and takes that segment out, which is what
+            makes the mouth open into the panel rather than being a diamond
+            stuck to its side. */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute", left: -ARROW / 2, top: arrowY - ARROW / 2,
+            width: ARROW, height: ARROW, transform: "rotate(45deg)",
+            background: "var(--surface-float)",
+            borderLeft: "1px solid var(--menu-border)",
+            borderBottom: "1px solid var(--menu-border)",
+            borderBottomLeftRadius: 2,
+          }}
+        />
         {note && (
           <div style={{ fontSize: "var(--fs-2)", color: "var(--muted)", lineHeight: 1.3 }}>
             {note}

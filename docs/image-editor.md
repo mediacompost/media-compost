@@ -106,7 +106,7 @@ The **crop tool** drags out a rectangle with handles: corners resize (the opposi
 
 The palette carries two swatches: the **foreground** color (used when adding — brush, fill) and the **background** color (used when removing — erase, `Delete`). The background is transparent by default; picking a fully transparent color (alpha 0) resets it.
 
-Clicking a swatch opens a custom **color picker** popover anchored beside it: a saturation/value square, hue and alpha sliders, editable values in RGB, HSL, HSV, or hex (8-digit hex carries alpha), and a **Recent colors** row remembered across sessions. Every change applies live. **The pipette's picks join that row too**, one per pick — a drag across the picture records the colour it ended on, not every colour it crossed.
+Clicking a swatch opens a custom **color picker** popover anchored beside it, with an arrow pointing back at the swatch it belongs to (the two sit one above the other and the panel is the same either way): a saturation/value square, hue and alpha sliders, editable values in RGB, HSL, HSV, or hex (8-digit hex carries alpha), and a **Recent colors** row remembered across sessions. Every change applies live. **The pipette's picks join that row too**, one per pick — a drag across the picture records the colour it ended on, not every colour it crossed.
 
 Colors carry **alpha**: a color's alpha is the stroke's opacity cap, and erasing replaces the area with the background color at its own alpha — never a blend with the old pixels.
 
