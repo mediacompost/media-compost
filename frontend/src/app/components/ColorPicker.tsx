@@ -74,7 +74,17 @@ function loadRecents(): string[] {
   } catch { return []; }
 }
 
-function pushRecent(hex: string) {
+/**
+ * Put `hex` at the head of the recent colours.
+ *
+ * Exported because the popover is not the only place a colour is CHOSEN:
+ * the pipette picks one off the picture without the popover being open at
+ * all, and a colour taken that way is exactly the kind the row exists to
+ * keep — it is the one you cannot get back by remembering a number.
+ * Whoever calls it owes the row the same rule the popover keeps: once per
+ * act, with the colour that act ended on, never per intermediate step.
+ */
+export function recordRecentColor(hex: string) {
   try {
     const list = [hex, ...loadRecents().filter((c) => c.toLowerCase() !== hex.toLowerCase())];
     storage.set(RECENT_KEY, JSON.stringify(list.slice(0, RECENT_MAX)));
@@ -125,7 +135,7 @@ export function ColorPickerPopover({
 
   // Record the final color once on close (Escape, outside click, ✕).
   const close = () => {
-    pushRecent(hexRef.current);
+    recordRecentColor(hexRef.current);
     onClose();
   };
   // A press elsewhere closes it (recording the recent colour) — the one

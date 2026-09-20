@@ -26,7 +26,7 @@ import { sharpenedImage } from "../imageSharpen";
 import { EditorMenus } from "./EditorMenu";
 import { Icon } from "../../shared/Icon";
 import { RefPickerOverlay } from "./RefPicker";
-import { ColorPickerPopover } from "./ColorPicker";
+import { ColorPickerPopover, recordRecentColor } from "./ColorPicker";
 import { useUI } from "../store";
 import { APP_PREFS, BLUR_IMAGE_MAX, SHARPEN_AMOUNT_MAX, SHARPEN_RADIUS, SHARPEN_RADIUS_MAX }
   from "../prefs";
@@ -419,7 +419,20 @@ function effectSliders(e: Effect, to: (next: Effect) => void): EffectSlider[] {
 }
 
 // Custom tool cursors (Photoshop-style): tiny inline SVGs with a dark outline
-// so they read on any image. Hotspots sit on the icon's business end.
+// so they read on any image.
+//
+// THE HOTSPOT IS THE PIXEL THE TOOL ACTS ON, and every one of these has to
+// say where that is in its own drawing: the loupes' is the centre of the
+// LENS, the wand's the sparkle at the TIP of the stick (which is why the
+// stick runs away down-right), the bucket's the tip of the POUR — not the
+// bucket — and the crop's and the rotate's the centre of their symbol,
+// those two being about an area rather than a point. Getting it wrong is
+// invisible in every test and in every screenshot (a screenshot does not
+// capture the cursor): it shows up only as a tool that acts a few pixels
+// away from where it is aimed. The brush, eraser and blur have no cursor at
+// all — `cursor: none` plus the DOM ring centred on the pointer — and the
+// selection tools, the text tool and the pipette use the native crosshair,
+// whose hotspot is its middle.
 const svgCursor = (svg: string, hx: number, hy: number, fallback: string) =>
   `url("data:image/svg+xml,${encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">${svg}</svg>`
@@ -432,10 +445,16 @@ const CURSOR_ZOOM_IN = svgCursor(
   9, 9, "zoom-in");
 const CURSOR_ZOOM_OUT = svgCursor(
   _LOUPE('<line x1="6.5" y1="9" x2="11.5" y2="9"/>'), 9, 9, "zoom-out");
+// Paint bucket: the hotspot is the TIP OF THE POUR — the drop beside the
+// bucket ends at (18.5, 17.9) and that is where the paint lands, so that is
+// the pixel the flood fills from. It used to be (10, 17), the bucket's own
+// bottom corner, which put the bucket body itself over the pointer: the
+// cursor read as centred on the click and the paint fell somewhere down and
+// to the right of whatever it was aimed at.
 const CURSOR_FILL = svgCursor(
   `<g stroke="black" stroke-width="3.4" fill="none" stroke-linejoin="round"><path d="M8 3 L16 11 L10 17 L3 10 Z"/><path d="M18.5 13.5 q2 2.8 0 4.4 q-2 -1.6 0 -4.4"/></g>` +
   `<g stroke="white" stroke-width="1.6" fill="white" stroke-linejoin="round"><path d="M8 3 L16 11 L10 17 L3 10 Z"/><path d="M18.5 13.5 q2 2.8 0 4.4 q-2 -1.6 0 -4.4"/></g>`,
-  10, 17, "crosshair");
+  18, 18, "crosshair");
 const CURSOR_ROTATE = svgCursor(
   `<g fill="none" stroke="black" stroke-width="3.6" stroke-linecap="round"><path d="M17 11 a6 6 0 1 1 -3 -5.2"/><path d="M14.5 2.5 L14.5 6.5 L10.5 6.2" stroke-linejoin="round"/></g>` +
   `<g fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round"><path d="M17 11 a6 6 0 1 1 -3 -5.2"/><path d="M14.5 2.5 L14.5 6.5 L10.5 6.2" stroke-linejoin="round"/></g>`,
@@ -1862,6 +1881,14 @@ export function EditorOverlay() {
    *  take, and "transparent" is a background the swatch's own ✕ already
    *  offers. */
   const probeRef = useRef<HTMLCanvasElement | null>(null);
+  // What this gesture has picked, for the picker's **recent colours**. A
+  // colour taken off the picture is exactly the kind that row is for — it is
+  // the one you cannot get back by remembering a number — but it is recorded
+  // at the END of the gesture and not per pick: the pipette picks again on
+  // every mousemove of a drag, and twelve slots of one sweep across a
+  // photograph is the row emptied of everything worth keeping. The popover's
+  // own rule, which records on close rather than per slider move.
+  const lastPick = useRef<string | null>(null);
   const pickColor = (img: { x: number; y: number }, background: boolean) => {
     const x = Math.floor(img.x), y = Math.floor(img.y);
     if (x < 0 || y < 0 || x >= dims.w || y >= dims.h) return;
@@ -1880,6 +1907,13 @@ export function EditorOverlay() {
     const hex = `#${hex2(r)}${hex2(g)}${hex2(b)}${a < 255 ? hex2(a) : ""}`;
     if (background) setBgColor(hex);
     else setColor(hex);
+    lastPick.current = hex;
+  };
+
+  /** End of a pipette gesture: the colour it ended on joins the recents. */
+  const endPick = () => {
+    if (lastPick.current) recordRecentColor(lastPick.current);
+    lastPick.current = null;
   };
 
   const clearSelection = (record = true) => {
@@ -3752,6 +3786,7 @@ export function EditorOverlay() {
         drag.current = null;
         return;
       }
+      if (d && d.tool === "pipette") endPick();
       if (d && (d.tool === "brush" || d.tool === "erase")) {
         endStroke();
         redraw();

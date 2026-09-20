@@ -20,6 +20,14 @@
   glyph, the old one being what sharpening looks like.
 - The image editor opens on the tool it was last left on, across pictures and
   across sessions, instead of on the hand tool every time.
+- A colour picked with the image editor's pipette now shows up in the colour
+  picker's **Recent** row, like one chosen in the picker itself. A drag
+  records the colour it ended on, not every colour it crossed.
+- The paint-bucket cursor points where the paint lands: its hotspot was the
+  bucket's own corner, so the bucket sat over the pointer and the fill
+  started down and to the right of where it was aimed. (The other tools'
+  cursors were checked with it — the wand was already at the tip of its
+  wand, the loupes at the centre of the lens.)
 
 ## 1.1.0
 
