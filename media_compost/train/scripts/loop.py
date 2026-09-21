@@ -672,8 +672,6 @@ def _eval_loss(engine, io: JobIO, latents: LatentSource, manifest: dict,
 
 
 def run(io: JobIO, config: dict, resume: bool = False) -> None:
-    import torch
-
     manifest = io.load_manifest()
     if not manifest.get("items"):
         raise ValueError("dataset manifest is empty — no items matched")
@@ -687,6 +685,13 @@ def run(io: JobIO, config: dict, resume: bool = False) -> None:
             raise ValueError(
                 "none of this run's images are in the library any more — "
                 "they were deleted or merged away since the job was made")
+    # AFTER the sweep, which is the whole reason the import is down here: the
+    # two refusals above are about the manifest and nothing else, and they are
+    # the answer in a fraction of a second rather than after several seconds
+    # of loading torch. It also lets the suite drive `run` far enough to see
+    # them in an interpreter that has no torch in it, which is what CI is.
+    import torch
+
     minfo = manifest.get("model") or {}
 
     hyper = config.get("hyper", {})

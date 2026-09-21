@@ -130,11 +130,23 @@ def test_the_cache_pass_reports_an_unreadable_picture_instead_of_raising(
     assert (tmp_path / "latents" / "i00001.pt").is_file()
 
 
-def test_the_run_sweeps_before_it_builds_anything_from_the_manifest(tmp_path):
+def test_the_run_sweeps_before_it_builds_anything_from_the_manifest(
+        tmp_path, monkeypatch):
     """The sweep is wired into `run` itself, not only available beside it —
     and a run that has lost EVERY picture says so rather than starting on
-    nothing."""
+    nothing.
+
+    Driven with torch HIDDEN, which is the point of the test as much as the
+    refusal is: `run` opened with `import torch`, so a refusal about the
+    manifest — a dict, checked in microseconds — waited on several seconds of
+    loading a library it does not need, and this test could only ever run on
+    a machine that happened to have one. The main venv is torch-free by
+    contract and CI's is torch-free in fact, so it failed there and nowhere
+    else. `None` in `sys.modules` is how an import is refused without
+    unloading anything a neighbouring test may be holding.
+    """
     loop = _loop_module()
+    monkeypatch.setitem(sys.modules, "torch", None)
 
     class _IO:
         dir = tmp_path
