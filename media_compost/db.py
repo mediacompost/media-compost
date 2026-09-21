@@ -855,13 +855,17 @@ class TagSet(Base):
     ASSIGNMENT — assigning one of its names creates the tag row exactly as a
     typed name does (plus its implied names), and nothing else is copied.
 
-    No row is special any more. The shipped Booru list is a TEMPLATE a set
-    is made from (`ops/tagsets.templates`), after which it is an ordinary
-    set of the library's; and the library's OWN set — where a description
-    typed into the tag editor landed — went before the first release, since
-    the only way to describe a tag is a set somebody made or imported.
-    `builtin` survives as a column an older build's installed copy carries
-    until `unlock_builtin_sets` clears it on open.
+    `builtin` marks a row the APP owns: one of the shipped lists
+    (`media_compost/tagsets/*.json`), given a row in every library by
+    `ops/tagsets.sync_builtin_sets` and read-only everywhere
+    (`_refuse_builtin`) — you duplicate one to edit it. Such a row arrives
+    holding NOTHING and switched off; its entries are written when somebody
+    switches it on, and `version` is then the STAMP of the shipped file they
+    came from, which is what lets the list offer an update when a later build
+    ships a different one. For every other set `version` stays 0. The
+    library's OWN set — where a description typed into the tag editor landed
+    — went before the first release, since the only way to describe a tag is
+    a set somebody made or imported.
 
     `enabled` is library-GLOBAL (which sets feed the autocomplete is a fact
     about the shared library); which set's description somebody PREFERS to
@@ -3447,19 +3451,19 @@ class Database:
                      _weak_method(self, "_poke_smart_sweeper"))
 
     def _install_tag_sets(self) -> None:
-        """Nothing is INSTALLED any more; the name survives for what the hook
-        still does at open. The shipped Booru set used to be a locked row in
-        every library; it is a TEMPLATE now (`ops/tagsets.templates`), and a
-        copy an older build installed is unlocked into an ordinary set of
-        the library's (`unlock_builtin_sets`) — same rows, same switch, now
-        editable and deletable. A system write at open like the adopters
-        above (no Ctx, no event). Lazy import: `ops` imports this module,
-        the `smart_sweeper` shape.
+        """The shipped tag lists get a ROW each (`ops/tagsets.
+        sync_builtin_sets`) — read-only, switched off, holding no entry until
+        somebody switches one on. A system write at open like the adopters
+        above (no Ctx, no event), and deliberately a cheap one: it hashes the
+        five shipped files and writes at most five rows, NEVER an entry, so
+        an upgrade that ships a bigger `characters.json` costs a library
+        nothing here. Lazy import: `ops` imports this module, the
+        `smart_sweeper` shape.
         """
         from .ops import tagsets
 
         with self.Session() as s:
-            tagsets.unlock_builtin_sets(s)
+            tagsets.sync_builtin_sets(s)
             s.commit()
 
     def _open_fresh(self) -> None:

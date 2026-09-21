@@ -63,7 +63,17 @@ const anyParents = (rows: TagRow[]) =>
 const anyMissing = (rows: TagRow[]) => rows.some((r) => !r.in_library);
 
 export function useTagSetVerbs(setId: number | null,
-                               onChanged: () => void): TagSetVerbs {
+                               onChanged: () => void,
+                               /** THE SET ON SCREEN IS THE APP'S, so every
+                                *  verb that writes IT stands down — Edit and
+                                *  Delete — while the ones that write the
+                                *  LIBRARY (add a name to it, take the set's
+                                *  advice for one) are exactly why the set is
+                                *  on screen and stay. Gated HERE rather than
+                                *  at the call sites, because one definition
+                                *  feeds the row's ⋯, its right-click and the
+                                *  toolbar's ⋯ alike. */
+                               readOnly = false): TagSetVerbs {
   const t = useT();
   const tn = useTn();
   const qc = useQueryClient();
@@ -187,9 +197,11 @@ export function useTagSetVerbs(setId: number | null,
   const aliasActions = (row: TagRow, ids: number[]): RowAction[] => [
     { icon: "arrow_forward", label: t("Show the tag it stands for"),
       onClick: () => setTagsView({ focus: row.alias_of ?? "" }) },
-    { icon: "delete", danger: true, separated: true, label: t("Delete"),
+    ...(readOnly ? [] : [{
+      icon: "delete", danger: true, separated: true, label: t("Delete"),
       hint: t("The spelling goes; the tag it stood for stays"),
-      onClick: () => deleteEntries(ids, row.name) },
+      onClick: () => deleteEntries(ids, row.name),
+    }]),
   ];
 
   const selectionActions = (ids: number[], rows: TagRow[]): RowAction[] => {
@@ -199,7 +211,7 @@ export function useTagSetVerbs(setId: number | null,
       // toolbar's ⋯ is the selection's menu, and a selection of one that
       // cannot be edited from it sends you back to the row to find its
       // pencil.
-      ...(one && !one.alias_of
+      ...(one && !one.alias_of && !readOnly
           ? [{ icon: "edit", label: t("Edit"),
                onClick: () => setEditing(one) }] : []),
       ...(anyMissing(rows) ? addActions(ids) : []),
@@ -208,8 +220,10 @@ export function useTagSetVerbs(setId: number | null,
       // NO COUNT: the menu already says what it is about — its heading over
       // a right-click, the button's own label over the toolbar's ⋯ — and
       // repeating the number on every item reads as a different scope.
-      { icon: "delete", danger: true, separated: true, label: t("Delete"),
-        onClick: () => deleteEntries(ids) },
+      ...(readOnly ? [] : [{
+        icon: "delete", danger: true, separated: true, label: t("Delete"),
+        onClick: () => deleteEntries(ids),
+      }]),
     ];
   };
 
@@ -217,12 +231,16 @@ export function useTagSetVerbs(setId: number | null,
     if (ids.length > 1) return selectionActions(ids, [row]);
     if (row.alias_of) return aliasActions(row, ids);
     return [
-      { icon: "edit", label: t("Edit"), onClick: () => setEditing(row) },
+      ...(readOnly ? []
+          : [{ icon: "edit", label: t("Edit"),
+               onClick: () => setEditing(row) }]),
       ...(anyMissing([row]) ? addActions(ids) : []),
       ...(anyImplies([row]) ? syncActions(ids) : []),
       ...(anyParents([row]) ? parentActions(ids) : []),
-      { icon: "delete", label: t("Delete"), danger: true, separated: true,
-        onClick: () => deleteEntries(ids, row.name) },
+      ...(readOnly ? [] : [{
+        icon: "delete", label: t("Delete"), danger: true, separated: true,
+        onClick: () => deleteEntries(ids, row.name),
+      }]),
     ];
   };
 

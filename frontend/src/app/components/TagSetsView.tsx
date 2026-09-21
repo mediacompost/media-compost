@@ -757,25 +757,35 @@ function Group({ children }: { children: React.ReactNode }) {
   return <Section>{children}</Section>;
 }
 
-/** One switch with its own explanation — the shared toggle row. */
-function SwitchRow({ title, help, checked, onChange, disabled }: {
+/** One switch with its own explanation — the shared toggle row.
+ *
+ *  `last` IS THE CALLER'S TO SAY (owner 2026-09). Both of these rows used to
+ *  pass it unconditionally, which is what draws no hairline under a row — a
+ *  box holding one row, which every `Group` here did when they were written.
+ *  The moment a box held TWO the pair ran together with no rule between them,
+ *  where the same grouped-section list in the import overlay has one. */
+function SwitchRow({ title, help, checked, onChange, disabled, last }: {
   title: string; help: string; checked: boolean;
   onChange: (v: boolean) => void;
   /** Its precondition is off. Dimmed and inert rather than hidden: what it
    *  is set to still applies the moment the precondition comes back. */
   disabled?: boolean;
+  /** The last row of its box, which draws no hairline under itself. */
+  last?: boolean;
 }) {
   return <ToggleRow label={title} hint={help} checked={checked} onChange={onChange}
-                    disabled={disabled} last />;
+                    disabled={disabled} last={last} />;
 }
 
 /** THE SAME ROW, THREE-STATE — a category answers for its branch, or lets
  *  the one above it answer. `inherited` is what that would be, spelled out
  *  on the Default button so the choice is never a guess. */
-function TriRow({ title, help, value, inherited, onChange }: {
+function TriRow({ title, help, value, inherited, onChange, last }: {
   title: string; help: string;
   value: boolean | null; inherited: boolean;
   onChange: (v: boolean | null) => void;
+  /** The last row of its box — see `SwitchRow`. */
+  last?: boolean;
 }) {
   const t = useT();
   const choices: Array<[boolean | null, string]> = [
@@ -785,7 +795,7 @@ function TriRow({ title, help, value, inherited, onChange }: {
   ];
   // The three answers as one segmented control — the shared one.
   return (
-    <RowShell label={title} hint={help} last>
+    <RowShell label={title} hint={help} last={last}>
       <SegmentedControl<string>
         value={String(value)}
         onChange={(v) => onChange(v === "null" ? null : v === "true")}
@@ -794,25 +804,34 @@ function TriRow({ title, help, value, inherited, onChange }: {
   );
 }
 
-/** THE SET'S OWN PROPERTIES — what used to be a lone Hide/Show in the ⋯
- *  menu, now that there are three switches and two of them are three-state
- *  at the category level. Hidden is `enabled` read the other way round: the
- *  menu said Hide/Show and so does this. */
+/** THE SET'S OWN PROPERTIES — its name, its words, and whether its two kinds
+ *  of advice are taken.
+ *
+ *  THERE IS NO HIDDEN SWITCH HERE (owner 2026-09). There was, and it was the
+ *  same fact as the switch at the end of every row of the tag-sets list —
+ *  one state with two controls, one of them behind a dialog. The list's is
+ *  the one, so this dialog now makes exactly one request.
+ *
+ *  A BUILT-IN OPENS IT READ-ONLY down to the two advice switches: the name
+ *  and the words are the shipped file's, and a copy you can edit is what
+ *  Duplicate is for. Which advice you take is still yours — it is a fact
+ *  about this library, not about the file.
+ */
 export function TagSetPropertiesOverlay({ set, onClose, onSaved }: {
   set: TagSetOut; onClose: () => void; onSaved: () => void;
 }) {
   const t = useT();
   const errText = useErrText();
+  const fixed = !!set.builtin;
   const [name, setName] = useState(set.name);
   const [description, setDescription] = useState(set.description ?? "");
-  const [hidden, setHidden] = useState(!set.enabled);
   const [aliases, setAliases] = useState(set.aliases_enabled);
   const [implications, setImplications] = useState(set.implications_enabled);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const clean = name.trim();
-  const desc = description.trim();
-  const dirty = clean !== set.name || hidden !== !set.enabled
+  const clean = fixed ? set.name : name.trim();
+  const desc = fixed ? (set.description ?? "").trim() : description.trim();
+  const dirty = clean !== set.name
     || desc !== (set.description ?? "").trim()
     || aliases !== set.aliases_enabled
     || implications !== set.implications_enabled;
@@ -820,22 +839,28 @@ export function TagSetPropertiesOverlay({ set, onClose, onSaved }: {
     if (busy || !clean) return;
     setBusy(true);
     try {
-      if (clean !== set.name || desc !== (set.description ?? "").trim()
-          || aliases !== set.aliases_enabled
-          || implications !== set.implications_enabled)
+      if (dirty)
         await api.updateTagSet(set.id, {
           ...(clean !== set.name ? { name: clean } : {}),
-          description: desc,
+          ...(fixed ? {} : { description: desc }),
           aliases_enabled: aliases, implications_enabled: implications });
-      // Enabling is its own endpoint and its own event — the one switch the
-      // rest of the app reads on every keystroke.
-      if (hidden !== !set.enabled) await api.setTagSetEnabled(set.id, !hidden);
       onSaved();
     } catch (e) { setError(errText(e)); }
     finally { setBusy(false); }
   };
   return (
-    <Overlay onSubmit={() => void save()} icon="tune" title={t("Tag set properties")} subtitle={set.name}
+    <Overlay onSubmit={() => void save()} icon="tune" title={t("Tag set properties")}
+      /* THE SUBTITLE SAYS WHICH SET, AND WHAT THIS DIALOG CAN DO WITH IT
+         (owner 2026-09). That was a line of prose over the first field,
+         which pushed the form down to say one word about the dialog; the
+         header already names the set and is where a fact about the whole of
+         it belongs. "Read-only" rather than "Built-in": the row behind this
+         already says which sets are the app's own, and what somebody opening
+         a dialog wants to know is whether the fields in front of them take a
+         change. What to DO about it (duplicate it) is the row's own menu one
+         dialog away, and saying that here is an instruction nobody asked
+         for on a dialog opened to read. */
+      subtitle={fixed ? t("{name} · Read-only", { name: set.name }) : set.name}
       width={520} onClose={onClose} unsaved={{ dirty, onSave: save, t }}
       footer={
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, alignItems: "center" }}>
@@ -850,12 +875,23 @@ export function TagSetPropertiesOverlay({ set, onClose, onSaved }: {
       <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: 18 }}>
         {/* THE NAME, first: it is the one thing about a set that is not a
             switch, and renaming it had been a menu row of its own for a
-            dialog that is otherwise everything about the set. */}
+            dialog that is otherwise everything about the set. A BUILT-IN'S
+            is the shipped file's and is read, not typed. */}
         <div>
           <Label>{t("Name")}</Label>
-          <input value={name} autoFocus onChange={(e) => setName(e.target.value)}
-                 
-                 placeholder={t("My tags")} style={field} />
+          {/* READ-ONLY IS STILL AN INPUT, not a div dressed as one (owner
+              2026-09). The body suppresses text selection app-wide so a
+              shift-click over rows never drags one with it, which left a
+              built-in's name as the one field in the app whose text could
+              not be picked up and pasted — and a tag set's name is exactly
+              the sort of thing somebody copies. `readOnly` and not
+              `disabled` for that reason: a disabled input selects nothing. */}
+          <input value={fixed ? set.name : name} readOnly={fixed}
+                 autoFocus={!fixed}
+                 onChange={fixed ? undefined : (e) => setName(e.target.value)}
+                 placeholder={t("My tags")}
+                 style={fixed ? { ...field, color: "var(--muted)", cursor: "default" }
+                              : field} />
         </div>
         {/* THE SET'S OWN WORDS — what the tag set IS, where it came
             from, what it is for. It rides the exported file, so a set
@@ -863,32 +899,44 @@ export function TagSetPropertiesOverlay({ set, onClose, onSaved }: {
             field for it the only way to write one was to edit the JSON. */}
         <div>
           <Label>{t("Description")}</Label>
-          <textarea value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder={t("What this tag set is, and where it came from")}
+          {/* A BUILT-IN'S IS READ-ONLY, BUT IT IS STILL THE FIELD (owner
+              2026-09): the same box, dimmed and not typed in, rather than a
+              paragraph of prose where the form has a control. A shipped
+              description runs to a few lines, so it keeps the textarea's
+              scrolling and its selection — `readOnly` and not `disabled`,
+              since a disabled textarea cannot be scrolled or copied out of,
+              which is the whole of what there is to do with it. */}
+          <textarea value={fixed ? (set.description || "") : description}
+            readOnly={fixed}
+            onChange={fixed ? undefined : (e) => setDescription(e.target.value)}
+            placeholder={fixed ? "—"
+                         : t("What this tag set is, and where it came from")}
             rows={3}
             style={{ ...field, height: "auto", minHeight: 64,
                      padding: "8px 11px", lineHeight: 1.5,
-                     resize: "vertical", fontFamily: "var(--sans)" }} />
+                     resize: "vertical", fontFamily: "var(--sans)",
+                     ...(fixed ? { color: "var(--muted)", cursor: "default" } : null) }} />
         </div>
-        <Group>
-          <SwitchRow title={t("Hidden")} checked={hidden} onChange={setHidden}
-                     help={t("A hidden set suggests nothing and marks nothing. "
-                             + "It stays here to edit and to show again.")} />
-        </Group>
-        {/* THE TWO KINDS OF ADVICE, in one section — and both DIMMED under
-            Hidden, which already turns the whole set off: a switch that
-            cannot change anything should say so rather than look live. What
-            they are set to is kept, and applies again the moment the set is
-            shown. */}
+        {/* THE TWO KINDS OF ADVICE, in one section — and LIVE whether or not
+            the set is switched on (owner 2026-09). They were dimmed under
+            the Hidden switch that used to sit above them, on the rule that a
+            switch which cannot change anything should say so rather than
+            look live. That rule went with the switch: whether this library
+            takes a set's spellings and its entailments is a preference worth
+            setting before the set is ever shown, it applies the moment it
+            is, and with the Hidden switch gone a dimmed pair would leave the
+            dialog with nothing to act on at all and no control in it that
+            says why. The set is switched on at the end of its row in the
+            list behind this dialog, which is the one place that state
+            lives. */}
         <Group>
           <SwitchRow title={t("Offer alias spellings")} checked={aliases}
-                     onChange={setAliases} disabled={hidden}
+                     onChange={setAliases}
                      help={t("The set's other spellings for a name are suggested "
                              + "and lead to it. Turning this off leaves every "
                              + "alias where it is; it stops being offered.")} />
           <SwitchRow title={t("Create implied tags")} checked={implications}
-                     onChange={setImplications} disabled={hidden}
+                     onChange={setImplications} last
                      help={t("Assigning one of the set's names also creates the "
                              + "tags it entails, and links them. Turning this "
                              + "off leaves the entries' implications listed.")} />
@@ -1031,7 +1079,7 @@ export function CategoryEditOverlay({ set, cats: catsLive, cat, onClose, onSaved
             name the library already HAS is offered by its own row, which no
             tag set has ever had a say in. */}
         <Group>
-          <SwitchRow title={t("Hide from the autocomplete")}
+          <SwitchRow title={t("Hide from the autocomplete")} last
                      checked={hidden} onChange={setHidden}
                      help={t("Its tags, and its sub-categories', stop being suggested. "
                              + "Tags the library already has are unaffected.")} />
@@ -1045,7 +1093,7 @@ export function CategoryEditOverlay({ set, cats: catsLive, cat, onClose, onSaved
                   value={aliases} onChange={setAliases}
                   inherited={inherited("aliases", set.aliases_enabled)}
                   help={t("For this category and everything under it.")} />
-          <TriRow title={t("Create implied tags")}
+          <TriRow title={t("Create implied tags")} last
                   value={implications} onChange={setImplications}
                   inherited={inherited("implications", set.implications_enabled)}
                   help={t("For this category and everything under it.")} />

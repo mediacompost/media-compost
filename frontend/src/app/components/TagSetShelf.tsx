@@ -21,7 +21,7 @@
  *  tag set they are names IN.
  */
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { api, TagSetOut } from "../api";
 import { downloadBlob } from "../csv";
@@ -51,9 +51,6 @@ export function TagSetShelf({ sets, setId, onPick, onChanged }: {
   const [propsFor, setPropsFor] = useState<TagSetOut | null>(null);
   const [csvFile, setCsvFile] = useState<{ file: File } | null>(null);
   const [managing, setManaging] = useState(false);
-  const { data: templates } = useQuery({
-    queryKey: ["tag-sets", "templates"], queryFn: api.tagSetTemplates,
-    staleTime: 600_000 });
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["tag-sets"] });
@@ -100,10 +97,13 @@ export function TagSetShelf({ sets, setId, onPick, onChanged }: {
     pick(made.id);
     invalidate();
   };
-  const fromTemplate = async (key: string) => {
-    const tpl = (templates ?? []).find((x) => x.key === key);
-    const made = (await api.tagSetFromTemplate(
-      key, freeName(tpl?.name || t("New set")))).set;
+  /** A COPY OF A SET YOU CAN EDIT. On a built-in this is what the Add
+   *  menu's shipped-template rows used to be: the server writes the shipped
+   *  file into a new ordinary set, which is why it takes the same seconds a
+   *  template press took. */
+  const duplicate = async (s: TagSetOut) => {
+    const made = await api.duplicateTagSet(
+      s.id, freeName(t("{name} (copy)", { name: s.name })));
     pick(made.id);
     invalidate();
   };
@@ -134,10 +134,9 @@ export function TagSetShelf({ sets, setId, onPick, onChanged }: {
       {managing && (
         <TagSetManageOverlay
           sets={sets}
-          templates={templates ?? []}
           onClose={() => setManaging(false)}
           onNew={newEmptySet}
-          onTemplate={fromTemplate}
+          onDuplicate={duplicate}
           onImport={() => fileImport.pick()}
           onProperties={(s) => { pick(s.id); setPropsFor(s); }}
           onExportLibrary={() => void exportLibrary()}

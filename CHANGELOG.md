@@ -2,6 +2,33 @@
 
 ## Unreleased
 
+- **The tag lists that ship with Media Compost are rows of the tag set
+  list now, not entries of its Add menu.** Booru, Characters, Photography,
+  Cinematography and Documents and screens are in every library, wearing a
+  *Built-in* chip and **switched off** — a hundred thousand names is not
+  something to put in everybody's tag fields uninvited — and switching one
+  on is what writes its entries, so a library never pays for a list nobody
+  wants and opening one never costs what the big file weighs. A built-in
+  is read-only (no rename, no entry, no category, no delete) and
+  **Duplicate** is the copy that is not; it exports like any other set,
+  switched on or not; and whether it is offered at all, where it sits in
+  the list and its two advice switches stay yours. Pressing a template in
+  the Add menu used to make a copy frozen at the file it came from, which
+  is a set nobody could keep up to date.
+- **And when a new version ships a different version of one of those
+  lists, the row says so.** A built-in you have switched on grows an
+  **Update available** chip and an **Update** entry at the top of its ⋯
+  menu. Nothing rewrites it on its own: that would be a hundred thousand
+  rows written while you wait for the window to open, on a launch you only
+  meant to be a launch. (Updating replaces the set's entries with the ones
+  this build ships, and cannot be undone — what it replaces is the
+  previous release's file.) A set you made from one of the old templates
+  becomes the built-in on the next open, keeping its entries, its switch
+  and its place, and reads as behind so the update is yours to press.
+- The tag set **Properties** dialog no longer has a **Hidden** switch. It
+  was the same state as the switch at the end of every row of the tag set
+  list, one fact with two controls and one of them behind a dialog.
+
 - Evaluate no longer shows half-drawn pictures. A generated image was
   written straight into the run's folder, which the app lists while the
   generation is still going — so a 1024 px PNG, which takes about 40 ms and

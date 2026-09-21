@@ -14,23 +14,30 @@ out of a set. (The implications were dropped for a round — owner decision
 saying something a library has to be told once per name otherwise, and the
 table was kept through the whole detour.)
 
-No set is special. The shipped Booru list is a TEMPLATE (`tagsets/*.json`,
-package data beside this module's parent), and `create_from_template` makes
-an ordinary set of the library's from it — editable, deletable, the same as
-an imported file. Nothing is installed on open; a shipped set an older build
-installed is unlocked into an ordinary one (`unlock_builtin_sets`). There
-USED to be a per-library set as well (`key="library"`, rung v16), holding
-what somebody typed into a tag's description field; it went with rung v17,
-because the only way to describe a tag is a set somebody made or imported.
+THE SHIPPED LISTS ARE BUILT-IN SETS (`tagsets/*.json`, package data beside
+this module's parent): `sync_builtin_sets` gives every library a row per
+file, switched OFF and holding no entry, and `_fill_builtin` writes the
+entries the moment somebody switches one on. A built-in is READ-ONLY
+(`_refuse_builtin` guards every write op) but not inert — it is exported,
+duplicated into an editable copy (`create_from_template`), ordered, switched,
+and its two advice flags are the person's; and when the shipped file changes
+under it the row says so (`is_outdated`) and `update_builtin` is the press
+that takes it. There USED to be a per-library set as well (`key="library"`,
+rung v16), holding what somebody typed into a tag's description field; it
+went with rung v17, because the only way to describe a tag is a set somebody
+made or imported.
 
 Readers take a Session; the logged ops take a Ctx and log one event each
-(`ops/actions.py`, the `tag_set` block). ONE PRIMITIVE is deliberately
-unlogged, as the CLAUDE.md list records: `unlock_builtin_sets` is a system
-write at open (no Ctx exists yet).
+(`ops/actions.py`, the `tag_set` block). TWO PRIMITIVES are deliberately
+unlogged, as the CLAUDE.md list records: `sync_builtin_sets` is a system
+write at open (no Ctx exists yet), and `_fill_builtin` writes DERIVED rows —
+the shipped file's, not anybody's edit — under a caller that logs what the
+person actually did.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import asdict, dataclass, field
 from functools import lru_cache
@@ -59,11 +66,12 @@ from . import actions
 from .context import Ctx
 from .errors import Conflict, Invalid, NotFound, Refused
 
-#: The shipped TEMPLATES — `tagsets/*.json`, package data. Nothing installs
-#: one: a set is CREATED from a template (`create_from_template`), after which
-#: it is an ordinary set of the library's, editable and deletable. (The
-#: shipped set was an installed, locked row in every library for a round —
-#: owner decision, 2026-09: a set you cannot edit or remove is not yours.)
+#: The shipped SETS — `tagsets/*.json`, package data. Each one is a row of
+#: every library (`sync_builtin_sets`), read-only and switched OFF, holding no
+#: entry until somebody switches it on. (They were templates the Add menu
+#: listed by name for a round — owner decision, 2026-09, reversed: a press
+#: made a copy frozen at the file it was made from, which is a set nobody
+#: could keep up to date. Duplicating a built-in is what that press was for.)
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "tagsets"
 
 #: HOW MANY NEW ENTRIES GO IN AT ONCE (`bulk_entries`). Big enough that the
@@ -1648,7 +1656,42 @@ def implications_of(s: Session, entry_ids: list[int]) -> dict[int, list[str]]:
     return out
 
 
-# ---- the templates, and the one system write at open ------------------------
+# ---- the built-in sets, and the one system write at open --------------------
+
+def _stamp_of(path: Path) -> int:
+    """WHICH SHIPPED CONTENT THIS FILE IS, as a number a row can hold.
+
+    The file format writes no version of its own — a version names an
+    installation, not the tag set, which is why `key` and `version` left the
+    format — so what says "this row's entries are that file" is the file's
+    own bytes. 56 bits of its SHA-256, which SQLite holds as an ordinary
+    INTEGER and `TagSet.version` already is. It maintains itself:
+    regenerating `characters.json` moves the number without anybody
+    remembering to bump one, and comparing it against the row is the whole
+    of "is an update available".
+    """
+    return int.from_bytes(hashlib.sha256(path.read_bytes()).digest()[:7], "big")
+
+
+@lru_cache(maxsize=16)
+def _stamp_cached(path: str, mtime_ns: int) -> int:
+    return _stamp_of(Path(path))
+
+
+def template_stamps() -> dict[str, tuple[Path, int]]:
+    """`{key: (path, stamp)}` for every shipped file, WITHOUT PARSING ONE.
+
+    This is what library open and the list endpoint ask, so it must not cost
+    what `_template_info` costs: the key is the filename (`fmt.load_path`'s
+    own rule) and the stamp is a hash, where parsing all five files builds
+    130,000 dataclasses. Hashing 34 MB is ~50 ms, and cached per file
+    version it is paid once a process.
+    """
+    out: dict[str, tuple[Path, int]] = {}
+    for p in sorted(TEMPLATE_DIR.glob("*.json")):
+        out[fmt.slug_key(p.stem)] = (p, _stamp_cached(str(p), p.stat().st_mtime_ns))
+    return out
+
 
 @dataclass(frozen=True)
 class TemplateInfo:
@@ -1668,6 +1711,12 @@ class TemplateInfo:
     name: str
     description: str
     entries: int
+    #: EVERY NAME THE FILE HOLDS — the entries and their other spellings.
+    #: What a built-in's row shows before it has been switched on, because
+    #: `counts_of` counts a spelling as a row like any other: reporting
+    #: `entries` there would make the number JUMP the moment the switch
+    #: wrote the rows, which reads as the switch having added tags.
+    names: int
     categories: int
 
 
@@ -1684,15 +1733,20 @@ def _template_info(path: str, mtime_ns: int) -> TemplateInfo:
     doc = fmt.load_path(Path(path))
     return TemplateInfo(key=doc.key, name=doc.name, description=doc.description,
                         entries=len(doc.entries),
+                        names=sum(1 + len(e.aliases) for e in doc.entries),
                         categories=len(fmt.category_order(doc.categories,
                                                           doc.entries)))
 
 
-def templates() -> list[TemplateInfo]:
-    """The shipped templates, by name — their facts, never their entries."""
-    infos = [_template_info(str(p), p.stat().st_mtime_ns)
-             for p in sorted(TEMPLATE_DIR.glob("*.json"))]
-    return sorted(infos, key=lambda d: d.name.lower())
+def template_info(key: str) -> Optional[TemplateInfo]:
+    """One shipped file's own facts, or None where nothing ships under that
+    key — what the list reads to say how big a built-in is before anybody
+    has switched it on."""
+    shipped = template_stamps().get(key)
+    if shipped is None:
+        return None
+    path = shipped[0]
+    return _template_info(str(path), path.stat().st_mtime_ns)
 
 
 def template(key: str) -> fmt.TagSetDoc:
@@ -1710,32 +1764,120 @@ def template(key: str) -> fmt.TagSetDoc:
 
 def create_from_template(ctx: Ctx, template_key: str, *, name: str = ""
                          ) -> tuple[TagSet, dict]:
-    """A NEW set holding a template's categories and entries — an import of
-    the shipped file, so it logs and reverts exactly as an import does, and
-    a second one from the same template takes a fresh key like a second
-    import of one file."""
+    """A NEW ordinary set holding a shipped file's categories and entries —
+    an import of it, so it logs and reverts exactly as an import does, and a
+    second one from the same file takes a fresh key like a second import of
+    one file. This is what DUPLICATING a built-in does."""
     doc = template(template_key)
     obj = fmt.dump(doc)
     if name.strip():
         obj["name"] = name.strip()
-    # The template's key travels EXPLICITLY: a format-2 file carries none
-    # (it names one installation, not the tag set), and the key is what
-    # says WHICH tag set this is — a second Booru set is `booru-2`,
+    # The shipped file's key travels EXPLICITLY: the file carries none (it
+    # names one installation, not the tag set), and the key is what says
+    # WHICH tag set this is — a copy of the built-in Booru is `booru-2`,
     # whatever the person called it.
     return import_document(ctx, obj, mode="create", key=doc.key)
 
 
-def unlock_builtin_sets(s: Session) -> int:
-    """The shipped set used to be INSTALLED in every library as a locked
-    row (`builtin=1`). It is a template now, and the copy a library already
-    holds becomes an ordinary set of its own — same rows, same switch, now
-    editable and deletable. A system write at open, idempotent."""
-    rows = s.execute(select(TagSet).where(TagSet.builtin.is_(True))).scalars().all()
-    for r in rows:
-        r.builtin = False
-    if rows:
+def _fill_builtin(s: Session, ts: TagSet) -> None:
+    """A BUILT-IN'S ROWS, FROM THE FILE IT SHIPS AS — the ONE writer of one's
+    content, and it has exactly two callers: `set_enabled` turning an empty
+    one on, and `update_builtin` behind the row's Update.
+
+    The name, the description and the STAMP are written in the same breath as
+    the entries, so a row can never say one shipped version in its name and
+    another in its rows. Unlogged on purpose in both directions: these are
+    derived rows — the shipped file's, not anybody's edit — and what each
+    caller logs is the thing the person did (switched it on; pressed Update).
+    """
+    doc = template(ts.key)
+    _clear_rows(s, ts.id)
+    ts.name = doc.name or ts.name
+    ts.description = doc.description or ""
+    ts.version = template_stamps()[ts.key][1]
+    s.flush()
+    _write_doc(s, ts, doc)
+
+
+def _has_entries(s: Session, set_id: int) -> bool:
+    return s.execute(select(TagSetEntry.id)
+                     .where(TagSetEntry.tag_set_id == set_id).limit(1)
+                     ).first() is not None
+
+
+def is_outdated(ts: TagSet, stamps: dict[str, tuple[Path, int]],
+                entries: int) -> bool:
+    """Would pressing Update change anything? ONLY A ROW THAT HOLDS ENTRIES
+    CAN BE BEHIND: an empty built-in is written from the current file the
+    moment it is switched on, so its stored stamp says nothing and an update
+    offered on it would be an errand with no work in it."""
+    if not ts.builtin or not entries:
+        return False
+    shipped = stamps.get(ts.key)
+    return shipped is not None and int(ts.version or 0) != shipped[1]
+
+
+def sync_builtin_sets(s: Session) -> int:
+    """THE SHIPPED SETS ARE ROWS OF EVERY LIBRARY, and this is what puts them
+    there. A system write at open (no Ctx, no event), idempotent.
+
+    **It never writes an entry.** A built-in arrives switched OFF holding
+    nothing, and the two things that fill it — switching it on, pressing
+    Update — are both a person's press. So an app upgrade that ships a new
+    `characters.json` costs a library NOTHING at open: what it gets is a chip
+    on a row saying an update is available, not a hundred thousand rows
+    rewritten while somebody waits for the window to appear.
+
+    Three cases besides "the row is already there and is left alone":
+
+    * no row → one is made, off, stamped with the file it was made against
+      (this is the only place open parses a shipped file, and only for a
+      template this library has not seen);
+    * a `builtin` row no shipped file answers for — a release dropped it —
+      is UNLOCKED into an ordinary set of the library's rather than
+      vanishing with whatever the person had switched;
+    * an ORDINARY set already holding a shipped key is ADOPTED: it was made
+      from this very file by the Add menu these rows replaced, so it becomes
+      the built-in, keeping its name, entries, switches and position, with
+      `version = 0` so it reads as behind and the Update that makes it the
+      current list is the person's to press.
+    """
+    stamps = template_stamps()
+    n = 0
+    for ts in s.execute(select(TagSet)).scalars().all():
+        shipped = stamps.get(ts.key)
+        if shipped is None:
+            if ts.builtin:
+                ts.builtin = False
+                n += 1
+            continue
+        if not ts.builtin:
+            ts.builtin = True
+            ts.version = 0
+            # AN ADOPTED ROW WITH NOTHING IN IT IS SWITCHED OFF, whatever it
+            # was. `set_enabled` is what fills a built-in and it returns at
+            # once when the flag already says what it is being told, so an
+            # empty set that was already ON would sit there for ever holding
+            # nothing while its row reported the shipped file's size. Off, it
+            # takes the ordinary path the moment somebody wants it.
+            if ts.enabled and not _has_entries(s, ts.id):
+                ts.enabled = False
+            n += 1
+    # The position is counted UP here rather than asked per row: the rows are
+    # not flushed as they are added, so `_next_position` would answer the same
+    # number five times.
+    pos = _next_position(s)
+    for key, (path, stamp) in sorted(stamps.items()):
+        if by_key(s, key) is not None:
+            continue
+        info = _template_info(str(path), path.stat().st_mtime_ns)
+        s.add(TagSet(key=key, name=info.name, description=info.description,
+                     version=stamp, builtin=True, enabled=False, position=pos))
+        pos += 1
+        n += 1
+    if n:
         s.flush()
-    return len(rows)
+    return n
 
 
 def _next_position(s: Session) -> int:
@@ -2033,7 +2175,14 @@ def export_document(s: Session, set_id: int) -> dict:
     """The set as its file."""
     if is_library(s, set_id):
         return export_library(s)
-    return fmt.dump(_doc_of(s, by_id(s, set_id)))
+    ts = by_id(s, set_id)
+    # A BUILT-IN EXPORTS AS THE FILE IT SHIPS AS, not as its rows. It has
+    # none until somebody switches it on, so the generic path would hand
+    # back an empty file for a set the list says holds 110,000 names — and
+    # where it does have rows they are that file, written back out.
+    if ts.builtin:
+        return fmt.dump(template(ts.key))
+    return fmt.dump(_doc_of(s, ts))
 
 
 def export_library(s: Session) -> dict:
@@ -2261,6 +2410,13 @@ def set_enabled(ctx: Ctx, set_id: int, enabled: bool) -> TagSet:
     ts = by_id(s, set_id)
     if bool(ts.enabled) == bool(enabled):
         return ts
+    # SWITCHING A BUILT-IN ON IS WHAT WRITES ITS ENTRIES. They are not in the
+    # library until then — a set nobody wants costs nothing, and opening a
+    # library never pays for five shipped lists. A row that already holds
+    # them is left alone: an enable is not an update, and switching OFF
+    # never drops them, so switching back on is instant.
+    if bool(enabled) and ts.builtin and not _has_entries(s, ts.id):
+        _fill_builtin(s, ts)
     old = bool(ts.enabled)
     ts.enabled = bool(enabled)
     s.flush()
@@ -2271,6 +2427,29 @@ def set_enabled(ctx: Ctx, set_id: int, enabled: bool) -> TagSet:
             summary_vars={"name": ts.name},
             data={"tag_set_id": ts.id, "key": ts.key, "enabled": bool(enabled),
                   "old_enabled": old})
+    return ts
+
+
+def update_builtin(ctx: Ctx, set_id: int) -> TagSet:
+    """REPLACE A BUILT-IN'S ENTRIES WITH THE ONES THIS BUILD SHIPS — the verb
+    behind the row's *Update available* chip, and the only thing that rewrites
+    a built-in somebody has already switched on.
+
+    NOT REVERTIBLE, and for the plainest reason there is: what it replaces is
+    the previous release's file, which is not on this machine any more.
+    """
+    s = ctx.session
+    ts = by_id(s, set_id)
+    if not ts.builtin:
+        raise Refused("only a built-in tag set is updated from the app",
+                      code="tag_set_not_builtin")
+    _fill_builtin(s, ts)
+    n_entries, _ = counts_of(s).get(ts.id, (0, 0))
+    ctx.log(action=actions.UPDATE_TAG_SET, entity_type="tag_set", entity_id=ts.id,
+            summary="Updated tag set {name} ({count} entries)",
+            summary_vars={"name": ts.name, "count": n_entries},
+            data={"tag_set_id": ts.id, "key": ts.key, "name": ts.name,
+                  "entries": n_entries, "version": int(ts.version or 0)})
     return ts
 
 
@@ -2297,6 +2476,13 @@ def duplicate_tag_set(ctx: Ctx, set_id: int, *, name: str,
     src = by_id(s, set_id)
     name = (name or "").strip() or _free_name(s, f"{src.name} (copy)")
     _refuse_taken_name(s, name)
+    # A BUILT-IN IS COPIED FROM ITS FILE, for the reason its export is
+    # written from one: the row holds nothing until it is switched on, and
+    # a copy of the shipped Booru must be the shipped Booru whether or not
+    # this library has ever offered it. `create_from_template` is that
+    # import, so the two have one definition.
+    if src.builtin:
+        return create_from_template(ctx, src.key, name=name)[0]
     k = _free_key(s, key.strip()) if key.strip() else _unique_key(s, name)
     doc = _doc_of(s, src)
     doc.key, doc.name = k, name

@@ -569,7 +569,17 @@ class TagSetOut(BaseModel):
     name: str
     description: str = ""
     version: int = 0
+    #: ONE OF THE LISTS THE APP SHIPS. Read-only — no rename, no entry, no
+    #: category — but exported, duplicated into a copy you can edit, ordered,
+    #: switched on and off, and its two advice flags are yours. It holds no
+    #: entry until it is switched on.
     builtin: bool = False
+    #: A BUILT-IN WHOSE SHIPPED FILE HAS MOVED SINCE ITS ENTRIES WERE WRITTEN.
+    #: The row says so and the ⋯ offers Update; nothing rewrites it on its
+    #: own, because that would be a hundred thousand rows at the first open
+    #: after an upgrade. Only a row that HOLDS entries can be behind — an
+    #: empty one takes the current file whenever it is switched on.
+    outdated: bool = False
     enabled: bool = True
     #: Whether the set's alias spellings are offered and its entries' implied
     #: names are minted. The ROOT of the three-state walk the categories do.
@@ -632,21 +642,6 @@ class TagSetTreeSet(BaseModel):
 
 class TagSetTreeOut(BaseModel):
     sets: list[TagSetTreeSet] = []
-
-
-class TagSetTemplateOut(BaseModel):
-    """A shipped template a set can be made from (`tagsets/*.json`)."""
-    key: str
-    name: str
-    description: str = ""
-    entries: int = 0
-    categories: int = 0
-
-
-class TagSetFromTemplateIn(RequestModel):
-    template: str
-    #: The new set's name; the template's own when empty.
-    name: str = ""
 
 
 class TagSetDetail(TagSetOut):

@@ -61,15 +61,16 @@ export function TagSetPills({
               <Button key={s.id} round size="sm" variant={on ? "primary" : "soft"}
                       onClick={() => setPickedId(s.id)} className="hoverable"
                       style={{ color: fg, fontSize: "var(--fs-3)", fontWeight: 500 }}>
-                {/* THE LIBRARY'S OWN PILL WEARS THE LIBRARY'S OWN GLYPH
-                    (owner 2026-09). Every other pill is a tag set
-                    somebody imported and named; this one is the app's own,
-                    and among a row of names it read as one more import. The
-                    top bar's Library tab is the same picture. */}
-                {s.library && (
-                  <Icon name="grid_view" size={15}
-                        color={on ? "var(--on-accent)" : "var(--muted-2)"} />
-                )}
+                {/* NO PILL WEARS A LEADING GLYPH (owner 2026-09). The
+                    library's had one and then a built-in's, on the reasoning
+                    that an icon says WHICH KIND of pill this is — and a row
+                    of names where only some rows carry a picture reads as
+                    two kinds of thing rather than one row of sets. The names
+                    are what tell them apart, the library's leads the row,
+                    and the list behind the pencil is where each set's kind
+                    is drawn. What IS different about a built-in is that it
+                    cannot be edited, and that is a STATE, so it is a mark at
+                    the end beside Hidden rather than a glyph in front. */}
                 {s.name}
                 {/* The count STAYS on hover (it was swapped for the ⋯, the
                     sidebar's `row-count`/`row-actions` shape, which made the
@@ -94,6 +95,21 @@ export function TagSetPills({
                         style={{ display: "flex", alignItems: "center",
                                  opacity: 0.7, flex: "0 0 auto" }}>
                     <Icon name="visibility_off" size={14} />
+                  </span>
+                )}
+                {/* AND A BUILT-IN SAYS THE ONE THING THAT IS DIFFERENT ABOUT
+                    IT: its list is read, not edited. A state, so it is a mark
+                    at the END beside Hidden rather than a glyph in front of
+                    the name — the pill is otherwise a tag set like any other
+                    and is drawn like one. Quiet, for the reason the mark
+                    above it is: the whole pill is a click target that picks
+                    the set, and a second meaning inside it would fire the
+                    wrong one. */}
+                {s.builtin && (
+                  <span title={t("Built-in — duplicate it to edit.")}
+                        style={{ display: "flex", alignItems: "center",
+                                 opacity: 0.7, flex: "0 0 auto" }}>
+                    <Icon name="edit_off" size={14} />
                   </span>
                 )}
               </Button>

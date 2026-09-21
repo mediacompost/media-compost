@@ -1143,16 +1143,22 @@ export interface RankingDetailOut {
   pools: RankingPoolDetailOut[];
 }
 
-/** One imported tag list (`/api/tag-sets`). `builtin` marks the locked copy
- *  of the shipped set an older build installed, until the server unlocks it
- *  on open; every set is the library's own to edit, switch and delete. */
+/** One tag list (`/api/tag-sets`) — imported, or one of the app's own. */
 export interface TagSetOut {
   id: number;
   key: string;
   name: string;
   description: string;
   version: number;
+  /** ONE OF THE LISTS THE APP SHIPS. Read-only — no rename, no entry, no
+   *  category — but exported, duplicated into a copy you can edit, ordered,
+   *  switched on and off, and its two advice flags are yours. It holds no
+   *  entry at all until it is switched on. */
   builtin: boolean;
+  /** A built-in whose shipped file has moved on since its entries were
+   *  written. The row says so and its ⋯ offers Update; nothing rewrites it
+   *  on its own. Only a built-in that HOLDS entries can be behind. */
+  outdated: boolean;
   enabled: boolean;
   /** Whether the set's alias spellings are offered and its entries' implied
    *  names are minted — the ROOT of the three-state walk its categories do. */
@@ -1403,15 +1409,6 @@ export interface TagSetTreeSet {
   categories: TagSetTreeCategory[];
   uncategorized: number;
   entries: number;
-}
-
-/** A shipped template a new set can be made from. */
-export interface TagSetTemplateOut {
-  key: string;
-  name: string;
-  description: string;
-  entries: number;
-  categories: number;
 }
 
 export interface TagSetImportOut {
@@ -2743,10 +2740,11 @@ export const api = {
     req<Record<string, { tag_sets: TagSetRef[]; descriptions: TagSetText[] }>>(
       `/api/tag-sets/describe?names=${encodeURIComponent(names.join(","))}`),
   tagSetTree: () => req<{ sets: TagSetTreeSet[] }>("/api/tag-sets/tree"),
-  tagSetTemplates: () => req<TagSetTemplateOut[]>("/api/tag-sets/templates"),
-  tagSetFromTemplate: (template: string, name = "") =>
-    req<TagSetImportOut>("/api/tag-sets/from-template",
-                         { method: "POST", body: JSON.stringify({ template, name }) }),
+  /** Give a built-in the entries THIS build ships. Slow by nature — it
+   *  rewrites every row of the set — which is why it is a press and not
+   *  something the server does at open. */
+  updateBuiltinTagSet: (id: number) =>
+    req<TagSetOut>(`/api/tag-sets/${id}/update`, { method: "POST" }),
   tagSetEntries: (id: number, opts: TagSetEntriesOpts = {}) => {
     const p = new URLSearchParams();
     if (opts.q) p.set("q", opts.q);

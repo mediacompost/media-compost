@@ -31,7 +31,7 @@ import { Chip } from "../../shared/Chip";
 import { EmptyState } from "../../shared/EmptyState";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { api, TagSetOut, TagSetTemplateOut } from "../api";
+import { api, TagSetOut } from "../api";
 import { compactCount } from "../format";
 import { downloadBlob } from "../csv";
 import { useErrText, useT, useTn } from "../i18n";
@@ -43,19 +43,19 @@ import { RowMenu } from "./shared/RowMenu";
 import { Switch } from "../../shared/Switch";
 
 export function TagSetManageOverlay({
-  sets, templates, onClose, onNew, onTemplate, onImport, onProperties,
+  sets, onClose, onNew, onDuplicate, onImport, onProperties,
   onExportLibrary, onGone, onChanged,
 }: {
   sets: TagSetOut[];
-  /** The shipped sets, drawn as rows of the Add menu (see the footer). */
-  templates: TagSetTemplateOut[];
   onClose: () => void;
-  /** MAKING A SET IS THE MENU ENTRY, not a form (owner 2026-09). Both of
-   *  these name the set themselves — an empty one takes a default, a
-   *  template takes the template's own — so what was a dialog with a name
-   *  field and a template picker in it is the press that made it. */
+  /** MAKING A SET IS THE MENU ENTRY, not a form (owner 2026-09): it names
+   *  itself and appears, where what this replaced was a dialog with a name
+   *  field in it. */
   onNew: () => Promise<void>;
-  onTemplate: (key: string) => Promise<void>;
+  /** A COPY OF A SET YOU CAN EDIT — the row's own verb, and on a BUILT-IN
+   *  the only way to one, which is what the Add menu's list of shipped
+   *  templates used to be. */
+  onDuplicate: (s: TagSetOut) => Promise<void>;
   onImport: () => void;
   onProperties: (s: TagSetOut) => void;
   /** THE LIBRARY EXPORTS THROUGH ITS OWN ROUTE, never `exportTagSet(id)`:
@@ -72,10 +72,10 @@ export function TagSetManageOverlay({
   const errText = useErrText();
   const [error, setError] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<TagSetOut | null>(null);
-  //: WHAT THE ADD MENU IS WRITING, if anything. A template is up to 110,868
-  //  entries and takes seconds; the dialog this replaced said so with a
-  //  spinner, and a footer that simply sat there would read as a press that
-  //  had not landed.
+  //: WHAT IS BEING WRITTEN, if anything — the label of the set a Duplicate
+  //  or an Update is busy with, "" for a plain create. A built-in is up to
+  //  110,868 entries and takes seconds, and a footer that simply sat there
+  //  would read as a press that had not landed.
   const [making, setMaking] = useState<string | null>(null);
   //: WHICH ROW IS BEING CARRIED, and which it is over — the second with the
   //  edge it would land on, so the line is drawn on the side the row is
@@ -152,7 +152,7 @@ export function TagSetManageOverlay({
   /** How far a set that is not offering its names recedes. */
   const DIMMED = 0.55;
 
-  /** One of the Add menu's makers, with its spinner and its error. */
+  /** One of the slow verbs, with its spinner and its error. */
   const makeSet = async (label: string, make: () => Promise<void>) => {
     if (making !== null) return;
     setMaking(label);
@@ -169,7 +169,13 @@ export function TagSetManageOverlay({
   });
 
   return (
-    <Overlay icon="edit" title={t("Tag sets")} width={560} onClose={onClose}
+    /* WIDER THAN A FORM DIALOG (owner 2026-09): this one is a LIST, and
+       every row spends its width on a description that says what the set is
+       for — the one thing somebody reading this list is deciding on. At 560
+       the shipped sets' sentences were cut after half a dozen words, which
+       is the row saying nothing at all. 720 is the width the other two list
+       dialogs here already use. */
+    <Overlay icon="edit" title={t("Tag sets")} width={720} onClose={onClose}
       /* THE TWO WAYS ANOTHER SET ARRIVES, in ONE menu, and it is the only
          thing in the footer (owner 2026-09). They were two ghost buttons
          over the list with a line of prose under them — three rows of
@@ -186,7 +192,7 @@ export function TagSetManageOverlay({
                            fontSize: "var(--fs-3)", color: "var(--muted-2)" }}>
               <Icon name="progress_activity" size={15}
                     spin />
-              {making ? t("Writing the template's entries…") : t("Creating…")}
+              {making ? t("Writing the set's entries…") : t("Creating…")}
             </span>
           )}
           <RowMenu always title={t("Add a tag set")} icon="add"
@@ -202,21 +208,12 @@ export function TagSetManageOverlay({
                 onClick: () => void makeSet("", onNew) },
               { icon: "upload", label: t("Import from file…"),
                 onClick: onImport },
-              // THE SHIPPED SETS, IN THE MENU (owner 2026-09). They were a
-              // picker inside the form this menu replaced, which meant
-              // reaching a template was: open the menu, open the dialog,
-              // open the picker, pick, press Create. They are what the menu
-              // is mostly FOR, so they are its rows — each named, described
-              // and sized, since which one to take is the whole question.
-              ...templates.map((tp, i) => ({
-                icon: "menu_book",
-                label: tp.name,
-                hint: tp.description,
-                trailing: tn({ one: "{n} tag", other: "{n} tags" }, tp.entries,
-                             { n: compactCount(tp.entries) }),
-                separated: i === 0,
-                onClick: () => void makeSet(tp.name, () => onTemplate(tp.key)),
-              })),
+              // THE SHIPPED SETS ARE NOT IN HERE ANY MORE (owner 2026-09).
+              // They were rows of this menu, and each press made a COPY
+              // frozen at the file it was made from — a set nobody could
+              // keep up to date, listed in a menu rather than in the list
+              // it belongs in. They are rows of the list now, and the copy
+              // that press made is what Duplicate on one of them is.
             ]} />
         </div>
       }>
@@ -301,8 +298,18 @@ export function TagSetManageOverlay({
               </span>
               <span style={{ display: "flex", flex: "0 0 auto",
                              opacity: row.enabled ? 1 : DIMMED }}>
-                <Icon name={row.builtin ? "inventory_2" : "menu_book"}
-                      size={16} color="var(--muted-2)" />
+                {/* ONE GLYPH FOR EVERY TAG SET (owner 2026-09): `topic`, a
+                    folder with a page in it — names gathered into one thing
+                    — and the browse tree draws a set the same way, beside
+                    the plain folder its categories wear. A built-in had a
+                    seal of its own for an afternoon and an imported one a
+                    book, which made three visual languages on a list of
+                    five rows. What a row IS is said by the Built-in chip
+                    beside its name; the glyph says what KIND of thing the
+                    row is, and that is the same for both. NOT `label` (the
+                    Tags tab's sidebar draws a NAMESPACE with that one) and
+                    not `sell` (the app's glyph for a single tag). */}
+                <Icon name="topic" size={16} color="var(--muted-2)" />
               </span>
               <div style={{ flex: "1 1 0", minWidth: 0,
                             opacity: row.enabled ? 1 : DIMMED }}>
@@ -314,6 +321,17 @@ export function TagSetManageOverlay({
                   </span>
                   {row.builtin && (
                     <Chip size="sm" upper bordered style={{ background: "transparent" }}>{t("Built-in")}</Chip>
+                  )}
+                  {/* A MARK, NOT A BUTTON. The verb is in the row's ⋯, where
+                      Duplicate and Export are, because a thing that reads as
+                      a state and acts as a button is one an aimed click
+                      undoes by accident — and this one rewrites every row of
+                      the set. The title says where the verb is. */}
+                  {row.outdated && (
+                    <Chip size="sm" upper bordered tone="warn"
+                          title={t("A newer version of this set ships with this build. Update is in the row's ⋯ menu.")}>
+                      {t("Update available")}
+                    </Chip>
                   )}
                   <span style={{ fontSize: "var(--fs-2)", color: "var(--muted-2)", flex: "0 0 auto" }}>
                     {tn({ one: "1 entry", other: "{n} entries" }, row.entries,
@@ -347,14 +365,27 @@ export function TagSetManageOverlay({
                   name is the reorder now, and two ways to do it is one of
                   them going stale. */}
               <RowMenu always title={t("More")} actions={[
+                // UPDATE LEADS, and only while there is one to take: it is
+                // the row's own news, where everything under it is a thing
+                // this row could always do.
+                ...(row.outdated ? [{
+                  icon: "system_update_alt", label: t("Update"),
+                  hint: t("Replace its entries with the ones this build ships"),
+                  onClick: () => void makeSet(
+                    row.name, () => run(() => api.updateBuiltinTagSet(row.id))),
+                }] : []),
                 { icon: "content_copy", label: t("Duplicate"),
                   hint: row.builtin ? t("A copy you can edit") : undefined,
-                  onClick: () => void run(() => api.duplicateTagSet(
-                    row.id, t("{name} (copy)", { name: row.name }))) },
+                  separated: row.outdated,
+                  onClick: () => void makeSet(row.name, () => onDuplicate(row)) },
                 { icon: "download", label: t("Export"),
                   onClick: () => exportSet(row) },
-                { icon: "delete", label: t("Delete"), danger: true, separated: true,
-                  onClick: () => setConfirm(row) },
+                // NO DELETE ON A BUILT-IN: it is the app's row, not a set
+                // somebody imported, and the server refuses it anyway.
+                ...(row.builtin ? [] : [{
+                  icon: "delete", label: t("Delete"), danger: true,
+                  separated: true, onClick: () => setConfirm(row),
+                }]),
               ]} />
               <Switch checked={row.enabled}
                       onChange={(v) => void run(() => api.setTagSetEnabled(row.id, v))}

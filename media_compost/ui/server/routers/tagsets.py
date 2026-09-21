@@ -35,7 +35,6 @@ from ..schemas import (
     TagSetEntryCreate,
     TagSetEntryOut,
     TagSetEntryUpdate,
-    TagSetFromTemplateIn,
     TagSetImportIn,
     TagSetMetaTagCreate,
     TagSetMetaTagOut,
@@ -46,7 +45,6 @@ from ..schemas import (
     TagSetAddOut,
     TagSetSyncIn,
     TagSetSyncOut,
-    TagSetTemplateOut,
     TagSetTreeCategory,
     TagSetTreeOut,
     TagSetTreeSet,
@@ -66,10 +64,20 @@ def _says(d) -> dict:
 
 def _out(ts: TagSet, counts: dict[int, tuple[int, int]]) -> TagSetOut:
     n_e, n_c = counts.get(ts.id, (0, 0))
+    outdated = False
+    if ts.builtin:
+        outdated = ops.is_outdated(ts, ops.template_stamps(), n_e)
+        # A BUILT-IN THAT HAS NEVER BEEN SWITCHED ON HOLDS NOTHING, and a row
+        # saying "0 entries" is the one fact somebody deciding whether to
+        # switch it on must not be told. Its size is the shipped file's.
+        if not n_e:
+            info = ops.template_info(ts.key)
+            if info is not None:
+                n_e, n_c = info.names, info.categories
     return TagSetOut(id=ts.id, key=ts.key, name=ts.name,
                      description=ts.description or "",
                      version=int(ts.version or 0), builtin=bool(ts.builtin),
-                     enabled=bool(ts.enabled),
+                     outdated=outdated, enabled=bool(ts.enabled),
                      aliases_enabled=bool(ts.aliases_enabled),
                      implications_enabled=bool(ts.implications_enabled),
                      position=int(ts.position or 0), entries=n_e, categories=n_c)
@@ -253,25 +261,6 @@ def tag_set_namespaces(set_id: int, s: Session = Depends(get_session)):
             for ns, n in ops.namespaces_of(s, set_id)]
 
 
-@router.get("/templates", response_model=list[TagSetTemplateOut])
-def tag_set_templates():
-    """The shipped templates a new set can start from.
-
-    `ops.templates` answers each file's own facts and holds none of its
-    entries (`TemplateInfo`), so this costs the same whatever the biggest
-    shipped set weighs.
-    """
-    return [TagSetTemplateOut(key=d.key, name=d.name, description=d.description,
-                              entries=d.entries, categories=d.categories)
-            for d in ops.templates()]
-
-
-@router.post("/from-template", response_model=TagSetImportOut)
-def tag_set_from_template(body: TagSetFromTemplateIn, ctx: Ctx = Depends(get_ctx)):
-    ts, result = ops.create_from_template(ctx, body.template, name=body.name)
-    return TagSetImportOut(set=_one(ctx.session, ts.id), **result)
-
-
 @router.get("/tree", response_model=TagSetTreeOut)
 def tag_set_tree(s: Session = Depends(get_session)):
     """The ENABLED sets' category trees — what an empty, focused tag field
@@ -317,6 +306,15 @@ def update_tag_set(set_id: int, body: TagSetUpdate, ctx: Ctx = Depends(get_ctx))
 @router.put("/{set_id}/enabled", response_model=TagSetOut)
 def set_enabled(set_id: int, body: TagSetEnabled, ctx: Ctx = Depends(get_ctx)):
     ops.set_enabled(ctx, set_id, body.enabled)
+    return _one(ctx.session, set_id)
+
+
+@router.post("/{set_id}/update", response_model=TagSetOut)
+def update_builtin(set_id: int, ctx: Ctx = Depends(get_ctx)):
+    """Take the entries this build ships — the verb behind the row's *Update
+    available* chip. Slow by nature (it rewrites every row of the set), which
+    is exactly why nothing does it on its own at library open."""
+    ops.update_builtin(ctx, set_id)
     return _one(ctx.session, set_id)
 
 

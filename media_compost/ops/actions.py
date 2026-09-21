@@ -271,6 +271,9 @@ SET_TAG_SET_ENABLED = "set_tag_set_enabled"
 DELETE_TAG_SET = "delete_tag_set"
 DUPLICATE_TAG_SET = "duplicate_tag_set"
 IMPORT_TAG_SET = "import_tag_set"
+#: A built-in taking the entries this build ships. NOT revertible — see
+#: `NOT_REVERTIBLE`.
+UPDATE_TAG_SET = "update_tag_set"
 CREATE_TAG_SET_CATEGORY = "create_tag_set_category"
 EDIT_TAG_SET_CATEGORY = "edit_tag_set_category"
 MOVE_TAG_SET_CATEGORY = "move_tag_set_category"
@@ -319,6 +322,10 @@ NOT_REVERTIBLE = frozenset({
     DETECT_TEXT,
     EDIT_VIDEO,
     REVERT,
+    # A built-in's entries are replaced with the ones this build ships, and
+    # what they replace is the PREVIOUS release's file — which is not on this
+    # machine any more, so there is nothing to put back.
+    UPDATE_TAG_SET,
 })
 
 #: Every action string this build can write. Pinned by
@@ -327,7 +334,7 @@ NOT_REVERTIBLE = frozenset({
 ALL = frozenset({
     SET_TAG_HIDDEN, SET_HIDDEN_NAMESPACES, DESCRIBE_TAG, SET_TAG_CATEGORY,
     CREATE_TAG_SET, EDIT_TAG_SET, SET_TAG_SET_ENABLED, DELETE_TAG_SET,
-    DUPLICATE_TAG_SET, IMPORT_TAG_SET, CREATE_TAG_SET_CATEGORY,
+    DUPLICATE_TAG_SET, IMPORT_TAG_SET, UPDATE_TAG_SET, CREATE_TAG_SET_CATEGORY,
     EDIT_TAG_SET_CATEGORY, MOVE_TAG_SET_CATEGORY, DELETE_TAG_SET_CATEGORY,
     CREATE_TAG_SET_META, EDIT_TAG_SET_META, DELETE_TAG_SET_META,
     CREATE_TAG_SET_ENTRY,

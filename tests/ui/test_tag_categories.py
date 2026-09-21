@@ -62,15 +62,17 @@ def test_the_librarys_set_does_not_exist_until_something_needs_it(client):
     always drawn: the library is always there, so it is synthesized at id 0
     until something brings the row into being."""
     rows = client.get("/api/tag-sets").json()
-    assert [(r["id"], r["key"], r["library"]) for r in rows] \
-        == [(0, "library", True)]
+    # The app's own sets are under it; the library's is the one at id 0.
+    assert (rows[0]["id"], rows[0]["key"], rows[0]["library"]) == (0, "library", True)
+    assert all(r["builtin"] for r in rows[1:])
     with client.lib.db.session() as s:
         assert ops.library_set(s) is None
 
     client.post("/api/tags/categories", json={"name": "Animals"})
 
     rows = client.get("/api/tag-sets").json()
-    assert [r["library"] for r in rows] == [True]
+    assert [r["library"] for r in rows[1:]] == [False] * (len(rows) - 1)
+    assert rows[0]["library"] is True
     assert rows[0]["name"] == "Library"
     assert rows[0]["id"] > 0
 
@@ -84,7 +86,8 @@ def test_the_librarys_pill_leads_and_counts_tags_not_entries(client):
     client.post("/api/tag-sets", json={"name": "Booru mini"})
 
     rows = client.get("/api/tag-sets").json()
-    assert [r["library"] for r in rows] == [True, False]
+    assert rows[0]["library"] is True
+    assert not any(r["library"] for r in rows[1:])
     assert rows[0]["entries"] == 2
     assert rows[0]["categories"] == 1
 

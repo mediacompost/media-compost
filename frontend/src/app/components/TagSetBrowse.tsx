@@ -356,7 +356,15 @@ export function TagSetBrowseList({ browse, dense = false, maxHeight = 320,
                             raisedPopover={raisedPopover} />
         ) : (
           <>
-            <Icon name={row.kind === "set" ? "menu_book" : (row.cat.icon || "folder")} size={size}
+            {/* A TAG SET IS `topic`, HERE AND IN THE TAG SET LIST (owner
+                2026-09) — a folder with a page in it, which is what a set
+                is: names gathered into one thing, next to the plain FOLDER
+                a category is drawn with. It was a book here and a
+                book-or-a-seal there, which is one concept with three
+                pictures. Not `label` (the Tags tab's sidebar draws a
+                NAMESPACE with that one) and not `sell` (the app's glyph for
+                a single tag, which a set is not). */}
+            <Icon name={row.kind === "set" ? "topic" : (row.cat.icon || "folder")} size={size}
                   color="var(--accent)" />
             <span style={{ flex: "0 1 auto", minWidth: 0, overflow: "hidden",
                            textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

@@ -66,7 +66,7 @@ PINNED = frozenset({
     "set_tag_hidden", "set_hidden_namespaces",
     "describe_tag", "set_tag_category",
     "create_tag_set", "edit_tag_set", "set_tag_set_enabled",
-    "delete_tag_set", "duplicate_tag_set", "import_tag_set",
+    "delete_tag_set", "duplicate_tag_set", "import_tag_set", "update_tag_set",
     "create_tag_set_category", "edit_tag_set_category", "move_tag_set_category",
     "delete_tag_set_category",
     "create_tag_set_meta", "edit_tag_set_meta", "delete_tag_set_meta",

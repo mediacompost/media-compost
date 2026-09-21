@@ -111,6 +111,12 @@ UNCOVERED = {
     # `create_tag_set` un-undoable in the whole-stream pass. Covered end to
     # end in tests/ui/test_tag_sets.py.
     actions.DELETE_TAG_SET,
+    # Not revertible either — it replaces a built-in's rows with the ones
+    # THIS build ships, and what it replaces is the previous release's file,
+    # which is not on the machine any more. Writing tens of thousands of
+    # rows in the middle of a scenario about a handful of tags would also be
+    # a scenario about that. Covered end to end in tests/ui/test_tag_sets.py.
+    actions.UPDATE_TAG_SET,
     # Covered end to end in tests/ui/test_subject_boxes.py — the sweep there
     # drives the draw, the replace, the clear and every revert.
     actions.SET_APPEARANCE_BOX,

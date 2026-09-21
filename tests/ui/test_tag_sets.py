@@ -67,8 +67,10 @@ def test_the_router_round_trips_a_file_and_lists_it(client):
     rows = c.get("/api/tag-sets").json()
     keys = {r["key"]: r for r in rows}
     # The LIBRARY leads every listing — it is the first pill in the Tags tab,
-    # synthesized where its (lazy) row does not exist yet.
-    assert set(keys) == {"library", "booru-mini"}
+    # synthesized where its (lazy) row does not exist yet — and under it the
+    # app's own sets, which every library holds.
+    assert set(keys) == {"library", "booru-mini", "booru", "characters",
+                         "cinematography", "documents", "photography"}
     assert rows[0]["key"] == "library" and rows[0]["library"] is True
     # SIX names, not four: `ballgag` and `zeb` are rows of the list like
     # any other name, so the number the pill shows counts them.
@@ -106,26 +108,76 @@ def test_the_router_round_trips_a_file_and_lists_it(client):
     assert (a["name"], b["name"]) == ("Booru mini (copy)", "Booru mini (copy) 2")
 
 
-def test_a_template_makes_an_ordinary_set(client):
+def test_a_builtin_says_how_big_it_is_before_anybody_switches_it_on(client):
+    """The five shipped rows, and what the list says about one that is empty.
+
+    A row reading "0 entries" is the one thing somebody deciding whether to
+    switch a set on must not be told, so its size is the shipped file's until
+    it has rows of its own.
+    """
     c = client
-    # Only the library's own pill, which is always there.
-    assert [r["key"] for r in c.get("/api/tag-sets").json()] == ["library"]
-    # The shipped list is a TEMPLATE, offered by the API and made into a set
-    # on request — one the person then owns.
-    tpls = c.get("/api/tag-sets/templates").json()
-    assert [t["key"] for t in tpls] == ["booru", "characters", "cinematography",
-                                        "documents", "photography"]
-    assert tpls[0]["entries"] > 50 and tpls[0]["name"] == "Booru"
-    made = c.post("/api/tag-sets/from-template", json={"template": "booru"})
-    assert made.status_code == 200, made.text
-    ts = made.json()["set"]
-    assert ts["key"] == "booru" and ts["builtin"] is False and ts["enabled"]
+    rows = c.get("/api/tag-sets").json()
+    assert [r["key"] for r in rows] == ["library", "booru", "characters",
+                                        "cinematography", "documents",
+                                        "photography"]
+    booru = rows[1]
+    assert booru["builtin"] and not booru["enabled"] and not booru["outdated"]
+    assert booru["entries"] > 50 and booru["categories"] > 5
+    # …and the number does not MOVE when the switch writes the rows: a
+    # spelling is a row of the list, so the file's count includes them.
+    cine = next(r for r in rows if r["key"] == "cinematography")
+    assert c.put(f"/api/tag-sets/{cine['id']}/enabled", json={"enabled": True}
+                 ).status_code == 200
+    after = next(r for r in c.get("/api/tag-sets").json()
+                 if r["key"] == "cinematography")
+    assert (after["entries"], after["categories"]) == (cine["entries"],
+                                                       cine["categories"])
+    # Read-only: no rename, no entry, no delete.
+    assert c.patch(f"/api/tag-sets/{booru['id']}", json={"name": "mine"}).status_code == 400
+    assert c.post(f"/api/tag-sets/{booru['id']}/entries",
+                  json={"name": "not_a_booru_tag"}).status_code == 400
+    assert c.delete(f"/api/tag-sets/{booru['id']}").status_code == 400
+    # …but the two kinds of advice, the order and the switch are the
+    # library's own answers.
+    assert c.patch(f"/api/tag-sets/{booru['id']}",
+                   json={"aliases_enabled": False, "position": 3}).status_code == 200
+    # AND A COPY IS EDITABLE, made from the file rather than from the rows —
+    # which is what the Add menu's shipped-template rows used to make.
+    ts = c.post(f"/api/tag-sets/{booru['id']}/duplicate", json={}).json()
+    assert ts["key"] == "booru-2" and ts["builtin"] is False
+    assert ts["entries"] > 50
     assert c.post(f"/api/tag-sets/{ts['id']}/entries",
                   json={"name": "not_a_booru_tag"}).status_code == 200
     assert c.delete(f"/api/tag-sets/{ts['id']}").status_code == 200
-    assert c.post("/api/tag-sets/from-template", json={"template": "nope"}).status_code == 404
     # An unknown field on a body is a 422, not a silently different request.
     assert c.post("/api/tag-sets", json={"name": "x", "colour": "red"}).status_code == 422
+
+
+def test_the_update_verb_is_offered_only_where_there_is_one(client):
+    """The chip and the press behind it, over the wire.
+
+    A built-in holding entries whose stamp no longer matches the shipped file
+    reads as `outdated`; `POST /{id}/update` writes the current file into it
+    and the flag goes. It is refused on a set that is not one of the app's.
+    """
+    c = client
+    rows = {r["key"]: r for r in c.get("/api/tag-sets").json()}
+    cid = rows["cinematography"]["id"]
+    assert c.put(f"/api/tag-sets/{cid}/enabled", json={"enabled": True}
+                 ).status_code == 200
+    row = next(r for r in c.get("/api/tag-sets").json() if r["id"] == cid)
+    assert row["enabled"] and not row["outdated"] and row["entries"] > 50
+    with c.lib.db.session() as s:
+        from media_compost.ops import tagsets as ops
+        ops.by_id(s, cid).version = 1234
+        s.commit()
+    assert next(r for r in c.get("/api/tag-sets").json()
+                if r["id"] == cid)["outdated"] is True
+    assert c.post(f"/api/tag-sets/{cid}/update").status_code == 200
+    after = next(r for r in c.get("/api/tag-sets").json() if r["id"] == cid)
+    assert after["outdated"] is False and after["entries"] == row["entries"]
+    mine = c.post("/api/tag-sets", json={"name": "Mine"}).json()
+    assert c.post(f"/api/tag-sets/{mine['id']}/update").status_code == 400
 
 
 def test_a_set_only_name_is_offered_after_the_library_and_creates_on_assignment(client):
@@ -1443,7 +1495,8 @@ def test_a_sets_names_are_in_the_tags_table_and_out_of_every_library_read(client
     assert rows["zebra"]["tag_sets"] and rows["zebra"]["positive"] == 0
 
     # And the set's own list holds its entries and not the library's.
-    ts = [r for r in c.get("/api/tag-sets").json() if not r["library"]][0]
+    ts = next(r for r in c.get("/api/tag-sets").json()
+              if not r["library"] and not r["builtin"])
     got = c.get(f"/api/tag-sets/{ts['id']}/entries").json()
     assert sorted(r["name"] for r in got["rows"]) == [
         "ball", "ball_gag", "ballgag", "balloon_animal", "zeb", "zebra"]

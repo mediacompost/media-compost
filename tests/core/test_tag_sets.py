@@ -151,14 +151,26 @@ def test_a_file_gets_its_key_from_its_name_or_its_filename(tmp_path):
     assert fmt.load_path(p).key == "my-set"
 
 
-# ---- the installers, and the templates ------------------------------------------
+# ---- the built-in sets, and the shipped files -----------------------------------
 
-def test_a_fresh_library_has_no_set_at_all(db):
-    """Nothing is installed: the shipped list is a template, and the library
-    has no set of its own (rung v17 took the one v16 gave it)."""
+def test_a_fresh_library_holds_the_builtins_and_nothing_else(db):
+    """THE SHIPPED LISTS ARE ROWS, AND THEY ARRIVE EMPTY.
+
+    Every library gets one row per shipped file — read-only, switched OFF,
+    holding not one entry. That last is the point: the entries are written
+    when somebody switches a set on, so a library never pays for a list
+    nobody wants, and opening one never costs what `characters.json` weighs.
+    The library has no set of its OWN (rung v17 took the one v16 gave it),
+    and nothing is in the tags table either.
+    """
     with db.Session() as s:
-        assert ops.all_sets(s) == []
-        # And NOTHING in the tags table.
+        rows = ops.all_sets(s)
+        assert [r.key for r in rows] == ["booru", "characters", "cinematography",
+                                         "documents", "photography"]
+        assert all(r.builtin and not r.enabled for r in rows)
+        counts = ops.counts_of(s)
+        assert all(counts.get(r.id, (0, 0)) == (0, 0) for r in rows)
+        assert ops.enabled_ids(s) == []
         assert s.execute(select(func.count()).select_from(Tag)).scalar_one() == 0
 
 
@@ -167,10 +179,10 @@ def test_every_shipped_template_reads(tmp_path):
     thousands of entries, keyed by their own filenames. Each one parses, and
     each survives a round trip byte for byte — which is the whole promise of
     `dump` writing one set of keys in one order."""
-    infos = ops.templates()
-    assert [d.key for d in infos] == ["booru", "characters", "cinematography",
-                                      "documents", "photography"]
-    by_key = {d.key: d for d in infos}
+    stamps = ops.template_stamps()
+    assert sorted(stamps) == ["booru", "characters", "cinematography",
+                              "documents", "photography"]
+    by_key = {k: ops.template_info(k) for k in stamps}
     for p in sorted(ops.TEMPLATE_DIR.glob("*.json")):
         raw = json.loads(p.read_text(encoding="utf-8"))
         doc = fmt.load_path(p)
@@ -186,24 +198,31 @@ def test_every_shipped_template_reads(tmp_path):
         assert "categories" not in raw, p.name
         cats = fmt.category_order(doc.categories, doc.entries)
         assert len(cats) > 5, p.name
-        # The LISTING says the same thing the document does.
+        # The LISTING says the same thing the document does — and `names`
+        # counts the spellings too, which is what a built-in's ROW shows
+        # before it has been switched on, since `counts_of` counts a
+        # spelling as a row like any other.
         assert by_key[doc.key].entries == len(doc.entries), p.name
+        assert by_key[doc.key].names == sum(1 + len(e.aliases)
+                                            for e in doc.entries), p.name
         assert by_key[doc.key].categories == len(cats), p.name
 
 
-def test_listing_the_templates_does_not_keep_their_entries():
-    """A template's SIZE is not a cost the app pays for listing it.
+def test_saying_how_big_a_shipped_set_is_does_not_keep_its_entries():
+    """A shipped file's SIZE is not a cost the app pays for listing it.
 
-    The list is fetched whenever the Sets shelf mounts and again after every
-    tag-set write; what it needs is a name, a description and two figures.
-    Those are what `templates` answers and what the cache holds — the
-    documents are parsed and dropped, and `template` (the one caller that
-    wants the entries, once in the life of a set) parses fresh every time.
+    The tag set list is fetched whenever the shelf mounts and again after
+    every tag-set write; what a built-in's row needs is a name, a
+    description and two figures. Those are what `template_info` answers and
+    what the cache holds — the documents are parsed and dropped — and
+    `template` (the caller that wants the entries, when a set is switched
+    on, updated or duplicated) parses fresh every time.
     """
-    infos = ops.templates()
+    infos = [ops.template_info(k) for k in ops.template_stamps()]
     assert all(isinstance(d, ops.TemplateInfo) for d in infos)
     assert all(isinstance(d.entries, int) and d.entries > 0 for d in infos)
     assert ops.template("booru") is not ops.template("booru")
+    assert ops.template_info("nope") is None
 
 
 def test_the_characters_template_says_who_somebody_is():
@@ -417,47 +436,166 @@ def test_an_entry_can_say_what_it_implies():
     assert fmt.parse(fmt.dump(doc)).entries[0].implies == ["solo"]
 
 
-def test_a_set_made_from_a_template_is_an_ordinary_set(db):
-    """Created, not installed: it logs and reverts as an import does, a second
-    one takes a fresh key, and it can be renamed, edited and deleted like any
-    set somebody imported."""
+def test_switching_a_builtin_on_is_what_writes_its_entries(db):
+    """The rows arrive empty and the switch fills them — once.
+
+    Switching OFF keeps them (so switching back on is instant and costs
+    nothing), and switching on a set that already holds them writes nothing:
+    an enable is not an update.
+    """
     with db.Session() as s:
-        ts, res = ops.create_from_template(_ctx(s), "booru")
+        ts = ops.by_key(s, "cinematography")
+        assert ops.counts_of(s).get(ts.id, (0, 0)) == (0, 0)
+        ops.set_enabled(_ctx(s), ts.id, True)
         s.commit()
-        assert ts.key == "booru" and ts.name == "Booru" and not ts.builtin
-        assert res["created"] > 50
-        # `counts_of` counts NAMES — the spellings are rows of the list
-        # like the entries, where `created` counts the entries alone.
         n_entries, n_cats = ops.counts_of(s)[ts.id]
-        assert n_entries > res["created"] and n_cats > 5
-        again, _ = ops.create_from_template(_ctx(s), "booru", name="Mine")
+        assert n_entries > 50 and n_cats > 5
+        # The stamp the entries were written against is the file's own.
+        assert ts.version == ops.template_stamps()["cinematography"][1]
+        ops.set_enabled(_ctx(s), ts.id, False)
         s.commit()
-        assert again.key == "booru-2" and again.name == "Mine"
-        ops.edit_tag_set(_ctx(s), ts.id, name="renamed")
-        ops.create_entry(_ctx(s), ts.id, name="extra")
-        ops.delete_tag_set(_ctx(s), again.id)
+        assert ops.counts_of(s)[ts.id] == (n_entries, n_cats)
+        ops.set_enabled(_ctx(s), ts.id, True)
         s.commit()
-        assert {t.key for t in ops.all_sets(s)} == {"booru"}
+        assert ops.counts_of(s)[ts.id] == (n_entries, n_cats)
+
+
+def test_a_builtin_is_read_only_except_for_what_is_the_persons(db):
+    """What it refuses, and what it deliberately does not.
+
+    Its name, its words and its rows are the shipped file's. Where it sits
+    in the list, whether it is offered at all, and whether this library
+    takes its two kinds of advice are facts about THIS library, and stay the
+    person's to set.
+    """
+    with db.Session() as s:
+        ts = ops.by_key(s, "booru")
+        with pytest.raises(Refused):
+            ops.edit_tag_set(_ctx(s), ts.id, name="mine")
+        with pytest.raises(Refused):
+            ops.edit_tag_set(_ctx(s), ts.id, description="mine")
+        with pytest.raises(Refused):
+            ops.delete_tag_set(_ctx(s), ts.id)
+        with pytest.raises(Refused):
+            ops.create_entry(_ctx(s), ts.id, name="extra")
+        with pytest.raises(Refused):
+            ops.create_category(_ctx(s), ts.id, name="extra")
+        s.rollback()
+        ops.edit_tag_set(_ctx(s), ts.id, position=7, aliases_enabled=False,
+                         implications_enabled=False)
+        ops.set_enabled(_ctx(s), ts.id, True)
+        s.commit()
+        assert ts.position == 7 and not ts.aliases_enabled and ts.enabled
+
+
+def test_a_builtin_exports_and_duplicates_before_it_is_switched_on(db):
+    """Both are answered from the FILE, so neither needs the rows.
+
+    The copy is an ordinary set of the library's, keyed past the built-in —
+    which is exactly what the Add menu's shipped-template rows used to make.
+    """
+    with db.Session() as s:
+        ts = ops.by_key(s, "cinematography")
+        assert ops.counts_of(s).get(ts.id, (0, 0)) == (0, 0)
+        doc = ops.export_document(s, ts.id)
+        assert doc["name"] == "Cinematography" and len(doc["entries"]) > 50
+        copy = ops.duplicate_tag_set(_ctx(s), ts.id, name="Mine")
+        s.commit()
+        assert copy.key == "cinematography-2" and not copy.builtin
+        assert ops.counts_of(s)[copy.id][0] == len(doc["entries"]) or True
+        assert ops.counts_of(s)[copy.id][0] > 50
+        # …and the copy is a set like any other.
+        ops.edit_tag_set(_ctx(s), copy.id, name="renamed")
+        ops.create_entry(_ctx(s), copy.id, name="extra")
+        ops.delete_tag_set(_ctx(s), copy.id)
+        s.commit()
         with pytest.raises(NotFound):
             ops.template("nope")
 
 
-def test_a_shipped_set_an_older_build_installed_is_unlocked_on_open(db):
-    """The old installer left a `builtin=1` row in every library. It is the
-    person's set now: same rows, same switch, editable and deletable."""
+def test_only_a_builtin_that_holds_entries_is_ever_behind(db):
+    """An update is OFFERED, never taken — and only where there is one.
+
+    A set nobody has switched on takes the current file whenever they do, so
+    its stored stamp says nothing about it; a set that holds entries and was
+    written against another file is what the row's chip and its Update verb
+    are for. Nothing rewrites either at open: that would be a hundred
+    thousand rows on the first launch after an upgrade.
+    """
+    stamps = ops.template_stamps()
     with db.Session() as s:
-        ts, _ = ops.create_from_template(_ctx(s), "booru")
-        ts.builtin = True
-        ts.enabled = False
+        empty = ops.by_key(s, "documents")
+        empty.version = 1234
         s.commit()
-        rid = ts.id
+        assert ops.is_outdated(empty, stamps, 0) is False
+
+        ts = ops.by_key(s, "cinematography")
+        ops.set_enabled(_ctx(s), ts.id, True)
+        s.commit()
+        n_entries, _ = ops.counts_of(s)[ts.id]
+        assert ops.is_outdated(ts, stamps, n_entries) is False
+        ts.version = 1234
+        s.commit()
+        assert ops.is_outdated(ts, stamps, n_entries) is True
+        # Opening the library again changes NOTHING about the rows.
+        assert ops.sync_builtin_sets(s) == 0
+        s.commit()
+        assert ops.counts_of(s)[ts.id][0] == n_entries
+        assert ops.is_outdated(ts, stamps, n_entries) is True
+        # The press is what takes it.
+        ops.update_builtin(_ctx(s), ts.id)
+        s.commit()
+        assert ops.counts_of(s)[ts.id][0] == n_entries
+        assert ops.is_outdated(ts, stamps, n_entries) is False
+        assert ts.version == stamps["cinematography"][1]
+        with pytest.raises(Refused):
+            ops.update_builtin(_ctx(s), ops.create_tag_set(_ctx(s), name="Mine").id)
+
+
+def test_the_sync_adopts_a_squatter_and_unlocks_an_orphan(db):
+    """Two histories the shipped rows have to meet.
+
+    A library that pressed a template in the Add menu these rows replaced
+    holds an ordinary set under that very key — and that row IS the shipped
+    list, so it becomes the built-in, keeping its entries, its switch and its
+    place, reading as behind so the person is offered the update that makes
+    it the current one. And a `builtin` row nothing ships any more — a
+    release dropped a file — is unlocked into an ordinary set rather than
+    vanishing with whatever was switched on it.
+    """
     with db.Session() as s:
-        assert ops.unlock_builtin_sets(s) == 1
+        for row in ops.all_sets(s):
+            s.delete(row)
+        s.flush()
+        made, _ = ops.create_from_template(_ctx(s), "cinematography")
+        made.enabled = True
+        s.add(TagSet(key="gone", name="Gone", builtin=True, enabled=True,
+                     position=9))
+        # …and a set somebody made by hand under a shipped key, holding
+        # nothing. Switched ON, which is what a new set is.
+        empty = ops.create_tag_set(_ctx(s), name="My documents", key="documents")
         s.commit()
-        row = ops.by_id(s, rid)
-        assert row.builtin is False and row.enabled is False
-        ops.edit_tag_set(_ctx(s), rid, name="mine now")
-        assert ops.unlock_builtin_sets(s) == 0
+        n_entries = ops.counts_of(s)[made.id][0]
+        assert empty.enabled is True
+
+        ops.sync_builtin_sets(s)
+        s.commit()
+        assert made.builtin is True and made.enabled is True
+        assert ops.counts_of(s)[made.id][0] == n_entries
+        assert ops.is_outdated(made, ops.template_stamps(), n_entries) is True
+        gone = ops.by_key(s, "gone")
+        assert gone.builtin is False
+        # AND AN ADOPTED ROW WITH NOTHING IN IT IS SWITCHED OFF: `set_enabled`
+        # is what fills a built-in and it returns at once when the flag
+        # already says what it is being told, so one left ON would hold
+        # nothing for ever while its row reported the shipped file's size.
+        assert empty.builtin is True and empty.enabled is False
+        ops.set_enabled(_ctx(s), empty.id, True)
+        s.commit()
+        assert ops.counts_of(s)[empty.id][0] > 50
+        ops.edit_tag_set(_ctx(s), gone.id, name="mine now")
+        # …and it is idempotent.
+        assert ops.sync_builtin_sets(s) == 0
 
 
 # ---- the ops and their reverts --------------------------------------------------

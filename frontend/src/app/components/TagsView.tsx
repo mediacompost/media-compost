@@ -226,9 +226,17 @@ export function TagsView() {
   const setsQuery = useQuery({
     queryKey: ["tag-sets"], queryFn: api.tagSets,
     enabled: withSidebar });
-  /** The set whose page is open, for the subtitle. */
+  /** The set whose page is open, for the subtitle.
+   *
+   *  THE FALLBACK PREFERS A SET THAT IS SWITCHED ON. Every library now holds
+   *  the app's own built-in sets, switched OFF and holding nothing until
+   *  somebody wants them, and the first row by position is one of those on a
+   *  fresh library — so a bare "the first set there is" opened the tab on an
+   *  empty list nobody asked for. A set picked BY ID still opens whatever it
+   *  is, switched on or not. */
   const openSet = useMemo(
     () => (setsQuery.data ?? []).find((x) => x.id === openSetId && !x.library)
+      ?? (setsQuery.data ?? []).find((x) => !x.library && x.enabled)
       ?? (setsQuery.data ?? []).find((x) => !x.library) ?? null,
     [setsQuery.data, openSetId]);
   /** WHICH TAG SET THE LIST IS SHOWING: null is the library's own names,
@@ -244,6 +252,11 @@ export function TagsView() {
   /** THE TAG SET THE PANE IS ABOUT, as a set row — an imported set, or
    *  the library's own (lazy) one. What a category dialog opens over. */
   const openTagSet = shownSetId != null ? openSet : librarySet;
+  /** THE SET ON SCREEN IS ONE OF THE APP'S OWN, so nothing here may write
+   *  it: no entry, no category, no spelling. Keyed off `shownSetId` and
+   *  never `paneSetId` — that one falls back to the LIBRARY's set, which is
+   *  never built-in and whose categories stay the person's to edit. */
+  const readOnly = shownSetId != null && !!openSet?.builtin;
   /** THE SET WHOSE CATEGORIES, NAMESPACES AND COUNTS THE PANE IS ABOUT —
    *  the picked tag set's own. The library files its tags in its own
    *  (lazy) set's categories, an imported set in its own; same rows, same
@@ -599,7 +612,7 @@ export function TagsView() {
   }, [csvIntoSet]);
   const setVerbs = useTagSetVerbs(shownSetId, () => {
     qc.invalidateQueries({ queryKey: ["tags"] });
-  });
+  }, readOnly);
   const rowActionsFor = (kind: SearchKind, name: string, label?: string,
                          own?: RowOwn, withEdit = false): RowAction[] => {
     const out: RowAction[] = [];
@@ -1886,14 +1899,19 @@ export function TagsView() {
               // A CATEGORY'S OWN VERBS, in the ⋯ and in the right-click
               // alike. They were a set's alone, though the library files
               // its tags in categories of its own and shows the same tree.
-              onCategoryMenu={(ev, c) => {
+              // A BUILT-IN SET'S TREE IS READ, NOT EDITED, and the sidebar
+              // already declares each of these optional and draws nothing
+              // where one is missing — so the gate is passing none.
+              onCategoryMenu={readOnly ? undefined : (ev, c) => {
                 ev.preventDefault();
                 setRowMenu({ at: { x: ev.clientX, y: ev.clientY },
                              kind: "tag", name: "",
                              own: { more: catActions(c) } });
               }}
-              onAddCategory={() => setAddingCategory(true)}
-              onDeleteCategories={(ids) => void deleteCategories(ids)}
+              onAddCategory={readOnly ? undefined
+                             : () => setAddingCategory(true)}
+              onDeleteCategories={readOnly ? undefined
+                                  : (ids) => void deleteCategories(ids)}
               // A NAMESPACE ROW OFFERS WHAT ITS PARENT ROW IN THE LIST DOES
               // — one verb, hiding the names made with it from the
               // autocomplete — so the two doors cannot say different things.
@@ -1903,8 +1921,8 @@ export function TagsView() {
                              kind: "tag", name: "",
                              own: { more: nsActions(ns.name) } });
               }}
-              categoryDrag={catDrag.categoryDrag}
-              looseDrag={catDrag.looseDrag}
+              categoryDrag={readOnly ? undefined : catDrag.categoryDrag}
+              looseDrag={readOnly ? undefined : catDrag.looseDrag}
             />
           </div>
         )}
@@ -1912,7 +1930,8 @@ export function TagsView() {
         {/* A SET'S OWN LABELS, in place of its names — the same row of the
             same pane the library's Meta row is, one tag set along. */}
         {setMetaOpen && shownSetId != null ? (
-          <TagSetMetaList setId={shownSetId} maxHeight={paneH.flow - 10} />
+          <TagSetMetaList setId={shownSetId} readOnly={readOnly}
+                          maxHeight={paneH.flow - 10} />
         ) : (<>
 
 
@@ -1960,7 +1979,12 @@ export function TagsView() {
                 (optional)" — which put the whole tag editor's worth of fields
                 out of reach and made every plain tag read past a question
                 about aliases. */}
-            {isTagList ? (
+            {/* NOTHING IS ADDED TO ONE OF THE APP'S OWN SETS, and the gate
+                goes OUTSIDE this ternary rather than into its condition:
+                the else branch is the records lists' own Add, so a
+                `!readOnly` in the test would have swapped one menu for
+                another rather than taking the button away. */}
+            {readOnly ? null : isTagList ? (
               // THE SAME MENU FOR EITHER TAG SET: a name, a spelling of
               // one, or a file. What each makes is the tag set's own —
               // a library tag, or an entry of the set on screen.
@@ -2371,7 +2395,7 @@ export function TagsView() {
                 // is selected — and a native drag decides at the first pixel
                 // and cannot be called off, so it would swallow that. Pick
                 // first, then carry: the Sets tab's rule for its own rows.
-                draggable={selSet.has(key)}
+                draggable={!readOnly && selSet.has(key)}
                 onDragStart={(e) => {
                   const ids = selectedTagIds.length ? selectedTagIds : [t.id];
                   e.dataTransfer.setData("text/plain", `tags:${ids.join(",")}`);
@@ -2582,8 +2606,10 @@ export function TagsView() {
                         it opens differs, because what there is to edit
                         differs: a library alias is a tag row (its name, and
                         what it points at), and a set's spelling is
-                        retargeted in the dialog that does exactly that. */}
-                    {(t.alias_of == null || shownSetId == null) ? (
+                        retargeted in the dialog that does exactly that. On
+                        one of the app's own sets there is no pencil at all —
+                        the row is read. */}
+                    {readOnly ? null : (t.alias_of == null || shownSetId == null) ? (
                       <span
                         className="tag-edit-btn"
                         onClick={(e) => { e.stopPropagation();
@@ -2635,6 +2661,16 @@ export function TagsView() {
                         where the record exists, Add where it does not (the
                         create overlay opens over this tag and adopts it). */}
                     {(() => {
+                      const acts = shownSetId != null
+                        ? rowActionsFor("tag", t.name, undefined,
+                                        { more: setVerbs.rowActions(t, [t.id]) })
+                        : rowActionsFor("tag", t.name, undefined,
+                                        tagRowOwn(t, key));
+                      // NO GLYPH OVER AN EMPTY MENU. `RowMenu always` draws
+                      // its ⋯ whatever it holds, and on one of the app's own
+                      // sets a row whose tag is already in the library and
+                      // entails nothing is left with nothing to offer.
+                      if (!acts.length) return null;
                       return (
                         <span className="tag-edit-btn"
                           style={{ alignItems: "center", flex: "0 0 auto" }}>
@@ -2642,11 +2678,7 @@ export function TagsView() {
                             title={tr("More")}
                             always
                             color="var(--muted-2)"
-                            actions={shownSetId != null
-                              ? rowActionsFor("tag", t.name, undefined,
-                                              { more: setVerbs.rowActions(t, [t.id]) })
-                              : rowActionsFor("tag", t.name, undefined,
-                                              tagRowOwn(t, key))}
+                            actions={acts}
                           />
                         </span>
                       );
@@ -2879,7 +2911,7 @@ export function TagsView() {
                e.target.value = "";
                if (f) setCsvFileForSet(f);
              }} />
-      {csvFileForSet && openSet && (
+      {csvFileForSet && openSet && !readOnly && (
         <TagSetCsvOverlay file={csvFileForSet} into={openSet}
           taken={(setsQuery.data ?? []).map((x) => x.name.trim().toLowerCase())}
           onClose={() => setCsvFileForSet(null)}
@@ -2892,7 +2924,7 @@ export function TagsView() {
       {/* ADDING A NAME TO A SET is the same dialog editing one opens, over
           nothing — and adding a SPELLING is the other door of the Add
           menu, exactly as the library's alias is. */}
-      {shownSetId != null && setVerbs.creating && openSet && (
+      {shownSetId != null && setVerbs.creating && openSet && !readOnly && (
         <EntryEditOverlay set={openSet} cats={libCats} entry={null}
           defaultCategoryId={catPicked.length === 1 ? catPicked[0] : null}
           onClose={() => setVerbs.setCreating(false)}
@@ -2910,7 +2942,7 @@ export function TagsView() {
             qc.invalidateQueries({ queryKey: ["tags"] });
           }} />
       )}
-      {shownSetId != null && retarget && openSet && (
+      {shownSetId != null && retarget && openSet && !readOnly && (
         <AliasOverlay set={openSet} alias={retarget.alias}
           fromName={retarget.fromName}
           onClose={() => setRetarget(null)}
@@ -2920,7 +2952,7 @@ export function TagsView() {
             qc.invalidateQueries({ queryKey: ["tag-sets"] });
           }} />
       )}
-      {shownSetId != null && setVerbs.addingAlias && openSet && (
+      {shownSetId != null && setVerbs.addingAlias && openSet && !readOnly && (
         <AliasOverlay set={openSet} alias="" fromName={null}
           onClose={() => setVerbs.setAddingAlias(false)}
           onSaved={() => {
@@ -2929,7 +2961,7 @@ export function TagsView() {
             qc.invalidateQueries({ queryKey: ["tag-sets"] });
           }} />
       )}
-      {shownSetId != null && setVerbs.editing && openSet && (
+      {shownSetId != null && setVerbs.editing && openSet && !readOnly && (
         <EntryEditOverlay set={openSet} cats={libCats}
           entry={asEntry(setVerbs.editing)}
           defaultCategoryId={catPicked.length === 1 ? catPicked[0] : null}
@@ -2967,7 +2999,7 @@ export function TagsView() {
       {/* THE CATEGORY DIALOG — its name, its icon, whether it is hidden,
           and (for an imported set) the two switches that turn its aliases
           and its implications off. One dialog for both tag sets. */}
-      {editingCat && paneSetId != null && openTagSet && (
+      {editingCat && paneSetId != null && openTagSet && !readOnly && (
         <CategoryEditOverlay set={openTagSet} cats={libCats}
           cat={editingCat.id === -1 ? { ...editingCat, id: 0 } : editingCat}
           onClose={() => setEditingCat(null)}
@@ -2977,7 +3009,7 @@ export function TagsView() {
             qc.invalidateQueries({ queryKey: ["tags"] });
           }} />
       )}
-      {addingCategory && (
+      {addingCategory && !readOnly && (
         <CategoryNameOverlay
           taken={(libraryDetail.data?.category_rows ?? [])
             .filter((c) => c.parent_id == null).map((c) => c.name)}
