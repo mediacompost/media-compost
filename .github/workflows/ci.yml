@@ -58,6 +58,24 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# EVERY JOB BELOW SAYS `ubuntu-26.04`, NOT `ubuntu-latest`, AND THAT IS THE
+# MIGRATION TAKEN EARLY RATHER THAN A PIN. GitHub moves `ubuntu-latest` from
+# 24 to 26 over the weeks from 2026-10-19, so the only question is whether
+# this suite meets the new image on a morning chosen by the rollout or on one
+# chosen here. The label existed before the rollout did, so: here.
+#
+# The whole of what the image is to this file is `apt-get install ffmpeg` —
+# everything else comes from setup-python (3.12) and setup-node (24), which
+# are the tool cache and not the OS. 24.04's apt ffmpeg is 6.1.1, and the
+# `base` job is the one that uses it for real: `suites` installs `[full]`, so
+# there its ffmpeg is imageio-ffmpeg's own bundled 7.1 on every image alike
+# and only ffprobe (which that wheel does not carry) comes from apt. The
+# developer's machine runs 7.1 and an 8.0 ffprobe, so moving apt off 6.1
+# NARROWS the gap this job exists to measure rather than widening it.
+#
+# When the rollout finishes, `ubuntu-latest` and this mean the same thing and
+# the label can go back — the value of saying it outright expires with the
+# migration, not with the image.
 jobs:
   # "Is this commit one we have already answered for?" — asked of the runs
   # themselves rather than of a clock. A window ("anything pushed in the last
@@ -72,7 +90,7 @@ jobs:
   # wanting an answer about a commit, whether or not one exists already.
   decide:
     name: has anything landed since the last run?
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       actions: read
       contents: read
@@ -109,7 +127,7 @@ jobs:
     name: core suite, base-only venv
     needs: decide
     if: needs.decide.outputs.run == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -142,7 +160,7 @@ jobs:
     name: every suite + the frontend's ratchets
     needs: decide
     if: needs.decide.outputs.run == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -179,7 +197,7 @@ jobs:
     name: the wheel honours its extras
     needs: decide
     if: needs.decide.outputs.run == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
