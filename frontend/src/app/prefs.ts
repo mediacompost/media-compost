@@ -4,7 +4,7 @@
 // every literal in the source to this table). The typed ones are read and
 // written through `shared/storage`; the rest are still read at their
 // sites through `storage.get`/`set`, listed here so the index is whole.
-import { boolPref, numPref, strPref } from "../shared/storage.ts";
+import { boolPref, jsonPref, numPref, strPref } from "../shared/storage.ts";
 
 /** The floor a side panel may be dragged to — the library's right panel
  *  and the annotator's sidebar share it. */
@@ -23,6 +23,21 @@ export const SHARPEN_AMOUNT = 80;
 export const SHARPEN_AMOUNT_MAX = 300;
 export const SHARPEN_RADIUS = 2;
 export const SHARPEN_RADIUS_MAX = 20;
+
+/** One paint tool's tip. */
+export interface EditorTip { size: number; hardness: number }
+export interface EditorTips { brush: EditorTip; erase: EditorTip; blur: EditorTip }
+const isTip = (v: unknown): v is EditorTip => {
+  const t = v as { size?: unknown; hardness?: unknown } | null;
+  return !!t && typeof t.size === "number" && Number.isFinite(t.size) && t.size >= 1 && t.size <= 200
+    && typeof t.hardness === "number" && t.hardness >= 0 && t.hardness <= 100;
+};
+function isEditorTips(v: unknown): v is EditorTips | null {
+  const t = v as Record<string, unknown> | null;
+  return !!t && isTip(t.brush) && isTip(t.erase) && isTip(t.blur);
+}
+export type SelModePref = "replace" | "extend" | "subtract" | "intersect";
+const SEL_MODES: readonly SelModePref[] = ["replace", "extend", "subtract", "intersect"];
 
 export const APP_PREFS = {
   sidebarWidth: numPref("mc.sidebarWidth", { def: 266, min: 198, max: 520 }),
@@ -82,6 +97,25 @@ export const APP_PREFS = {
    *  checked against `TOOLS` where that list lives, not by a closed list
    *  here: a tool that has been renamed away reads as the default. */
   editorTool: strPref<string>("mc.editor.tool", "hand"),
+  /** EVERY OTHER TOOL SETTING, the same way (owner 2026-09: "remember all
+   *  properties of all tools"). Each paint tool's tip, the paint and
+   *  background colours (the brush's opacity is the paint colour's alpha),
+   *  the blur tool's strength, the marquee's shape, the two selection modes,
+   *  the crop's ratio and the transform's Keep original. */
+  editorTips: jsonPref<EditorTips | null>("mc.editor.tips", null, isEditorTips),
+  /** "" until one is picked — the editor's own default. */
+  editorColor: strPref<string>("mc.editor.color", ""),
+  /** "" is TRANSPARENT (the eraser knocks out), anything else a colour. */
+  editorBgColor: strPref<string>("mc.editor.bgColor", ""),
+  editorBlurStrength: numPref("mc.editor.blurStrength", { def: 8, min: 1, max: 30 }),
+  editorMarquee: strPref<"rect" | "ellipse">("mc.editor.marquee", "rect", ["rect", "ellipse"]),
+  editorSelMode: strPref<SelModePref>("mc.editor.selMode", "replace", SEL_MODES),
+  editorWandMode: strPref<SelModePref>("mc.editor.wandMode", "replace", SEL_MODES),
+  editorCropAspect: strPref<string>("mc.editor.cropAspect", "free"),
+  editorCropCustom: jsonPref<{ w: string; h: string }>("mc.editor.cropCustom", { w: "", h: "" },
+    (v): v is { w: string; h: string } => !!v && typeof (v as { w?: unknown }).w === "string"
+      && typeof (v as { h?: unknown }).h === "string"),
+  editorKeepOriginal: boolPref("mc.editor.keepOriginal", false),
 };
 
 

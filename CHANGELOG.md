@@ -6,6 +6,9 @@
   transforming a blurred selection used to leave a grey veil where the
   original was, and a round one a thin outline; the original now stays
   exactly as it was.
+- **The image editor remembers every tool's settings** — brush, eraser
+  and blur sizes and hardness, both colours, the blur strength, the
+  marquee shape, the selection modes, the crop ratio and Keep original.
 - **Shortcuts keep working after you touch a slider, a button or a
   dropdown** in the editor's properties bar.
 - **The tag lists that ship with Media Compost are rows of the tag set

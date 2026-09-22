@@ -539,10 +539,12 @@ export function EditorOverlay() {
    * would report the opposite of the truth halfway through a drag.
    */
   const [gestureMode, setGestureMode] = useState<SelMode | null>(null);
-  const [color, setColor] = useState("#ffffff");
+  // Every setting below is REMEMBERED across windows (`APP_PREFS`), written
+  // from effects so the setters stay plain.
+  const [color, setColor] = useState(() => APP_PREFS.editorColor.read() || "#ffffff");
   // Brush tip (size/hardness) kept separately per painting tool, so switching
   // between brush and blur restores each tool's own tip.
-  const [tips, setTips] = useState({
+  const [tips, setTips] = useState(() => APP_PREFS.editorTips.read() ?? {
     brush: { size: 40, hardness: 80 },
     erase: { size: 40, hardness: 80 },
     blur: { size: 60, hardness: 60 },
@@ -551,14 +553,14 @@ export function EditorOverlay() {
     setTips((t) => ({ ...t, [key]: { ...t[key], ...patch } }));
   // Secondary / background color: what "removing" (erase, Delete-fill) paints.
   // null = transparent — erasing then truly knocks out to transparency.
-  const [bgColor, setBgColor] = useState<string | null>(null);
+  const [bgColor, setBgColor] = useState<string | null>(() => APP_PREFS.editorBgColor.read() || null);
   // Which swatch the custom color-picker popover is open for.
   const [pickerFor, setPickerFor] = useState<null | "fg" | "bg">(null);
   // The foreground swatch, named to its picker so a press on it toggles
   // rather than reading as a press outside.
   const fgSwatch = useRef<HTMLButtonElement>(null);
   // Blur-tool strength: the gaussian radius (px) applied per stamp.
-  const [blurStrength, setBlurStrength] = useState(8);
+  const [blurStrength, setBlurStrength] = useState(() => APP_PREFS.editorBlurStrength.read());
   // Color tolerance (0–100 → 0–255 per channel) of the fill and wand tools.
   // REMEMBERED, like the wand's Grow below: a tolerance dialled in by dragging
   // is an answer about the pictures being worked on, and the pictures being
@@ -567,7 +569,7 @@ export function EditorOverlay() {
   const [wandTolerance, setWandTolerance] = useState(() => APP_PREFS.wandTolerance.read());
   // How a wand click merges with the current selection (Shift/Alt override it
   // per click, exactly like the select tool's marquee modes).
-  const [wandMode, setWandMode] = useState<SelMode>("replace");
+  const [wandMode, setWandMode] = useState<SelMode>(() => APP_PREFS.editorWandMode.read());
   // HOW FAR THE WAND'S OWN FIND IS GROWN BEFORE IT JOINS THE SELECTION, in
   // whole pixels; negative shrinks it. It applies to the NEW region ALONE —
   // a flood stops a pixel short of an edge it was never going to cross, and
@@ -586,9 +588,19 @@ export function EditorOverlay() {
   const [growShrink, setGrowShrink] = useState<null | "grow" | "shrink" | "blur">(null);
   // The marquee's shape. The lasso tool IS a style, so it answers for
   // itself and everything below goes on reading one `selStyle`.
-  const [marqueeStyle, setMarqueeStyle] = useState<Exclude<SelStyle, "lasso">>("rect");
+  const [marqueeStyle, setMarqueeStyle] = useState<Exclude<SelStyle, "lasso">>(() => APP_PREFS.editorMarquee.read());
   const selStyle: SelStyle = tool === "lasso" ? "lasso" : marqueeStyle;
-  const [selMode, setSelMode] = useState<SelMode>("replace");
+  const [selMode, setSelMode] = useState<SelMode>(() => APP_PREFS.editorSelMode.read());
+  // Whether a lifted selection leaves its original in place (the transform's
+  // Keep original), carried from one float to the next.
+  const keepOriginalRef = useRef(APP_PREFS.editorKeepOriginal.read());
+  useEffect(() => { APP_PREFS.editorColor.write(color); }, [color]);
+  useEffect(() => { APP_PREFS.editorBgColor.write(bgColor ?? ""); }, [bgColor]);
+  useEffect(() => { APP_PREFS.editorTips.write(tips); }, [tips]);
+  useEffect(() => { APP_PREFS.editorBlurStrength.write(blurStrength); }, [blurStrength]);
+  useEffect(() => { APP_PREFS.editorWandMode.write(wandMode); }, [wandMode]);
+  useEffect(() => { APP_PREFS.editorMarquee.write(marqueeStyle); }, [marqueeStyle]);
+  useEffect(() => { APP_PREFS.editorSelMode.write(selMode); }, [selMode]);
   const [hasSelection, setHasSelection] = useState(false);
   // Whether the buffer has unsaved edits since the last load/save — gates the
   // Save button and triggers the save/discard/cancel prompt on close.
@@ -625,11 +637,16 @@ export function EditorOverlay() {
   // A TOOL SETTING, like the brush's size: it outlives the rectangle and the
   // tab, because "I am cropping these to 16:9" is a fact about the job rather
   // than about one picture.
-  const [cropAspectId, setCropAspectId] = useState("free");
+  const [cropAspectId, setCropAspectId] = useState(() => {
+    const saved = APP_PREFS.editorCropAspect.read();
+    return CROP_ASPECTS.some((a) => a.id === saved) ? saved : "free";
+  });
+  useEffect(() => { APP_PREFS.editorCropAspect.write(cropAspectId); }, [cropAspectId]);
   // A ratio nothing in the list offers, as the two fields hold it — TEXT,
   // because a field halfway through being typed into has an empty side and
   // a lone "." in it, and a number can hold neither.
-  const [cropCustom, setCropCustom] = useState<CustomAspect>({ w: "", h: "" });
+  const [cropCustom, setCropCustom] = useState<CustomAspect>(() => APP_PREFS.editorCropCustom.read());
+  useEffect(() => { APP_PREFS.editorCropCustom.write(cropCustom); }, [cropCustom]);
   // The ratio it stands for, in pixels — null while the crop is free. Derived
   // rather than stored, so "Original" follows a resize and the typed pair
   // takes effect on the keystroke that completes it.
@@ -1976,7 +1993,7 @@ export function EditorOverlay() {
       canvas: fc, mask: mc, w0: bb.w, h0: bb.h,
       cx: bb.x + bb.w / 2, cy: bb.y + bb.h / 2,
       homeX: bb.x, homeY: bb.y,
-      scaleX: 1, scaleY: 1, rot: 0, transforming, keep: false, orig,
+      scaleX: 1, scaleY: 1, rot: 0, transforming, keep: keepOriginalRef.current, orig,
     };
     // Punch the hole in the buffer under the selection — unless the original
     // is being kept, in which case the buffer is left exactly as it was.
@@ -3374,6 +3391,10 @@ export function EditorOverlay() {
     // scale changes stay ref-only so a drag never re-renders per mousemove.
     if (patch.keep !== undefined && patch.keep !== cur.keep) {
       placeHome(nf, nf.keep);
+      if (!nf.pasted) {
+        keepOriginalRef.current = nf.keep;
+        APP_PREFS.editorKeepOriginal.write(nf.keep);
+      }
     }
     if (patch.transforming !== undefined || patch.keep !== undefined) setFloating(nf);
     redrawRef.current();
