@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **A blurred selection's outline sits outside it.** The marching ants
+  used to be blurred along with the selection's edge; now they run just
+  outside every selected pixel, however faintly selected, and the dimming
+  shows how soft the edge is.
 - **Keep original no longer leaves a trace behind.** Moving or
   transforming a blurred selection used to leave a grey veil where the
   original was, and a round one a thin outline; the original now stays

@@ -1270,6 +1270,7 @@ export function EditorOverlay() {
           }
         }
         ringDirty.current = true;
+        if (!maskShift.current) maskGen.current++;
         ctx.drawImage(tmp, 0, 0, box.w, box.h);
       } else if (!(veilLive && tmp && veilKeyRef.current === zoomKey)) {
         if (!tmp || tmp.width !== bw || tmp.height !== bh) {
@@ -1325,6 +1326,8 @@ export function EditorOverlay() {
         // the veil is, so the outline and the dimming can never be pictures
         // of two different selections.
         ringDirty.current = true;
+        // A selection being dragged is the SAME mask at an offset.
+        if (!sh) maskGen.current++;
       }
       if (!huge) ctx.drawImage(tmp, ox, oy, drawW, drawH);
     }
@@ -1537,13 +1540,20 @@ export function EditorOverlay() {
   redrawRef.current = redraw;
 
   // ---- marching ants ----
-  // Animated black/white dashes tracing the exact selection silhouette (or, while
+  // Animated black/white dashes tracing the selection silhouette (or, while
   // a selection is floating, the moved/transformed silhouette). Drawn on its own
   // overlay canvas so the animation never re-runs the (heavy) main redraw. The
-  // technique: rasterize the selection alpha at screen scale, keep only a ~1px
-  // boundary ring, and fill it with a rotating black/white stripe pattern whose
-  // offset advances each frame — perpendicular stripes over a 1px ring read as
-  // dashes marching along the outline, for any shape.
+  // technique: rasterize the selection at screen scale, keep only a 1px ring
+  // just OUTSIDE it, and fill that with a rotating black/white stripe pattern
+  // whose offset advances each frame — perpendicular stripes over a 1px ring
+  // read as dashes marching along the outline, for any shape.
+  //
+  // THE OUTLINE NEVER COVERS A SELECTED PIXEL, HOWEVER FAINTLY SELECTED (owner
+  // 2026-09). It was the silhouette's own edge, taken from the mask's alpha,
+  // so a blurred selection drew blurred ants sitting on top of the feather.
+  // Now the silhouette is made BINARY first — any alpha at all is in — and the
+  // ring is one pixel of growth beyond it; how strongly each pixel is
+  // selected is the veil's job, which dims by the mask's own alpha.
   const stripePat = useRef<CanvasPattern | null>(null);
   useEffect(() => {
     const p = document.createElement("canvas");
@@ -1558,8 +1568,46 @@ export function EditorOverlay() {
     let raf = 0;
     let t = 0;
     const scratch = document.createElement("canvas");
-    const eroded = document.createElement("canvas");
+    const grown = document.createElement("canvas");
     const ring = document.createElement("canvas");
+    // The zoomed-out path's levels (image resolution, then each halving),
+    // kept so a pan does not allocate a picture's worth of canvas per frame.
+    const levels: HTMLCanvasElement[] = [];
+    // The finished pyramid: which mask, which generation of it, and which
+    // halving factor it was built for. Built over the WHOLE mask, so a pan
+    // (which only changes the visible patch) reads it as it is.
+    let pyr: { mask: HTMLCanvasElement; gen: number; f: number; w: number; h: number;
+               canvas: HTMLCanvasElement } | null = null;
+    const level = (i: number, w: number, h: number) => {
+      const c = levels[i] ?? (levels[i] = document.createElement("canvas"));
+      if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+      else c.getContext("2d")!.clearRect(0, 0, w, h);
+      return c;
+    };
+    /** Any alpha at all to full, on the GPU, with no readback. `lighter`
+     *  ADDS, so two copies that take turns adding the other into themselves
+     *  grow as the Fibonacci numbers: thirteen draws take 1/255 to 610/255.
+     *  Two canvases rather than one drawn into itself, because Safari copies
+     *  a canvas that is its own source on every draw — the self-drawn
+     *  doubling was 10.5 ms at screen size there, this is 3.7. */
+    const partner = document.createElement("canvas");
+    const harden = (c: HTMLCanvasElement) => {
+      if (partner.width !== c.width || partner.height !== c.height) {
+        partner.width = c.width; partner.height = c.height;
+      }
+      const cx = c.getContext("2d")!, px = partner.getContext("2d")!;
+      px.globalCompositeOperation = "copy";
+      px.drawImage(c, 0, 0);
+      cx.globalCompositeOperation = "lighter";
+      px.globalCompositeOperation = "lighter";
+      // Odd, so the last draw lands in `c`.
+      for (let i = 0; i < 13; i++) {
+        if (i % 2 === 0) cx.drawImage(partner, 0, 0);
+        else px.drawImage(c, 0, 0);
+      }
+      cx.globalCompositeOperation = "source-over";
+      px.globalCompositeOperation = "source-over";
+    };
     // THE RING IS BUILT ONLY WHEN THE SHAPE CHANGES; the frame loop just moves
     // the stripes across it. Building it is thirteen full-screen composites —
     // the mask scaled to screen, eight shifted copies for the erosion, the
@@ -1621,12 +1669,6 @@ export function EditorOverlay() {
         // pixels inside the selection must not grow their own outline.
         sctx.drawImage(f.mask, -halfW, -halfH, halfW * 2, halfH * 2);
         sctx.restore();
-        // Binarize the silhouette's alpha: scaling the lifted mask up
-        // stretches its antialiased edge into a multi-pixel soft fringe,
-        // which would fatten the ants ring with the float's scale. Repeated
-        // self-compositing pushes any fringe alpha toward 1 (a' = 1-(1-a)^16),
-        // so the erosion below always leaves a crisp ~1px screen-space ring.
-        for (let i = 0; i < 4; i++) sctx.drawImage(scratch, 0, 0);
       } else {
         // The visible PATCH of the mask, never the whole mask scaled to the
         // picture's zoomed size — at 16x that destination is tens of
@@ -1638,31 +1680,75 @@ export function EditorOverlay() {
         const b = visibleBlit(xf.ox + (sh ? sh.x * xf.scale : 0),
                               xf.oy + (sh ? sh.y * xf.scale : 0),
                               xf.scale, m.width, m.height, xf.bw, xf.bh);
-        if (b) sctx.drawImage(m, b.sx, b.sy, b.sw, b.sh, b.dx, b.dy, b.dw, b.dh);
+        if (b && xf.scale < 1) {
+          // ZOOMED OUT, a screen pixel stands for several mask pixels, and
+          // any ordinary downscale lets a faintly selected one average away
+          // into its unselected neighbours — the outline would then run over
+          // it. So the patch is made binary and HALVED: a draw at exactly
+          // half size samples every 2x2 block at its shared corner, which is
+          // an exact box average, and hardening again after each step keeps
+          // any selected pixel in (a quarter of full is far from zero). The
+          // last step, by less than two, samples between pixels rather than
+          // on a grid of them, so the shape is grown by one pixel first and
+          // nothing can fall between two samples.
+          let wantF = 1;
+          while (xf.scale * wantF * 2 <= 1) wantF *= 2;
+          if (!pyr || pyr.mask !== m || pyr.gen !== maskGen.current || pyr.f !== wantF
+              || pyr.w !== m.width || pyr.h !== m.height) {
+            let cur = level(0, m.width, m.height);
+            cur.getContext("2d")!.drawImage(m, 0, 0);
+            harden(cur);
+            let w = m.width, h = m.height, f = 1;
+            while (f < wantF) {
+              const next = level(levels.indexOf(cur) + 1, Math.ceil(w / 2), Math.ceil(h / 2));
+              const nctx = next.getContext("2d")!;
+              nctx.imageSmoothingEnabled = true;
+              nctx.imageSmoothingQuality = "low";
+              nctx.drawImage(cur, 0, 0, w, h, 0, 0, w / 2, h / 2);
+              harden(next);
+              cur = next; w = next.width; h = next.height; f *= 2;
+            }
+            if (xf.scale * f < 1) {
+              const g = level(levels.indexOf(cur) + 1, w, h);
+              const gc = g.getContext("2d")!;
+              for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]] as const) {
+                gc.drawImage(cur, dx, dy);
+              }
+              cur = g;
+            }
+            pyr = { mask: m, gen: maskGen.current, f, w: m.width, h: m.height, canvas: cur };
+          }
+          const f = pyr.f, cur = pyr.canvas;
+          sctx.imageSmoothingEnabled = true;
+          sctx.imageSmoothingQuality = "low";
+          sctx.drawImage(cur, b.sx / f, b.sy / f, b.sw / f, b.sh / f, b.dx, b.dy, b.dw, b.dh);
+        } else if (b) {
+          sctx.drawImage(m, b.sx, b.sy, b.sw, b.sh, b.dx, b.dy, b.dw, b.dh);
+        }
       }
-      // Erode the silhouette by ~1px (intersection of 8 shifted copies) — the
-      // ants outline is a 1px ring whose stripe phase animates below.
-      if (eroded.width !== xf.bw || eroded.height !== xf.bh) { eroded.width = xf.bw; eroded.height = xf.bh; }
-      const ectx = eroded.getContext("2d")!;
-      ectx.clearRect(0, 0, xf.bw, xf.bh);
-      ectx.drawImage(scratch, 0, 0);
-      ectx.globalCompositeOperation = "destination-in";
-      const d = 1.0;
-      for (const [dx, dy] of [[d, 0], [-d, 0], [0, d], [0, -d], [d, d], [-d, -d], [d, -d], [-d, d]] as const) {
-        ectx.drawImage(scratch, dx, dy);
+      // The silhouette, BINARY: anything selected at all is in. (A float's
+      // mask scaled up also stretches its anti-aliased edge into a soft
+      // fringe; hardened, the ring stays one crisp screen pixel whatever the
+      // float's scale.)
+      harden(scratch);
+      // Grow it by one pixel (the union of eight shifted copies) and take the
+      // silhouette back out: the ring is the pixels just OUTSIDE it.
+      if (grown.width !== xf.bw || grown.height !== xf.bh) { grown.width = xf.bw; grown.height = xf.bh; }
+      const gctx = grown.getContext("2d")!;
+      gctx.clearRect(0, 0, xf.bw, xf.bh);
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]] as const) {
+        gctx.drawImage(scratch, dx, dy);
       }
-      ectx.globalCompositeOperation = "source-over";
-      // ring = silhouette − eroded
-      sctx.globalCompositeOperation = "destination-out";
-      sctx.drawImage(eroded, 0, 0);
-      sctx.globalCompositeOperation = "source-over";
+      gctx.globalCompositeOperation = "destination-out";
+      gctx.drawImage(scratch, 0, 0);
+      gctx.globalCompositeOperation = "source-over";
       // KEEP the ring: from here every frame is the two lines in `stripe`.
       if (ring.width !== xf.bw || ring.height !== xf.bh) {
         ring.width = xf.bw; ring.height = xf.bh;
       }
       const rctx = ring.getContext("2d")!;
       rctx.clearRect(0, 0, ring.width, ring.height);
-      rctx.drawImage(scratch, 0, 0);
+      rctx.drawImage(grown, 0, 0);
       antsRing.current = ring;
       antsRingGen.current++;
       stripe(actx, ac);
@@ -2282,6 +2368,12 @@ export function EditorOverlay() {
    *  so one rule keeps them from disagreeing about what is selected. Read
    *  by `onSelectionBorder` as "the ring is stale". */
   const ringDirty = useRef(true);
+  /** Bumped where the mask may have CHANGED (the veil rebuilt outside a
+   *  gesture that leaves it alone), never by a pan, a zoom or a selection
+   *  being dragged. What the zoomed-out outline's pyramid is keyed on: it is
+   *  work in proportion to the PICTURE, and a pan asking for it again on
+   *  every frame was 85 ms a frame on a 64 MP page in Safari. */
+  const maskGen = useRef(0);
   /** The view transform the ants canvas currently HOLDS, or "" when it holds
    *  nothing. It is what lets a gesture freeze the dashes without freezing
    *  them through a pan: same key, same picture, nothing to redraw. */
