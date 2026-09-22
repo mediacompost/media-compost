@@ -159,6 +159,13 @@ interface Floating {
   transforming: boolean;       // show the transform box + handles
   keep: boolean;               // copy mode: the original pixels stay in place
   pasted?: boolean;            // came from the clipboard — no original underneath
+  // The bbox of the buffer as it was BEFORE the lift, for Keep original. The
+  // hole is punched with the mask, so a soft or anti-aliased edge leaves the
+  // pixel partly there — and drawing the lifted copy back over that does not
+  // add up to the original (two partial alphas composite to less than one):
+  // a blurred selection left a grey veil and a round one a thin ring. Keep
+  // original therefore puts THESE pixels back, exactly.
+  orig?: HTMLCanvasElement;
 }
 
 /** One undo/redo checkpoint of the destructive editor state. */
@@ -1284,12 +1291,8 @@ export function EditorOverlay() {
       const f = floatRef.current;
       const cxS = ox + f.cx * scale, cyS = oy + f.cy * scale;
       const halfW = (f.w0 * f.scaleX * scale) / 2, halfH = (f.h0 * f.scaleY * scale) / 2;
-      // Copy mode: the original pixels stay visible in place (the lift punched
-      // a hole; painting the lifted layer back at home covers it exactly).
-      if (f.keep) {
-        ctx.drawImage(f.canvas, ox + f.homeX * scale, oy + f.homeY * scale,
-                      f.w0 * scale, f.h0 * scale);
-      }
+      // Copy mode needs nothing here: the buffer under the float still holds
+      // the original (`placeHome`), so the picture drawn above shows it.
       ctx.save();
       ctx.translate(cxS, cyS);
       ctx.rotate(f.rot);
@@ -1940,32 +1943,50 @@ export function EditorOverlay() {
     const mc = document.createElement("canvas");
     mc.width = bb.w; mc.height = bb.h;
     mc.getContext("2d")!.drawImage(maskRef.current, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
-    // Punch the hole in the buffer under the selection.
-    const pctx = pixelRef.current.getContext("2d")!;
-    pctx.save();
-    pctx.globalCompositeOperation = "destination-out";
-    pctx.drawImage(maskRef.current, 0, 0);
-    pctx.restore();
+    const orig = document.createElement("canvas");
+    orig.width = bb.w; orig.height = bb.h;
+    orig.getContext("2d")!.drawImage(pixelRef.current, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
     const f: Floating = {
       canvas: fc, mask: mc, w0: bb.w, h0: bb.h,
       cx: bb.x + bb.w / 2, cy: bb.y + bb.h / 2,
       homeX: bb.x, homeY: bb.y,
-      scaleX: 1, scaleY: 1, rot: 0, transforming, keep: false,
+      scaleX: 1, scaleY: 1, rot: 0, transforming, keep: false, orig,
     };
+    // Punch the hole in the buffer under the selection — unless the original
+    // is being kept, in which case the buffer is left exactly as it was.
+    if (!f.keep) placeHome(f, false);
     floatRef.current = f;
     setFloating(f);
     setTimeout(() => redrawRef.current(), 0);
     return f;
   };
 
+  /** The buffer under a float's HOME: the original put back exactly (keep)
+   *  or the hole punched through it with the lifted selection shape. */
+  const placeHome = (f: Floating, keep: boolean) => {
+    if (!f.orig) return;
+    const pctx = pixelRef.current.getContext("2d")!;
+    pctx.save();
+    pctx.globalCompositeOperation = "copy";
+    pctx.beginPath();
+    pctx.rect(f.homeX, f.homeY, f.w0, f.h0);
+    pctx.clip();
+    pctx.drawImage(f.orig, f.homeX, f.homeY);
+    pctx.restore();
+    if (keep) return;
+    pctx.save();
+    pctx.globalCompositeOperation = "destination-out";
+    pctx.drawImage(f.mask, f.homeX, f.homeY);
+    pctx.restore();
+  };
+
   // Bake the floating layer back into the buffer and re-derive the selection
   // mask from its transformed silhouette (so it stays selected in place).
+  // With Keep original the buffer under the float already IS the original
+  // (`placeHome`), so the copy simply lands on top of it.
   const commitFloat = () => {
     const f = floatRef.current;
     if (!f) return;
-    // Copy mode: put the lifted pixels back into their hole first, so the
-    // original survives underneath the transformed copy.
-    if (f.keep) pixelRef.current.getContext("2d")!.drawImage(f.canvas, f.homeX, f.homeY);
     const apply = (c: CanvasRenderingContext2D, src: HTMLCanvasElement) => {
       c.save();
       c.translate(f.cx, f.cy);
@@ -3325,6 +3346,9 @@ export function EditorOverlay() {
     floatRef.current = nf;
     // Only the transforming/keep flags affect the UI (props bar); position and
     // scale changes stay ref-only so a drag never re-renders per mousemove.
+    if (patch.keep !== undefined && patch.keep !== cur.keep) {
+      placeHome(nf, nf.keep);
+    }
     if (patch.transforming !== undefined || patch.keep !== undefined) setFloating(nf);
     redrawRef.current();
   };

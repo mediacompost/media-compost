@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Keep original no longer leaves a trace behind.** Moving or
+  transforming a blurred selection used to leave a grey veil where the
+  original was, and a round one a thin outline; the original now stays
+  exactly as it was.
 - **The tag lists that ship with Media Compost are rows of the tag set
   list now, not entries of its Add menu.** Booru, Characters, Photography,
   Cinematography and Documents and screens are in every library, wearing a
