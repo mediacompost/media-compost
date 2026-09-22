@@ -11,6 +11,8 @@
   marquee shape, the selection modes, the crop ratio and Keep original.
 - **Shortcuts keep working after you touch a slider, a button or a
   dropdown** in the editor's properties bar.
+- **Hold Alt/Option with the brush or the fill tool to pick a colour**
+  off the picture, as in Photoshop. A quick tap of Alt switches nothing.
 - **The tag lists that ship with Media Compost are rows of the tag set
   list now, not entries of its Add menu.** Booru, Characters, Photography,
   Cinematography and Documents and screens are in every library, wearing a

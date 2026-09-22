@@ -985,7 +985,7 @@ export function EditorOverlay() {
   const pressureRef = useRef(1);
   const brushViewRef = useRef({ tool: "hand" as Tool, size: 40 });
   brushViewRef.current = {
-    tool: spaceHand ? "hand" : tool,
+    tool: spaceHand ? "hand" : altHeld && (tool === "brush" || tool === "fill") ? "pipette" : tool,
     size: tool === "blur" ? tips.blur.size : tool === "erase" ? tips.erase.size : tips.brush.size,
   };
 
@@ -999,7 +999,12 @@ export function EditorOverlay() {
 
   // Holding Space temporarily switches any tool to the hand (pan) tool,
   // Photoshop-style; the picked tool comes back on release.
-  const activeTool: Tool = spaceHand ? "hand" : tool;
+  //
+  // Holding Alt/Option over the BRUSH or the FILL is the pipette, the same way
+  // and for as long as it is held (Photoshop's eyedropper modifier). It is a
+  // derived tool rather than a switch, so a brief tap of Alt changes nothing.
+  const altPicks = (t: Tool) => t === "brush" || t === "fill";
+  const activeTool: Tool = spaceHand ? "hand" : altHeld && altPicks(tool) ? "pipette" : tool;
 
   // Zoom by `factor` about the right point — the same rule the annotator uses,
   // from the same `zoomPivot.ts` (its tests are where the rule is stated): an
@@ -1702,7 +1707,7 @@ export function EditorOverlay() {
   useEffect(() => {
     const c = cursorRef.current;
     placeRing(c.x, c.y, c.over);
-  }, [tool, spaceHand, tips, scale, placeRing]);
+  }, [tool, spaceHand, altHeld, tips, scale, placeRing]);
 
   // ---- undo / redo ----
   const captureSnap = (): Snap => ({
@@ -1891,7 +1896,10 @@ export function EditorOverlay() {
   // photograph is the row emptied of everything worth keeping. The popover's
   // own rule, which records on close rather than per slider move.
   const lastPick = useRef<string | null>(null);
-  const pickColor = (img: { x: number; y: number }, background: boolean) => {
+  /** `keepOpacity`: the brush's own Alt-pick, which takes the COLOUR off the
+   *  picture and leaves the Opacity slider where it was — Photoshop's rule,
+   *  and the one that makes sampling a flat area not reset a 30% brush. */
+  const pickColor = (img: { x: number; y: number }, background: boolean, keepOpacity = false) => {
     const x = Math.floor(img.x), y = Math.floor(img.y);
     if (x < 0 || y < 0 || x >= dims.w || y >= dims.h) return;
     let probe = probeRef.current;
@@ -1908,6 +1916,7 @@ export function EditorOverlay() {
     const hex2 = (v: number) => v.toString(16).padStart(2, "0");
     const hex = `#${hex2(r)}${hex2(g)}${hex2(b)}${a < 255 ? hex2(a) : ""}`;
     if (background) setBgColor(hex);
+    else if (keepOpacity) setColor((c) => withAlpha(splitAlpha(hex).rgb, splitAlpha(c).a));
     else setColor(hex);
     lastPick.current = hex;
   };
@@ -3468,7 +3477,10 @@ export function EditorOverlay() {
     }
     // The hand tool (or held Space) only pans — Photoshop-style; moving a
     // floated selection happens through its transform box instead.
-    const at = activeTool;
+    // `e.altKey` as well as the held flag: an Alt pressed while a field had
+    // the focus never reached the key handler.
+    const altPick = !spaceHand && altPicks(tool) && (altHeld || e.altKey);
+    const at: Tool = altPick ? "pipette" : activeTool;
     // Starting a new selection while floating bakes the current float first.
     if (isSelectTool(at) && floatRef.current) commitFloat();
 
@@ -3479,7 +3491,13 @@ export function EditorOverlay() {
     // similar-colored area under the cursor; dragging then widens/narrows the
     // tolerance live (see beginFlood/dragFlood).
     if (at === "fill") { beginFlood("fill", img.x, img.y, "replace"); return; }
-    if (at === "pipette") { pickColor(img, e.altKey); return; }
+    if (at === "pipette") {
+      (drag.current as { altPick?: boolean }).altPick = altPick;
+      // The pipette's own Alt picks the BACKGROUND; the brush's Alt IS the
+      // pipette, and picks the paint colour.
+      pickColor(img, !altPick && e.altKey, altPick && tool === "brush");
+      return;
+    }
     // Wand: flood-SELECT the similar-colored area; Shift extends and Alt
     // subtracts, overriding the bar's mode for this click.
     if (at === "wand") {
@@ -3740,7 +3758,11 @@ export function EditorOverlay() {
         setZoomRect(normRect(d.last, img));
         return;
       }
-      if (d.tool === "pipette") { pickColor(img, e.altKey); return; }
+      if (d.tool === "pipette") {
+        const altPick = !!(d as { altPick?: boolean }).altPick;
+        pickColor(img, !altPick && e.altKey, altPick && tool === "brush");
+        return;
+      }
       if (d.tool === "brush" || d.tool === "blur" || d.tool === "erase") {
         // A STAMP EVERY `spacing` PIXELS OF TRAVEL, with the remainder carried
         // to the next event. It used to be `max(1, distance / spacing)` stamps
@@ -5436,10 +5458,10 @@ function hintFor(tool: Tool, selStyle?: SelStyle): string {
     case "lasso": return "Drag to draw · click to place corners · double-click, the first corner or Enter closes · Esc cancels · Shift extend · Alt subtract · Shift+Alt intersect";
     case "select": return "Drag to select · Shift extend · Alt subtract · Shift+Alt intersect · while dragging, Shift makes it square and Alt draws from the centre · Transform to scale/rotate";
     case "text": return "Click a text box to select it · drag across several · Shift add · Alt remove";
-    case "brush": return "Paint with the active color · affects the selection only";
+    case "brush": return "Paint with the active color · Alt picks a color · affects the selection only";
     case "erase": return "Erase to the background color (transparent by default) · affects the selection only";
     case "blur": return "Paint to blur · repeated strokes blur further · affects the selection only";
-    case "fill": return "Click to fill similar colors · drag to widen/narrow the tolerance · affects the selection only";
+    case "fill": return "Click to fill similar colors · drag to widen/narrow the tolerance · Alt picks a color · affects the selection only";
     case "pipette": return "Click to pick the color under the pointer · drag to keep picking · Alt-click picks the background color";
     case "wand": return "Click to select similar colors · drag to widen/narrow · Grow pads what it finds (negative shrinks) · Shift add · Alt remove · Shift+Alt intersect · click inside to deselect";
     case "crop": return "Drag a crop · Angle slider rotates · Enter crops";
