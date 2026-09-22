@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Selections stay smooth when zoomed in, especially in Safari.** With
+  a selection on screen every frame used to pay for redrawing its outline,
+  and zoomed in a drag redrew it on every mouse move. Dragging out a new
+  selection over an old one no longer slows down the longer the drag runs.
 - **A blurred selection's outline sits outside it.** The marching ants
   used to be blurred along with the selection's edge; now they run just
   outside every selected pixel, however faintly selected, and the dimming

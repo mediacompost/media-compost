@@ -1063,9 +1063,19 @@ export function EditorOverlay() {
     // in CSS pixels (`ctx.scale`). Without this, 100% — one picture pixel per
     // device pixel — would draw the image into half as many canvas pixels as
     // the screen has, and "actual size" would be a downscale.
-    view.width = Math.round(box.w * dpr);
-    view.height = Math.round(box.h * dpr);
+    // Assigning the size is how this used to START OVER — a fresh bitmap and
+    // a context back at its defaults — but it throws the backing store away
+    // and allocates another even when the size is the one it has, on every
+    // pointer move of every gesture. `reset()` is the same fresh start
+    // without the allocation; the size is assigned only when it changes.
+    const vw = Math.round(box.w * dpr), vh = Math.round(box.h * dpr);
     const ctx = view.getContext("2d")!;
+    const resettable = typeof (ctx as { reset?: () => void }).reset === "function";
+    if (view.width !== vw || view.height !== vh || !resettable) {
+      view.width = vw; view.height = vh;
+    } else {
+      (ctx as unknown as { reset: () => void }).reset();
+    }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, box.w, box.h);
     const ox = originX(), oy = originY();
@@ -1237,40 +1247,58 @@ export function EditorOverlay() {
       // every pointer move for a mask that had not changed.
       let tmp = dimRef.current;
       if (huge) {
-        // The viewport-sized version of the same veil, rebuilt every redraw:
-        // one fill and one patch of the mask, both bounded by the screen.
+        // The viewport-sized version of the same veil: one fill and one patch
+        // of the mask, both bounded by the screen.
         const vw = Math.max(1, Math.round(box.w * dpr)), vh = Math.max(1, Math.round(box.h * dpr));
+        // KEPT FOR THE LENGTH OF A GESTURE THAT LEAVES THE MASK ALONE, keyed
+        // on the view: dragging out a new marquee over an old selection
+        // redrew this on every pointer move, and at 5120 x 2630 in Safari it
+        // is 5.3 ms of GPU work each time — the drag's biggest single cost,
+        // queued faster than the screen could show it.
+        const hugeKey = `huge|${vw}x${vh}|${ox}|${oy}|${scale}|${dims.w}x${dims.h}`;
+        const reuse = veilLive && tmp && veilKeyRef.current === hugeKey
+          && tmp.width === vw && tmp.height === vh;
         if (!tmp || tmp.width !== vw || tmp.height !== vh) {
           tmp = document.createElement("canvas");
           tmp.width = vw; tmp.height = vh;
           dimRef.current = tmp;
         }
-        veilKeyRef.current = "";
-        const tctx = tmp.getContext("2d")!;
-        tctx.setTransform(1, 0, 0, 1, 0, 0);
-        tctx.clearRect(0, 0, vw, vh);
-        tctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        tctx.globalCompositeOperation = "source-over";
-        if (vis) {
-          tctx.fillStyle = "rgba(10,12,20,0.28)";
-          tctx.fillRect(vis.dx, vis.dy, vis.dw, vis.dh);
-          tctx.globalCompositeOperation = "destination-out";
-          tctx.imageSmoothingEnabled = scale * dpr < 1;
-          // The visible patch of the mask WHERE IT IS BEING DRAGGED TO: the
-          // origin moves, so the visible rect is computed against the moved
-          // origin rather than the mask's own.
-          const sh = maskShift.current;
-          const mv = sh
-            ? visibleBlit(ox + sh.x * scale, oy + sh.y * scale, scale,
-                          dims.w, dims.h, box.w, box.h)
-            : vis;
-          if (mv) {
-            tctx.drawImage(maskRef.current, mv.sx, mv.sy, mv.sw, mv.sh,
-                           mv.dx, mv.dy, mv.dw, mv.dh);
+        veilKeyRef.current = hugeKey;
+        if (!reuse) {
+          const tctx = tmp.getContext("2d")!;
+          tctx.setTransform(1, 0, 0, 1, 0, 0);
+          tctx.clearRect(0, 0, vw, vh);
+          tctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          tctx.globalCompositeOperation = "source-over";
+          if (vis) {
+            tctx.fillStyle = "rgba(10,12,20,0.28)";
+            tctx.fillRect(vis.dx, vis.dy, vis.dw, vis.dh);
+            tctx.globalCompositeOperation = "destination-out";
+            tctx.imageSmoothingEnabled = scale * dpr < 1;
+            // The visible patch of the mask WHERE IT IS BEING DRAGGED TO: the
+            // origin moves, so the visible rect is computed against the moved
+            // origin rather than the mask's own.
+            const sh = maskShift.current;
+            const mv = sh
+              ? visibleBlit(ox + sh.x * scale, oy + sh.y * scale, scale,
+                            dims.w, dims.h, box.w, box.h)
+              : vis;
+            if (mv) {
+              tctx.drawImage(maskRef.current, mv.sx, mv.sy, mv.sw, mv.sh,
+                             mv.dx, mv.dy, mv.dw, mv.dh);
+            }
           }
         }
-        ringDirty.current = true;
-        if (!maskShift.current) maskGen.current++;
+        // This veil is rebuilt on every redraw outside a gesture, so it
+        // cannot be what says the mask changed: during a gesture that leaves
+        // the mask alone (a marquee drag, a stroke, a pan — `veilLive`) the
+        // outline stays as it was, and a pan is caught by the loop's own key. Marking it
+        // here unconditionally rebuilt the outline on every pointer move of
+        // every drag once zoomed in — most of a 53 ms frame in Safari.
+        if (!veilLive) {
+          ringDirty.current = true;
+          if (!maskShift.current) maskGen.current++;
+        }
         ctx.drawImage(tmp, 0, 0, box.w, box.h);
       } else if (!(veilLive && tmp && veilKeyRef.current === zoomKey)) {
         if (!tmp || tmp.width !== bw || tmp.height !== bh) {
@@ -1538,6 +1566,20 @@ export function EditorOverlay() {
   // (image looked stretched until the next zoom rebuilt redraw).
   const redrawRef = useRef(redraw);
   redrawRef.current = redraw;
+  /** ONE REDRAW A FRAME FOR A DRAG. A pointer can deliver several moves per
+   *  frame, and each redraw repaints the whole view: at 5120 x 2630 that is
+   *  enough GPU work that Safari queued it faster than it could show it,
+   *  and a drag drew fewer frames the longer it went on. The move handler
+   *  asks for a redraw; the next frame draws the latest state once. */
+  const redrawFrame = useRef(0);
+  const scheduleRedraw = () => {
+    if (redrawFrame.current) return;
+    redrawFrame.current = requestAnimationFrame(() => {
+      redrawFrame.current = 0;
+      redrawRef.current();
+    });
+  };
+  useEffect(() => () => cancelAnimationFrame(redrawFrame.current), []);
 
   // ---- marching ants ----
   // Animated black/white dashes tracing the selection silhouette (or, while
@@ -1754,33 +1796,41 @@ export function EditorOverlay() {
       stripe(actx, ac);
     };
 
-    /** One frame: the stripes, clipped to the ring built above. */
-    function stripe(actx: CanvasRenderingContext2D, ac: HTMLCanvasElement) {
+    /** The stripes, painted ONCE per canvas size, a period larger than the
+     *  canvas on every side. A pattern fill over a rotated rect was every
+     *  frame's cost and in Safari it is slow — 23 ms a frame at 2560 x 1315,
+     *  a quarter of the frame budget three times over, for as long as
+     *  anything was selected. Moving a finished picture is a plain
+     *  `drawImage`, 2.7 ms there. */
+    const stripes = document.createElement("canvas");
+    const ANG = (35 * Math.PI) / 180;
+    const PAD = 8;
+    function stripeCanvas(w: number, h: number): HTMLCanvasElement | null {
       const pat = stripePat.current;
-      if (!pat) return;
+      if (!pat) return null;
+      if (stripes.width === w + 2 * PAD && stripes.height === h + 2 * PAD) return stripes;
+      stripes.width = w + 2 * PAD; stripes.height = h + 2 * PAD;
+      const c = stripes.getContext("2d")!;
+      c.save();
+      c.rotate(ANG);
+      c.fillStyle = pat;
+      // The whole canvas seen from the rotated frame (its corners through the
+      // inverse rotation), padded by a period.
+      const cs = Math.cos(ANG), sn = Math.sin(ANG);
+      const W = stripes.width, H = stripes.height;
+      c.fillRect(-PAD, -W * sn - PAD, W * cs + H * sn + 2 * PAD, W * sn + H * cs + 2 * PAD);
+      c.restore();
+      return stripes;
+    }
+
+    /** One frame: the stripes, moved along their own normal by the phase,
+     *  clipped to the ring built above. */
+    function stripe(actx: CanvasRenderingContext2D, ac: HTMLCanvasElement) {
+      const st = stripeCanvas(ac.width, ac.height);
+      if (!st) return;
       t = (t + 0.35) % 8;
-      // Rotate/translate the CONTEXT and fill a rect: patterns follow the
-      // canvas transform everywhere (Safari has no reliable
-      // CanvasPattern.setTransform), so the dash phase animates there too.
-      // THE RECT IS THE CANVAS SEEN FROM THE ROTATED FRAME — its four
-      // corners through the inverse rotation, padded by one pattern period
-      // for the phase — not a square on the diagonal, which covered four and
-      // a half screens of pattern fill sixty times a second for as long as
-      // anything was selected. This is every frame's whole cost on a
-      // software canvas (Safari), where the fill is the brush's competitor.
       actx.globalCompositeOperation = "source-over";
-      actx.save();
-      const ang = (35 * Math.PI) / 180;
-      const cs = Math.cos(ang), sn = Math.sin(ang);
-      actx.rotate(ang);
-      actx.translate(t, 0);
-      actx.fillStyle = pat;
-      // Screen (x, y) lands at (x·cos + y·sin, −x·sin + y·cos) in the rotated
-      // frame; the canvas's corners bound it at x ∈ [0, w·cos + h·sin] and
-      // y ∈ [−w·sin, h·cos].
-      actx.fillRect(-t - 8, -ac.width * sn - 8,
-                    ac.width * cs + ac.height * sn + 16, ac.width * sn + ac.height * cs + 16);
-      actx.restore();
+      actx.drawImage(st, -PAD + t * Math.cos(ANG), -PAD + t * Math.sin(ANG));
       actx.globalCompositeOperation = "destination-in";
       actx.drawImage(ring, 0, 0);
       actx.globalCompositeOperation = "source-over";
@@ -3709,7 +3759,7 @@ export function EditorOverlay() {
           x: Math.round(img.x - (d as any).startImg.x),
           y: Math.round(img.y - (d as any).startImg.y),
         };
-        redraw();
+        scheduleRedraw();
         return;
       }
       // Adjusting the crop rect via its handles (resize / rotate / move).
@@ -3884,7 +3934,7 @@ export function EditorOverlay() {
         if (d.tool === "blur") (d as any).carry = travelled;
         else if (st) st.carry = travelled;
         d.last = img;
-        redraw();
+        scheduleRedraw();
         return;
       }
       if (isSelectTool(d.tool)) {
@@ -3896,7 +3946,7 @@ export function EditorOverlay() {
           fromCentre: e.altKey && !(d as any).altAtStart,
           square: e.shiftKey && !(d as any).shiftAtStart,
         });
-        redraw();
+        scheduleRedraw();
         return;
       }
       if (d.tool === "text") {
@@ -3904,7 +3954,7 @@ export function EditorOverlay() {
         // (the rubber band) but never committed: what lands in the mask is
         // the BOXES it touched.
         pending.current!.rect = normRect(d.last, img);
-        redraw();
+        scheduleRedraw();
         return;
       }
       if (d.tool === "crop") {
