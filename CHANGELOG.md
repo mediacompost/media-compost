@@ -6,6 +6,8 @@
   transforming a blurred selection used to leave a grey veil where the
   original was, and a round one a thin outline; the original now stays
   exactly as it was.
+- **Shortcuts keep working after you touch a slider, a button or a
+  dropdown** in the editor's properties bar.
 - **The tag lists that ship with Media Compost are rows of the tag set
   list now, not entries of its Add menu.** Booru, Characters, Photography,
   Cinematography and Documents and screens are in every library, wearing a

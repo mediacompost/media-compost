@@ -180,6 +180,32 @@ interface Snap {
   id: number;
 }
 
+/** Inputs nobody TYPES into: a slider, a tick box, a colour well. */
+const NON_TEXT_INPUTS = new Set(["range", "checkbox", "radio", "button", "submit", "reset", "color", "file", "image"]);
+/** A control that took focus from a click and holds no text — a button, a
+ *  slider, a tick box. */
+function isNonTextControl(el: EventTarget | null): el is HTMLElement {
+  if (el instanceof HTMLButtonElement) return true;
+  return el instanceof HTMLInputElement && NON_TEXT_INPUTS.has(el.type);
+}
+/**
+ * WHETHER A KEY BELONGS TO A FIELD RATHER THAN TO THE EDITOR.
+ *
+ * `isTypingTarget` answers yes for every `<input>`, and a SLIDER is one: a
+ * click on the brush's Size or Hardness track focuses it, and from then on B,
+ * E, Space, ⌘Z and the rest all stood down until something else took the
+ * focus — "the shortcuts stop working after I touch a slider". Nothing is
+ * typed into a slider, so only its own arrow keys stay with it.
+ */
+function typingInEditor(e: KeyboardEvent): boolean {
+  if (!isTypingTarget(e)) return false;
+  const el = e.target;
+  if (el instanceof HTMLInputElement && NON_TEXT_INPUTS.has(el.type)) {
+    return el.type === "range" && /^(Arrow|Home$|End$|Page)/.test(e.key);
+  }
+  return true;
+}
+
 function cloneCanvas(src: HTMLCanvasElement): HTMLCanvasElement {
   const c = document.createElement("canvas");
   c.width = src.width;
@@ -4050,7 +4076,14 @@ export function EditorOverlay() {
       // While typing in a text field (e.g. the add-tag input), let the field
       // handle every key itself — no tool shortcuts, and crucially no Backspace
       // firing the destructive fill/erase on the current selection.
-      if (isTypingTarget(e)) return;
+      if (typingInEditor(e)) return;
+      // A button or slider the mouse left focused must not take Space or
+      // Enter for itself (Space would press it instead of panning, Enter
+      // press it as well as applying): it gives the focus back first.
+      if ((e.key === " " || e.key === "Enter") && isNonTextControl(e.target)) {
+        e.preventDefault();
+        e.target.blur();
+      }
       // While a modal (reference picker, save prompt) is up, it owns the
       // keyboard — especially Escape, which must not also close the editor.
       if (modalOpenRef.current) return;
@@ -4754,6 +4787,7 @@ export function EditorOverlay() {
                   // Remembered for the ITEM, so the sidebar and the
                   // annotator show the reading you just switched to.
                   rememberEngine(editorItemId, e.target.value);
+                  e.target.blur();
                 }}
                 title="Show another model's reading"
                 style={{
@@ -5409,7 +5443,8 @@ function SelectProp({ label, value, options, onChange, title }: {
       <span style={{ fontSize: "var(--fs-2)", color: "var(--muted)" }}>{label}</span>
       <select
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        // A picked option hands the keyboard back to the editor's shortcuts.
+        onChange={(e) => { onChange(e.target.value); e.target.blur(); }}
         style={{ height: 24, borderRadius: "var(--r-2)", border: "none", background: "var(--panel-2)", color: "var(--text-2)", padding: "0 4px", fontSize: "var(--fs-2)", cursor: "pointer" }}>
         {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
