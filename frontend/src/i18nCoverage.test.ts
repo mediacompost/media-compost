@@ -35,7 +35,7 @@ import { dirname, join, relative, sep } from "node:path";
 import appDe from "./app/locales/de.ts";
 import { COLOR_BANDS } from "./app/gridGroups.ts";
 import { ACTION_SECTIONS } from "./app/actionSections.ts";
-import { GRID_SIZES } from "./app/gridGeom.ts";
+import { GRID_SIZES } from "./shared/gridGeom.ts";
 import { ACTIONS, UNKNOWN_ACTION } from "./app/historyActions.ts";
 import { ARTIFACT_KINDS } from "./app/artifactKinds.ts";
 import { STORAGE_ROW_LABELS } from "./app/storageRows.ts";

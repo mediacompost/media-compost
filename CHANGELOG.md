@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **The Evaluate grid behaves like the library's.** Drag a box from the
+  background to select, pick a size with S/M/L, and every picture sits in a
+  square card like the library's.
 - **Settings → Storage shows the Evaluate tab's pictures as their own
   row.** They used to be counted as Training runs.
 - **The Evaluate grid's selection bar can cancel.** With a slot of a

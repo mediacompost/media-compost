@@ -43,8 +43,8 @@ import { PointerMenu, RowMenu, type RowAction } from "./shared/RowMenu";
 import { useRowSelect } from "./shared/useRowSelect";
 import { FacePreviewOverlay, FloatingFaceInPicture } from "./shared/FaceInPicture";
 import { useAnchorRect } from "../../shared/AnchoredDropdown";
-import { CardGrid, GridSizeControl } from "./CardGrid";
-import { columnsFor } from "../gridGeom";
+import { CardGrid, GridSizeControl } from "../../shared/CardGrid";
+import { columnsFor } from "../../shared/gridGeom";
 import { PAGE_PAD, TagsPanes, usePaneHeight } from "./TagsPanes";
 import { WhenEditor } from "./PeopleSection";
 import { Overlay } from "../../shared/Overlay";
@@ -1526,7 +1526,7 @@ export function FacesView({ scrollRef }: {
             onPick: (id) => setGrouping(id as FaceGrouping),
           }]} />
       )}
-      <GridSizeControl size={faceSize} onSize={setFaceSize} />
+      <GridSizeControl size={faceSize} onSize={setFaceSize} t={t} />
       </div>
       {/* WHAT THE PICTURES ARE TAGGED, as a set of ticks (owner 2026-09).
           Ticking one or more lays the grid out by them — and by the

@@ -45,7 +45,7 @@ const FONT_BUDGET: Record<string, number> = {
 const RADIUS_BUDGET: Record<string, number> = {
   "app/components/AnnotationOverlay.tsx": 15,
   "app/components/CaptionEditor.tsx": 1,
-  "app/components/CardGrid.tsx": 1,
+  "shared/CardGrid.tsx": 1,
   "app/components/ColorPicker.tsx": 2,
   "app/components/CutTrack.tsx": 2,
   "app/components/EstimateOverlay.tsx": 1,

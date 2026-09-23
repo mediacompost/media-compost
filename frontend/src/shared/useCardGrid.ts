@@ -12,7 +12,7 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "re
 import {
   columnsFor, gridWindow, groupLayout, groupWindow, marqueeHits,
   marqueeHitsGrouped, scrollScale, type GroupLayout, type GroupRun,
-} from "../gridGeom";
+} from "./gridGeom";
 
 export interface CardGridOptions {
   /** How many cards there are, loaded or not. */
@@ -262,7 +262,10 @@ export function useCardGrid(o: CardGridOptions): CardGridState {
     const sc = scrollRef.current;
     // A press in the scrollbar gutter is the scrollbar's.
     if (sc && e.clientX - sc.getBoundingClientRect().left >= sc.clientWidth) return;
-    if ((e.target as HTMLElement).closest(cardSelector)) return;
+    // …and neither is a press on a CONTROL inside the grid (a section
+    // header's button): its click has to arrive, and a press that never
+    // moved would otherwise report a click on nothing as well.
+    if ((e.target as HTMLElement).closest(`${cardSelector}, button`)) return;
     cb.current.onMarqueeStart?.(e);
     const b = el.getBoundingClientRect();
     e.preventDefault();

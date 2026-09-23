@@ -20,19 +20,19 @@
  *  and every gesture on a card — a press on a card is deliberately NOT the
  *  start of a marquee, so a card's own click, drag and paint are untouched.
  */
-import React from "react";
-import { SegmentedControl } from "../../shared/SegmentedControl";
-
-import { useT } from "../i18n";
-import { GRID_SIZES, type GroupLayout, type GroupRun } from "../gridGeom";
+import React, { useImperativeHandle } from "react";
+import { SegmentedControl } from "./SegmentedControl";
+import { cardBox, GRID_SIZES, type GroupLayout, type GroupRun } from "./gridGeom";
 import { useCardGrid } from "./useCardGrid";
 
-/** The S/M/L segmented control, drawn the same in every grid that has one. */
-export function GridSizeControl({ size, onSize }: {
+/** The S/M/L segmented control, drawn the same in every grid that has one.
+ *  `t` is REQUIRED, like the rest of the shared chrome: the Evaluate tab
+ *  draws this too, and `train/` may not import the app's translator. */
+export function GridSizeControl({ size, onSize, t }: {
   size: number;
   onSize: (px: number) => void;
+  t: (s: string) => string;
 }) {
-  const t = useT();
   return (
     <SegmentedControl<number>
       value={size}
@@ -54,11 +54,22 @@ export interface CardGridGeom {
   layout: GroupLayout | null;
 }
 
+/** What a host may ask of the grid after it has laid itself out — for a
+ *  keyboard walk, which needs the same layout the cards are drawn from, and
+ *  has to bring a card on screen that the window may not have MOUNTED (so
+ *  `scrollIntoView` on the element has nothing to find). */
+export interface CardGridHandle {
+  columns: number;
+  layout: GroupLayout | null;
+  /** Scroll the scroller the least that puts card `index` fully in view. */
+  reveal: (index: number) => void;
+}
+
 export function CardGrid({
   count, size, metaH = 0, gap = 10, pad = 0,
   scrollRef, runs, headerH = 34, groupGap = 10, rowBuffer = 2,
-  renderCard, renderHeader, onMarquee, onMarqueeStart, marquee = true,
-  empty, style,
+  renderCard, renderHeader, onMarquee, onMarqueeStart, onBackgroundClick,
+  marquee = true, cardSelector, handleRef, empty, style,
 }: {
   /** How many cards there are, loaded or not. */
   count: number;
@@ -90,18 +101,52 @@ export function CardGrid({
   /** The press that begins a box, before any hit is known: where a host
    *  wants to take focus or put a menu away. */
   onMarqueeStart?: (e: React.MouseEvent) => void;
+  /** A press on the background that never became a box — a click on
+   *  nothing, which is where a host puts its selection down. The grid's
+   *  own answer, since a box drag also ends in a click the host's own
+   *  `onClick` could not tell from this one. */
+  onBackgroundClick?: (additive: boolean) => void;
   /** False where a box selection means nothing (a list of one row). */
   marquee?: boolean;
+  /** What a press on a card looks like (`[data-card]` by default) — such a
+   *  press is never the start of a box. */
+  cardSelector?: string;
+  handleRef?: React.Ref<CardGridHandle>;
   /** Drawn instead of the grid when there is nothing in it. */
   empty?: React.ReactNode;
   style?: React.CSSProperties;
 }) {
   const grid = useCardGrid({
     count, size, metaH, gap, pad, scrollRef, runs, headerH, groupGap, rowBuffer,
-    marquee, onMarquee, onMarqueeStart,
+    marquee, onMarquee, onMarqueeStart, onBackgroundClick, cardSelector,
   });
   const { wrapRef, columns, cellW, rowStride, layout, win, gwin, physH, yShift, fillH, box,
-          onMouseDown } = grid;
+          onMouseDown, toPhys } = grid;
+
+  useImperativeHandle(handleRef, () => ({
+    columns, layout,
+    reveal: (index: number) => {
+      const sc = scrollRef.current;
+      const el = wrapRef.current;
+      if (!sc || !el || columns < 1) return;
+      const b = layout ? cardBox(layout, index) : {
+        top: pad + Math.floor(index / columns) * rowStride,
+        height: rowStride - gap,
+      };
+      if (!b) return;
+      // The wrapper's place inside the scroller, then the card's inside the
+      // wrapper — in PHYSICAL pixels, which a scaled spacer is not.
+      const wrapTop = el.getBoundingClientRect().top
+        - sc.getBoundingClientRect().top + sc.scrollTop;
+      const top = wrapTop + toPhys(b.top);
+      const bottom = top + b.height;
+      const MARGIN = 8;
+      if (top < sc.scrollTop) sc.scrollTop = top - MARGIN;
+      else if (bottom > sc.scrollTop + sc.clientHeight) {
+        sc.scrollTop = bottom - sc.clientHeight + MARGIN;
+      }
+    },
+  }), [columns, layout, rowStride, pad, gap, scrollRef, wrapRef, toPhys]);
 
   if (count === 0 && empty) {
     return <div ref={wrapRef} style={style}>{empty}</div>;

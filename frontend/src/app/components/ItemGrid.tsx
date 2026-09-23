@@ -31,10 +31,10 @@ import {
   cardBox, columnsFor, gridWindow, groupLayout, groupWindow,
   marqueeHits, marqueeHitsGrouped, scrollScale, stepIndex,
   type GroupLayout, type GroupRun,
-} from "../gridGeom";
+} from "../../shared/gridGeom";
 import { groupLabel, groupSwatch, jumpGroups } from "../gridGroups";
-import { GridSizeControl } from "./CardGrid";
-import { useCardGrid } from "./useCardGrid";
+import { GridSizeControl } from "../../shared/CardGrid";
+import { useCardGrid } from "../../shared/useCardGrid";
 import { GridExportButton } from "./GridExport";
 import { RankingEditOverlay } from "./RankingEditOverlay";
 import { ActionToast } from "./shared/ActionToast";
@@ -1965,7 +1965,7 @@ export function ItemGrid() {
 
           {/* Grid size: S / M / L — `GridSizeControl`, the same control the
               Faces grid has, so the two cannot drift into two shapes. */}
-          <GridSizeControl size={gridSize} onSize={setGridSize} />
+          <GridSizeControl size={gridSize} onSize={setGridSize} t={t} />
           </div>
         </div>
 

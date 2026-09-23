@@ -2,7 +2,7 @@
 // completed training jobs) at user-defined weights. Size and seed are
 // automatic unless overridden. Past generations stack up as cards on the
 // right, newest first.
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { storage } from "../shared/storage";
 import { SectionHeading } from "../shared/SectionHeading";
 import { IconButton } from "../shared/IconButton";
@@ -26,8 +26,9 @@ import { Lightbox } from "./Lightbox";
 import { PromptArea } from "./PromptArea";
 
 import { architectureLabel, errText, fitsModel, groupBy, groupByArchitecture, releaseLabel } from "./util";
-import { stepTile } from "./evalGrid";
-import type { GridSection, StepDir } from "./evalGrid";
+import { CardGrid, GridSizeControl, type CardGridHandle } from "../shared/CardGrid";
+import { stepIndex, type GroupRun } from "../shared/gridGeom";
+import { TRAIN_PREFS } from "./prefs";
 import { useDateFormatters } from "../shared/time";
 import { SidebarSplit } from "../shared/SidebarSplit";
 import { TokenWarning } from "../shared/HfWarnings";
@@ -787,33 +788,6 @@ function ModelRows({ models, model, finetune, onModel, onFinetune }: {
 /** Runs closer together than this belong to the same sitting (30 minutes). */
 const SESSION_GAP = 30 * 60;
 
-/** One sitting's results, under a header naming when it started. The header
- *  carries the only bulk action there is: clearing that whole session, which
- *  is how a page full of experiments gets tidied without 20 confirmations. */
-/** How many columns the results grid has right now.
- *
- *  Measured, because the detail panel opens after the ROW its picture is in —
- *  which is a fact about the layout, not about the data, and the grid is
- *  `auto-fill` so nothing else knows it. */
-function useGridColumns(min: number, gap: number) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [cols, setCols] = useState(1);
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const measure = () => {
-      const w = el.clientWidth;
-      setCols(Math.max(1, Math.floor((w + gap) / (min + gap))));
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [min, gap]);
-  return { ref, cols };
-}
-
-const TILE_MIN = 180;
 //: The LIBRARY's grid gap, and it has to be: the selection ring is drawn 3 px
 //: outside a tile and is 2 px wide, so a tile reaches 5 px past its own box on
 //: every side. At the 8 px this used to be, two neighbouring rings overlapped
@@ -852,14 +826,16 @@ type Ring = "picked" | "none";
  *  yellow: it is the library grid's colour for a selection's secondary
  *  copies — the same "with the picked one, not it" claim — where yellow
  *  reads as a warning or a machine's guess. */
-function tileStyle(run: EvalRun, ring: Ring): React.CSSProperties {
+function tileStyle(ring: Ring): React.CSSProperties {
   return {
     display: "block", borderRadius: "var(--r-6)", overflow: "hidden",
     border: "1px solid var(--border)",
     outline: ring === "none" ? "none" : "2px solid var(--accent)",
     outlineOffset: 3,
     background: "var(--bg-deep)",
-    aspectRatio: `${run.width} / ${run.height}`, lineHeight: 0,
+    // SQUARE, the library grid's card: the grid lays out fixed cells, and
+    // a picture of any other shape sits letterboxed inside its own.
+    aspectRatio: "1 / 1", lineHeight: 0,
     padding: 0, cursor: "pointer",
   };
 }
@@ -900,6 +876,8 @@ function tileKey(uid: string, index: number): string {
  *  from the last pick over the reading order. */
 export type { PickMods } from "../shared/pickList";
 
+type StepDir = "left" | "right" | "up" | "down";
+
 /** The four keys that walk the grid — a table, so a key this tab does not
  *  claim falls through to the browser untouched. */
 const ARROWS: Record<string, StepDir | undefined> = {
@@ -907,145 +885,131 @@ const ARROWS: Record<string, StepDir | undefined> = {
   ArrowUp: "up", ArrowDown: "down",
 };
 
-/** ONE SESSION AS A CONTACT SHEET. The runs of a session used to be a stack
- *  of cards, each with its own little grid inside it; the pictures are what
- *  this tab is looked at for, so they share one grid, and the settings that
- *  made each of them ride the PREVIEW under the picture — for a slot with no
- *  picture, the preview is the card alone. */
-function SessionGroup({ runs, onClear, picked, onPick, onLightbox,
-                       onColumns }: {
+/** ONE SESSION'S HEADING in the contact sheet: when the sitting started, how
+ *  many results it holds, and the only bulk action there is — clearing the
+ *  whole session, which is how a page full of experiments gets tidied without
+ *  20 confirmations. Drawn by `CardGrid` as a section header, whose height is
+ *  fixed, so this is one line and never wraps. */
+function SessionHeader({ runs, onClear }: {
   runs: EvalRun[];
   onClear: () => void;
-  /** How many tiles fit across — MEASURED here, where the grid is, and
-   *  reported up because the arrow keys are the view's (the walk crosses
-   *  sessions). Every session sits in one scroll column, so they all
-   *  measure the same number and the last to report is right. */
-  onColumns?: (n: number) => void;
-  /** The VIEW's selection (tile keys) — it spans every session, like the
-   *  library grid's spans every section. */
-  picked: string[];
+}) {
+  const t = useT();
+  const tn = useTn();
+  const { formatUnix } = useDateFormatters();
+  return (
+    <div style={{
+      flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 8,
+      padding: "0 2px",
+    }}>
+      <SectionHeading>
+        {formatUnix(runs[runs.length - 1].created_at)}
+      </SectionHeading>
+      <span style={{ fontSize: "var(--fs-2)", color: "var(--muted-3)" }}>
+        {tn({ one: "1 result", other: "{n} results" }, runs.length)}
+      </span>
+      <div style={{ flex: 1, height: 1, background: "var(--border-soft)" }} />
+      <button
+        onClick={onClear}
+        title={t("Delete every result in this session")}
+        className="hoverable"
+        style={{
+          display: "inline-flex", alignItems: "center", gap: 5, height: 24,
+          padding: "0 9px", borderRadius: "var(--r-3)", border: "1px solid var(--border)",
+          background: "transparent", color: "var(--muted)", fontSize: "var(--fs-2)",
+          cursor: "pointer", fontFamily: "inherit",
+        }}
+      >
+        <Icon name="delete_sweep" size={14} />
+        {t("Clear")}
+      </button>
+    </div>
+  );
+}
+
+/** ONE TILE: a finished picture, or the slot of one still to come (or that
+ *  never came). `data-card` is what tells `CardGrid` a press here is the
+ *  tile's own and not the start of a box. */
+function EvalTile({ tile, picked, thumbW, onPick, onLightbox }: {
+  tile: Tile;
+  picked: boolean;
+  /** The width the server scales the picture to — the card's own, doubled
+   *  for a HiDPI screen, so one of three cached sizes. */
+  thumbW: number;
   onPick: (key: string, mods: PickMods) => void;
   /** The preview is the VIEW's — it walks the selection, which spans every
    *  session — so a tile only says which one it wants opened. */
   onLightbox: (v: { uid: string; i: number }) => void;
 }) {
   const t = useT();
-  const tn = useTn();
-  const { formatUnix } = useDateFormatters();
-  const { ref, cols } = useGridColumns(TILE_MIN, TILE_GAP);
-  const tiles: Tile[] = tilesOf(runs);
-  useEffect(() => { onColumns?.(cols); }, [cols, onColumns]);
-
   const mods = (e: React.MouseEvent): PickMods =>
     ({ meta: e.metaKey || e.ctrlKey, shift: e.shiftKey });
-
-  return (
-    <div style={{ marginBottom: 18 }}>
-      <div style={{
-        display: "flex", alignItems: "center", gap: 8, marginBottom: 8,
-        padding: "0 2px",
-      }}>
-        <SectionHeading>
-          {formatUnix(runs[runs.length - 1].created_at)}
-        </SectionHeading>
-        <span style={{ fontSize: "var(--fs-2)", color: "var(--muted-3)" }}>
-          {tn({ one: "1 result", other: "{n} results" }, runs.length)}
-        </span>
-        <div style={{ flex: 1, height: 1, background: "var(--border-soft)" }} />
-        <button
-          onClick={onClear}
-          title={t("Delete every result in this session")}
-          className="hoverable"
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 5, height: 24,
-            padding: "0 9px", borderRadius: "var(--r-3)", border: "1px solid var(--border)",
-            background: "transparent", color: "var(--muted)", fontSize: "var(--fs-2)",
-            cursor: "pointer", fontFamily: "inherit",
-          }}
-        >
-          <Icon name="delete_sweep" size={14} />
-          {t("Clear")}
-        </button>
-      </div>
-      <div ref={ref} style={{
-        display: "grid", gap: TILE_GAP,
-        gridTemplateColumns: `repeat(auto-fill, minmax(${TILE_MIN}px, 1fr))`,
-      }}>
-        {tiles.map((tile) => {
-          const { run } = tile;
-          const key = tileKey(run.uid, tile.index);
-          // The ACCENT ring is the selection, the library grid's.
-          const ring: Ring = picked.includes(key) ? "picked" : "none";
-          const open = () => onLightbox({ uid: run.uid, i: tile.index });
-          const failed = run.status === "failed";
-          return tile.name ? (
-            // A DIV, not a button, because it contains one — the info button
-            // below is a real button and nesting two is invalid.
-            // A CLICK SELECTS; the preview is a double-click or Space over
-            // the selection — the library grid's rules, so the two grids
-            // read as one app (a click used to open the preview outright).
-            <div
-              key={`${run.uid}-${tile.name}`}
-              data-tilekey={key}
-              role="button"
-              tabIndex={0}
-              onClick={(e) => onPick(key, mods(e))}
-              onDoubleClick={open}
-              onKeyDown={(e) => {
-                if (e.key !== "Enter") return;
-                e.preventDefault();
-                open();
-              }}
-              title={run.prompt || t("(no prompt)")}
-              style={{ ...tileStyle(run, ring), position: "relative" }}
-            >
-              <img
-                src={api.evalImageUrl(run.uid, tile.name, 320)}
-                alt={run.prompt}
-                loading="lazy"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-              {/* No ⓘ here any more: the run's settings ride the PREVIEW
-                  now, under the image — the card is about the picture, so
-                  it lives where the picture is looked at. */}
-            </div>
-          ) : (
-            // A slot has no picture, so its preview is the settings card
-            // alone — the same door as a picture's (double-click, Enter,
-            // Space), where an inline card under the row used to open; a
-            // click selects it like any tile (removing a failed run is
-            // done through its slot).
-            <div
-              key={`${run.uid}-slot-${tile.index}`}
-              data-tilekey={key}
-              role="button"
-              tabIndex={0}
-              onClick={(e) => onPick(key, mods(e))}
-              onDoubleClick={open}
-              onKeyDown={(e) => {
-                if (e.key !== "Enter") return;
-                e.preventDefault();
-                open();
-              }}
-              title={failed ? (run.error || t("generation failed"))
-                : run.status === "running" ? t("not generated yet")
-                : t("no image")}
-              style={{
-                ...tileStyle(run, ring), position: "relative",
-                border: `1px dashed ${failed ? "var(--red)" : "var(--border-strong)"}`,
-                background: "var(--panel-2)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: failed ? "var(--red-text)" : "var(--muted-3)",
-              }}
-            >
-              {run.status === "running"
-                ? <Icon name="progress_activity" size={20} spin />
-                : <Icon name={failed ? "error" : run.status === "queued"
-                    ? "schedule" : "image"} size={20} />}
-            </div>
-          );
-        })}
-      </div>
+  const { run } = tile;
+  const key = tileKey(run.uid, tile.index);
+  // The ACCENT ring is the selection, the library grid's.
+  const ring: Ring = picked ? "picked" : "none";
+  const open = () => onLightbox({ uid: run.uid, i: tile.index });
+  const failed = run.status === "failed";
+  return tile.name ? (
+    // A CLICK SELECTS; the preview is a double-click or Space over
+    // the selection — the library grid's rules, so the two grids
+    // read as one app (a click used to open the preview outright).
+    <div
+      data-card
+      role="button"
+      tabIndex={0}
+      onClick={(e) => onPick(key, mods(e))}
+      onDoubleClick={open}
+      onKeyDown={(e) => {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        open();
+      }}
+      title={run.prompt || t("(no prompt)")}
+      style={{ ...tileStyle(ring), position: "relative" }}
+    >
+      <img
+        src={api.evalImageUrl(run.uid, tile.name, thumbW)}
+        alt={run.prompt}
+        loading="lazy"
+        style={{ width: "100%", height: "100%", objectFit: "contain" }}
+      />
+      {/* No ⓘ here any more: the run's settings ride the PREVIEW
+          now, under the image — the card is about the picture, so
+          it lives where the picture is looked at. */}
+    </div>
+  ) : (
+    // A slot has no picture, so its preview is the settings card
+    // alone — the same door as a picture's (double-click, Enter,
+    // Space), where an inline card under the row used to open; a
+    // click selects it like any tile (removing a failed run is
+    // done through its slot).
+    <div
+      data-card
+      role="button"
+      tabIndex={0}
+      onClick={(e) => onPick(key, mods(e))}
+      onDoubleClick={open}
+      onKeyDown={(e) => {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        open();
+      }}
+      title={failed ? (run.error || t("generation failed"))
+        : run.status === "running" ? t("not generated yet")
+        : t("no image")}
+      style={{
+        ...tileStyle(ring), position: "relative",
+        border: `1px dashed ${failed ? "var(--red)" : "var(--border-strong)"}`,
+        background: "var(--panel-2)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        color: failed ? "var(--red-text)" : "var(--muted-3)",
+      }}
+    >
+      {run.status === "running"
+        ? <Icon name="progress_activity" size={20} spin />
+        : <Icon name={failed ? "error" : run.status === "queued"
+            ? "schedule" : "image"} size={20} />}
     </div>
   );
 }
@@ -1060,8 +1024,16 @@ export function EvaluateView() {
   const [picked, setPicked] = useState<string[]>([]);
   const pickAnchor = useRef<string | null>(null);
   useEscapeClears(true, picked.length > 0, () => { setPicked([]); pickAnchor.current = null; });
-  // How many tiles fit across, measured by the session grids themselves.
-  const [columns, setColumns] = useState(1);
+  // THE GRID: the library's `CardGrid`, whose layout the arrow walk reads
+  // and whose `reveal` keeps the cursor on screen (a windowed grid has not
+  // mounted a tile far off it, so the DOM cannot be asked).
+  const gridRef = useRef<CardGridHandle>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [tileSize, setTileSize] = useState(() => TRAIN_PREFS.evalGridSize.read());
+  useEffect(() => { TRAIN_PREFS.evalGridSize.write(tileSize); }, [tileSize]);
+  // What a box drag adds to: the selection at the press when it began with
+  // ⇧ or ⌘, else nothing — the library grid's rule.
+  const boxBase = useRef<string[]>([]);
   const { data: runsData } = useQuery({
     queryKey: ["eval-runs"],
     queryFn: api.evalRuns,
@@ -1103,18 +1075,12 @@ export function EvaluateView() {
   const allTiles = useMemo(() => sessions.flatMap((g) => tilesOf(g)), [sessions]);
   const order = useMemo(
     () => allTiles.map((x) => tileKey(x.run.uid, x.index)), [allTiles]);
-  // WHERE EACH SESSION STARTS in that order — one grid per session, each
-  // beginning a fresh row, which is what the arrow walk needs and what
-  // `cur ± columns` cannot know.
-  const sections = useMemo<GridSection[]>(() => {
-    let start = 0;
-    return sessions.map((g) => {
-      const count = tilesOf(g).length;
-      const at = start;
-      start += count;
-      return { start: at, count };
-    });
-  }, [sessions]);
+  // THE SESSIONS AS THE GRID'S SECTIONS, runs of that order: each starts a
+  // fresh row under its own heading.
+  const sessionRuns = useMemo<GroupRun[]>(
+    () => sessions.map((g) => ({ key: g[0].uid, count: tilesOf(g).length })),
+    [sessions]);
+  const pickedSet = useMemo(() => new Set(picked), [picked]);
   // A tile that is gone (its run deleted, or a slot filled by its picture
   // arriving) leaves the selection, or the bar counts things nobody can see.
   useEffect(() => {
@@ -1152,23 +1118,21 @@ export function EvaluateView() {
 
   // THE ARROW KEYS WALK THE GRID, the library's rules: ←/→ step one tile in
   // reading order, ↑/↓ a row, a plain press replaces the selection and Shift
-  // extends from the last pick. The sessions are separate grids, so the walk
-  // goes through `stepTile` rather than `cur ± columns` — a session's first
-  // index is generally not a multiple of the column count (see evalGrid.ts).
+  // extends from the last pick. Each session starts a fresh row, so the walk
+  // is `stepIndex` over the grid's own layout rather than `cur ± columns`.
   // With nothing picked the first press lands on the first tile: the mouse is
   // primary here, and a cursor on a tile nobody pointed at would be a
   // suggestion rather than an answer.
   const walk = (dir: StepDir, shift: boolean): boolean => {
     if (!order.length) return false;
+    const grid = gridRef.current;
+    if (!grid?.layout) return false;
     const cur = pickAnchor.current ? order.indexOf(pickAnchor.current) : -1;
-    const next = cur < 0 ? 0 : stepTile(sections, columns, cur, dir);
+    const next = cur < 0 ? 0 : stepIndex(grid.layout, cur, dir);
     const key = order[next];
     if (key == null) return false;
     pick(key, { meta: false, shift });
-    // The tiles are all rendered (no windowing here), so the DOM is the
-    // simplest honest way to keep the cursor on screen.
-    document.querySelector(`[data-tilekey="${CSS.escape(key)}"]`)
-      ?.scrollIntoView({ block: "nearest" });
+    grid.reveal(next);
     return true;
   };
 
@@ -1553,18 +1517,15 @@ export function EvaluateView() {
           shape, from the same component. */}
       <div style={{ minHeight: 0, position: "relative", display: "flex",
                     flexDirection: "column" }}>
-      <div style={{ flex: 1, minHeight: 0, overflowY: "auto",
-                    padding: "16px 20px" }}
-        // A click on the BACKGROUND puts the selection down — the library
-        // grid's rule. Background is anything that is not a tile, a
-        // control or the inline settings card (whose prompt and chips are
-        // clickable divs, so the card marks itself rather than each one).
-        onClick={(e) => {
-          const el = e.target as HTMLElement;
-          if (el.closest("[role=button], button, a, input, textarea, "
-                         + "select, [data-keep-selection]")) return;
-          clearPicked();
-        }}>
+      {runs.length > 0 && (
+        // The grid's one view option, where the library's toolbar keeps it.
+        <div style={{ display: "flex", justifyContent: "flex-end",
+                      padding: "12px 20px 0" }}>
+          <GridSizeControl size={tileSize} onSize={setTileSize} t={t} />
+        </div>
+      )}
+      <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto",
+                                    paddingTop: 12 }}>
         {runs.length === 0 ? (
           <div style={{
             height: "100%", display: "flex", flexDirection: "column",
@@ -1577,17 +1538,49 @@ export function EvaluateView() {
             </div>
           </div>
         ) : (
-          sessions.map((group) => (
-            <SessionGroup key={group[0].uid} runs={group}
-              onClear={() => clearSession(group)}
-              onColumns={setColumns}
-              picked={picked} onPick={pick} onLightbox={setLightbox} />
-          ))
-        )}
-        {/* The bar takes no layout space, so the content reserves its height
-            here — the last row has to be scrollable clear of it. */}
-        {runs.length > 0 && (
-          <div style={{ height: SELECTION_BAR_H + SELECTION_BAR_GAP * 2 }} />
+          // The bar floats over the grid and takes no layout space, so the
+          // grid's wrapper reserves its height underneath — the last row has
+          // to scroll clear of it. A padding rather than a spacer after it:
+          // the grid measures the room below it to fill to the bottom, and a
+          // sibling would make an unscrollable page scroll by the bar's
+          // height.
+          <div style={{ paddingBottom: SELECTION_BAR_H + SELECTION_BAR_GAP * 2 }}>
+            <CardGrid
+              handleRef={gridRef}
+              count={order.length} size={tileSize} gap={TILE_GAP} pad={20}
+              scrollRef={scrollRef}
+              runs={sessionRuns} groupGap={18}
+              renderHeader={(_, section) => (
+                <SessionHeader runs={sessions[section]}
+                  onClear={() => clearSession(sessions[section])} />
+              )}
+              renderCard={(i) => {
+                const tile = allTiles[i];
+                const key = tileKey(tile.run.uid, tile.index);
+                return (
+                  <EvalTile key={key} tile={tile} picked={pickedSet.has(key)}
+                    thumbW={tileSize * 2}
+                    onPick={pick} onLightbox={setLightbox} />
+                );
+              }}
+              onMarqueeStart={(e) => {
+                boxBase.current = e.shiftKey || e.metaKey || e.ctrlKey
+                  ? picked : [];
+              }}
+              onMarquee={(hits, additive) => {
+                const keys = hits.map((i) => order[i]).filter(Boolean);
+                const base = additive ? boxBase.current : [];
+                const have = new Set(base);
+                setPicked([...base, ...keys.filter((k) => !have.has(k))]);
+                // The last tile the box reached is where ⇧-click and the
+                // arrows carry on from.
+                if (keys.length) pickAnchor.current = keys[keys.length - 1];
+              }}
+              // A press on nothing puts the selection down, unless it was
+              // meant to add (⇧/⌘) — the library grid's rule.
+              onBackgroundClick={(additive) => { if (!additive) clearPicked(); }}
+            />
+          </div>
         )}
       </div>
       {lightTile && (

@@ -1,10 +1,13 @@
 // THE TRAINER'S PERSISTED PREFERENCES — the `mc.train…`/`mc.eval…` keys,
 // listed here so the index in `app/prefs.ts` and this one cover every key
 // between them (`prefs.test.ts`). `train/` may not import `app/`.
-import { boolPref } from "../shared/storage.ts";
+import { boolPref, numPref } from "../shared/storage.ts";
 
 export const TRAIN_PREFS = {
   statsOpen: boolPref("mc.trainStatsOpen", false),
+  // The Evaluate grid's S/M/L — one of `GRID_SIZES`' px values; the bounds
+  // are that table's ends.
+  evalGridSize: numPref("mc.eval.gridSize", { def: 168, min: 124, max: 232 }),
 };
 
 export const TRAIN_PREF_KEYS: Record<string, string> = {

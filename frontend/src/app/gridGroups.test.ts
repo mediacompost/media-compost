@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { groupLabel, jumpGroups } from "./gridGroups.ts";
-import type { GroupRun } from "./gridGeom.ts";
+import type { GroupRun } from "../shared/gridGeom.ts";
 
 // The real `t` fills `{name}` placeholders (`shared/i18n: fillVars`); a
 // stand-in that only echoed would have let "Score {n}" pass as a label.

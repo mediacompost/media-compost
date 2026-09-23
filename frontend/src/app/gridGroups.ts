@@ -5,7 +5,7 @@
 // colour tag set both live here. Pure and React-free, so `node --test`
 // covers the whole answer space.
 
-import type { GroupRun } from "./gridGeom";
+import type { GroupRun } from "../shared/gridGeom";
 
 /** The fixed colour tag set, indexed by the band packed into `color_key`'s
  *  high bits (see `backend/media_compost/colorkey.py`). The BOUNDARIES live
