@@ -39,7 +39,7 @@ import { Overlay } from "../../shared/Overlay";
 import { Button } from "../../shared/Button";
 import { CommentField, DescriptionField } from "./DescribedFields";
 import { TagSuggestList, useSuggestList } from "./TagSuggestList";
-import { RowMenu } from "./shared/RowMenu";
+import { RowMenu } from "../../shared/RowMenu";
 import { Switch } from "../../shared/Switch";
 
 /** What a category may wear in place of the folder — a SMALL set, on

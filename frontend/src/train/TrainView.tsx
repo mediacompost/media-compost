@@ -17,7 +17,8 @@ import { useT } from "./i18n";
 import { GpuStatsBar } from "./GpuStatsBar";
 import { TrainSetupBanner } from "./TrainSetupBanner";
 import { TrainJobCard } from "./TrainJobCard";
-import { TrainJobDetail } from "./TrainJobDetail";
+import { LogOverlay, TrainJobDetail } from "./TrainJobDetail";
+import { PointerMenu, type RowAction } from "../shared/RowMenu";
 import { SidebarSplit } from "../shared/SidebarSplit";
 import { TrainJobEditor } from "./TrainJobEditor";
 import { invalidateJob } from "./invalidate";
@@ -210,7 +211,7 @@ type JobDrag = {
 
 function JobPanel({ jobs, drag, onDropAt, insertable,
                     dragTitle, evalBusy, queueActive, picked, onPick,
-                    onRefused }: {
+                    onRefused, onMenu }: {
   jobs: TrainingJobSummary[];
   /** An Evaluate generation holds the GPU, so queued rows are waiting on it. */
   evalBusy?: boolean;
@@ -230,6 +231,8 @@ function JobPanel({ jobs, drag, onDropAt, insertable,
   onPick?: (uid: string, mods: { meta: boolean; shift: boolean }) => void;
   /** What the server said when a row's button was refused. */
   onRefused?: (message: string) => void;
+  /** A row was right-clicked: the tab's context menu, for that job. */
+  onMenu?: (job: TrainingJobSummary, e: React.MouseEvent) => void;
 }) {
   // Same drag pattern as the sequence-member list: only the handle starts a
   // drag, an insertion line marks the slot, and the drop reads its own
@@ -283,6 +286,7 @@ function JobPanel({ jobs, drag, onDropAt, insertable,
             queueActive={queueActive}
             onRefused={onRefused}
             onSelect={(mods) => onPick?.(j.uid, mods)}
+            onMenu={onMenu ? (e) => onMenu(j, e) : undefined}
             dragHandle={drag ? {
               title: dragTitle,
               onDragStart: () => drag.start(j.uid),
@@ -470,6 +474,93 @@ export function TrainView({ jobUid, onSelectJob }: {
 
   const removePicked = () => removeJobs(removable);
 
+  // THE ROW'S CONTEXT MENU: every verb about ONE job in one place — the
+  // row's own buttons (start, queue, pause), the ones the detail pane's
+  // header carries (edit, log, delete) and the finished result's download.
+  // It is about the job under the pointer, never the selection: a
+  // right-click on a row that is not picked picks it (the library grid's
+  // rule), so the pane beside the menu shows what the menu is about.
+  const [menu, setMenu] = useState<{ uid: string; x: number; y: number } | null>(null);
+  const [logFor, setLogFor] = useState<string | null>(null);
+  const openMenu = (job: TrainingJobSummary, e: React.MouseEvent) => {
+    if (!picked.includes(job.uid)) pick(job.uid, { meta: false, shift: false });
+    setMenu({ uid: job.uid, x: e.clientX, y: e.clientY });
+  };
+  const menuJob = menu ? jobs.find((j) => j.uid === menu.uid) ?? null : null;
+  // One request, its refusal said where every row's is.
+  const act = (uid: string, fn: () => Promise<unknown>) =>
+    void fn().then(() => setRefused(""), (e) => setRefused(errText(e)))
+      .finally(() => invalidateJob(qc, uid));
+  const jobActions = (job: TrainingJobSummary): RowAction[] => {
+    const s = job.status;
+    const waiting = s === "draft" || s === "queued" || s === "paused";
+    const out: RowAction[] = [];
+    if (waiting) {
+      out.push({
+        icon: "play_arrow",
+        label: s === "paused" ? t("Resume now") : t("Start now"),
+        title: data?.queue_active
+          ? t("Start now — pauses the running job and puts this one first")
+          : t("Start now — puts this job first and starts the queue"),
+        onClick: () => act(job.uid, () => api.trainStart(job.uid, true)),
+      });
+    }
+    if (s === "draft" || s === "paused") {
+      out.push({
+        icon: "playlist_add", label: t("Add to the queue"),
+        title: s === "paused"
+          ? t("Add to the queue — resumes from the last checkpoint when its turn comes")
+          : undefined,
+        onClick: () => act(job.uid, () => api.trainQueue(job.uid)),
+      });
+    }
+    if (s === "queued") {
+      out.push({
+        icon: "playlist_remove", label: t("Remove from the queue"),
+        title: t("Remove from the queue — the job keeps its place for later"),
+        onClick: () => act(job.uid, () => api.trainPause(job.uid)),
+      });
+    }
+    if (s === "running" || s === "pausing") {
+      out.push({
+        icon: "pause", label: s === "pausing" ? t("Pausing…") : t("Pause"),
+        title: t("Pause (saves a checkpoint)"), disabled: s === "pausing",
+        onClick: () => act(job.uid, () => api.trainPause(job.uid)),
+      });
+    }
+    out.push({
+      icon: "edit", label: t("Edit…"), separated: out.length > 0,
+      onClick: () => setEditorFor(job.uid),
+    });
+    out.push({
+      icon: "receipt_long", label: t("Log"),
+      onClick: () => setLogFor(job.uid),
+    });
+    if (s === "completed") {
+      out.push({
+        icon: "download", label: t("Download result"),
+        onClick: () => {
+          const a = document.createElement("a");
+          a.href = api.trainOutputUrl(job.uid);
+          a.download = "";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        },
+      });
+    }
+    // Never for a running job — the header's rule: pausing keeps what the
+    // run has earned, and a delete one row below Pause is the more
+    // destructive half of the same gesture.
+    if (!RUNNING.includes(s)) {
+      out.push({
+        icon: "delete", label: t("Delete…"), danger: true, separated: true,
+        onClick: () => void removeJobs([job]),
+      });
+    }
+    return out;
+  };
+
   const selected = one ? (jobs.find((j) => j.uid === one) ?? null) : null;
 
   // One drag shared by both waiting sections, so a row can move between them:
@@ -601,7 +692,7 @@ export function TrainView({ jobUid, onSelectJob }: {
           <>
             <SectionHeader label={t("Running")} count={sections.running.length} first
               trailing={<PauseControl running={sections.running} />} />
-            <JobPanel onRefused={setRefused} queueActive={!!data?.queue_active} jobs={sections.running}
+            <JobPanel onRefused={setRefused} onMenu={openMenu} queueActive={!!data?.queue_active} jobs={sections.running}
               picked={picked} onPick={pick} />
           </>
         )}
@@ -620,7 +711,7 @@ export function TrainView({ jobUid, onSelectJob }: {
               trailing={<RunControl running={sections.running.length}
                 queued={sections.queued.length} />} />
             {sections.queued.length > 0 ? (
-              <JobPanel onRefused={setRefused} queueActive={!!data?.queue_active} jobs={sections.queued} evalBusy={evalBusy}
+              <JobPanel onRefused={setRefused} onMenu={openMenu} queueActive={!!data?.queue_active} jobs={sections.queued} evalBusy={evalBusy}
                 picked={picked} onPick={pick}
                 drag={drag} onDropAt={dropToQueue}
                 insertable
@@ -658,7 +749,7 @@ export function TrainView({ jobUid, onSelectJob }: {
                 ? <HeldSortSelect value={heldSort} onChange={changeHeldSort} />
                 : undefined} />
             {sections.held.length > 0 ? (
-              <JobPanel onRefused={setRefused} queueActive={!!data?.queue_active} jobs={sections.held}
+              <JobPanel onRefused={setRefused} onMenu={openMenu} queueActive={!!data?.queue_active} jobs={sections.held}
                 picked={picked} onPick={pick}
                 drag={drag} onDropAt={dropToHeld}
                 insertable={heldSort === "manual"}
@@ -701,7 +792,7 @@ export function TrainView({ jobUid, onSelectJob }: {
                   {t("Clear")}
                 </button>
               } />
-            <JobPanel onRefused={setRefused} queueActive={!!data?.queue_active} jobs={sections.finished}
+            <JobPanel onRefused={setRefused} onMenu={openMenu} queueActive={!!data?.queue_active} jobs={sections.finished}
               picked={picked} onPick={pick} />
           </>
         )}
@@ -796,6 +887,15 @@ export function TrainView({ jobUid, onSelectJob }: {
 
     </SidebarSplit>
 
+      {menu && menuJob && (
+        <PointerMenu at={menu} actions={jobActions(menuJob)}
+          onClose={() => setMenu(null)} />
+      )}
+      {logFor && (
+        <LogOverlay uid={logFor}
+          active={RUNNING.includes(jobs.find((j) => j.uid === logFor)?.status ?? "")}
+          onClose={() => setLogFor(null)} />
+      )}
       {editorFor !== null && status && (
         <TrainJobEditor
           uid={editorFor || null}

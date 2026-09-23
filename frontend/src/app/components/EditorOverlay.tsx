@@ -45,7 +45,7 @@ import { UndoRedoButtons } from "./shared/UndoRedoButtons";
 import { ThemeMenu, useWindowTheme } from "./shared/ThemeMenu";
 import { useBackdropDismiss } from "../../shared/Backdrop";
 import { ConfirmModal } from "../../shared/ConfirmModal";
-import { RowMenu } from "./shared/RowMenu";
+import { RowMenu } from "../../shared/RowMenu";
 import { closeChoice } from "./shared/closeChoice";
 import { ModeSwitch } from "./shared/ModeSwitch";
 import { HeaderActions } from "./shared/HeaderActions";

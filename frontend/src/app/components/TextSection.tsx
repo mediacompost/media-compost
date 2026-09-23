@@ -42,7 +42,7 @@ import { api, ItemDetail, TextRegion } from "../api";
 import { Icon } from "../../shared/Icon";
 import { useT, useTn } from "../i18n";
 import { useReportSelection } from "../../shared/SelectionBar";
-import { RowAction, RowMenu } from "./shared/RowMenu";
+import { RowAction, RowMenu } from "../../shared/RowMenu";
 import { FloatingTextInPicture } from "./shared/TextInPicture";
 import { useRowSelect } from "./shared/useRowSelect";
 import { useUndoRun } from "./shared/useUndoBar";

@@ -13,7 +13,7 @@ import { useImportTasks, taskActive, taskDone, cancelImportTask, dismissImportTa
 import { renderAnsi } from "../../shared/ansi";
 import { bumpLibrary } from "../invalidation";
 import { useBackdropDismiss } from "../../shared/Backdrop";
-import { RowMenu } from "./shared/RowMenu";
+import { RowMenu } from "../../shared/RowMenu";
 import { useT, useTn } from "../i18n";
 import { useEscape } from "../../shared/useEscape";
 import { Overlay } from "../../shared/Overlay";

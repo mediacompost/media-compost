@@ -19,7 +19,7 @@ import { Icon } from "../../shared/Icon";
 import { useLang, useT } from "../i18n";
 import { TagAutocomplete } from "./TagAutocomplete";
 import { RecordEditOverlay } from "./TagEditOverlay";
-import { RowMenu } from "./shared/RowMenu";
+import { RowMenu } from "../../shared/RowMenu";
 import { useSearchActions } from "./shared/searchActions";
 import { SuggestedHeading, SuggestedRow } from "./shared/SuggestedRow";
 import { formatDate } from "../../query/subjects/when";

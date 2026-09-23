@@ -39,7 +39,7 @@ import { ActionToast } from "./shared/ActionToast";
 import { UndoRunnerSlot, useUndoBar } from "./shared/useUndoBar";
 import { FilterMenu } from "./FilterMenu";
 import { SubjectMergeOverlay } from "./SubjectMergeOverlay";
-import { PointerMenu, RowMenu, type RowAction } from "./shared/RowMenu";
+import { PointerMenu, RowMenu, type RowAction } from "../../shared/RowMenu";
 import { useRowSelect } from "./shared/useRowSelect";
 import { FacePreviewOverlay, FloatingFaceInPicture } from "./shared/FaceInPicture";
 import { useAnchorRect } from "../../shared/AnchoredDropdown";

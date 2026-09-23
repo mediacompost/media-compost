@@ -8,7 +8,7 @@ import React, { useLayoutEffect, useRef, useState } from "react";
 import { Button } from "../../../shared/Button";
 import { Icon } from "../../../shared/Icon";
 import { CHROME_BTN } from "./iconButtons";
-import { RowMenu } from "./RowMenu";
+import { RowMenu } from "../../../shared/RowMenu";
 
 /** One of the window's own actions, in the header. */
 export interface HeaderAction {

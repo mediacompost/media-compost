@@ -89,7 +89,7 @@ import { UndoRunnerSlot, useUndoBar, useUndoRun } from "./shared/useUndoBar";
 import { SELECTION_BAR_GAP, SELECTION_BAR_H, SelectionBar, SelectionBarSlot, SelectionReport,
          useReportSelection, useSelectionBarSlot } from "../../shared/SelectionBar";
 import { TagRangeLine, useImpliedRangeLabel } from "./shared/TagRanges";
-import { PointerMenu, RowAction, RowMenu } from "./shared/RowMenu";
+import { PointerMenu, RowAction, RowMenu } from "../../shared/RowMenu";
 import { useSearchActions } from "./shared/searchActions";
 import { ActionToast } from "./shared/ActionToast";
 import { useRowSelect, type RowSelect } from "./shared/useRowSelect";

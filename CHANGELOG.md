@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Right-click a job in the Train tab's list** for a menu of everything
+  that can be done to it: start or resume now, queue, pause, edit, log,
+  download the result, delete.
 - **New training job sits at the foot of the Train tab's job list**, where
   the Evaluate tab keeps Generate, so it no longer scrolls away.
 - **Settings → Storage can empty more.** Thumbnails (made again as they are

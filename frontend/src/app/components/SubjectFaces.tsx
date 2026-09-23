@@ -20,7 +20,7 @@ import { Button } from "../../shared/Button";
 import { useUI } from "../store";
 import { TagAutocomplete } from "./TagAutocomplete";
 import { useAnchorRect } from "../../shared/AnchoredDropdown";
-import { PointerMenu, RowAction } from "./shared/RowMenu";
+import { PointerMenu, RowAction } from "../../shared/RowMenu";
 import { useUndoRun, type UndoRun } from "./shared/useUndoBar";
 import { FacePreviewOverlay, FloatingFaceInPicture } from "./shared/FaceInPicture";
 import { byRecent, rememberSubject, useRecentSubjects } from "../subjects/recent";

@@ -19,7 +19,7 @@ import type { ModelCacheInfo, ModelInfo, TaskInfo } from "./api";
 import { storage } from "../shared/storage.ts";
 import { ACTION_SECTIONS, SECTION_ICON, SEQ_OK } from "./actionSections.ts";
 import { detectAndRemoveRows } from "./detectAndRemove.ts";
-import type { RowAction } from "./components/shared/RowMenu";
+import type { RowAction } from "../shared/RowMenu";
 
 /** THE PANELS TASK'S "into a sequence" PREFERENCE — the one extra output
  *  any action still offers, and the only reason this is remembered rather

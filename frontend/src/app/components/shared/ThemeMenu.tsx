@@ -3,7 +3,7 @@ import { storage } from "../../../shared/storage";
 import { Icon } from "../../../shared/Icon";
 import { loadThemePref, resolveTheme } from "../../theme";
 import { CHROME_BTN } from "./iconButtons";
-import { RowMenu } from "./RowMenu";
+import { RowMenu } from "../../../shared/RowMenu";
 
 /**
  * The image editor's and the annotator's theme control. Each window can be

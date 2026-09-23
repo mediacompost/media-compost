@@ -48,7 +48,7 @@ import {
 import { mpLabel } from "../format";
 import { useMenuDismiss } from "../../shared/useMenuDismiss";
 import { AnchoredDropdown, useAnchorRect } from "../../shared/AnchoredDropdown";
-import { PointerMenu, RowMenu, type RowAction } from "./shared/RowMenu";
+import { PointerMenu, RowMenu, type RowAction } from "../../shared/RowMenu";
 
 // Sort fields for the grid's order dropdown; the direction is a separate
 // toggle. The values ARE `SortField` — `groupOptionsFor` in the store is keyed

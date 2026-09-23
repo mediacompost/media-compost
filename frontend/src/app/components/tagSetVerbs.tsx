@@ -19,7 +19,7 @@ import { confirm } from "../../shared/ConfirmModal";
 import type { TagRow } from "../api";
 import { useErrText, useT, useTn } from "../i18n";
 import { bumpEdits } from "../invalidation";
-import type { RowAction } from "./shared/RowMenu";
+import type { RowAction } from "../../shared/RowMenu";
 import { useUI } from "../store";
 
 export interface TagSetVerbs {

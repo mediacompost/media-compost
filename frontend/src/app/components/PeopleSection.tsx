@@ -33,7 +33,7 @@ import { Icon } from "../../shared/Icon";
 import { useLang, useT, useTn } from "../i18n";
 import { TagAutocomplete } from "./TagAutocomplete";
 import { TagSuggestion } from "./TagAutocomplete";
-import { RowAction, RowMenu } from "./shared/RowMenu";
+import { RowAction, RowMenu } from "../../shared/RowMenu";
 import { useSearchActions } from "./shared/searchActions";
 import { FloatingFaceInPicture } from "./shared/FaceInPicture";
 import { RowSelect } from "./shared/useRowSelect";

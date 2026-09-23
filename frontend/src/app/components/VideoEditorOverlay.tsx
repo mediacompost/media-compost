@@ -41,7 +41,7 @@ import { PlaybackBar, RangeFields, SpeedControl, TrackControls, VolumeControl,
          subtitleLabel } from "./shared/VideoTransport";
 import { WindowTabs, filmTabSuffix } from "./shared/WindowTabs";
 import { ConfirmModal } from "../../shared/ConfirmModal";
-import { RowMenu } from "./shared/RowMenu";
+import { RowMenu } from "../../shared/RowMenu";
 import { closeChoice } from "./shared/closeChoice";
 import { runVideoKey, videoKeyAction } from "./shared/videoKeys";
 import { ModeSwitch } from "./shared/ModeSwitch";

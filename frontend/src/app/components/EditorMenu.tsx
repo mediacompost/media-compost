@@ -4,7 +4,7 @@ import { api, JobKind, ModelInfo } from "../api";
 import { evalExpr } from "../mathExpr";
 import { Icon } from "../../shared/Icon";
 import { ConfirmModal } from "../../shared/ConfirmModal";
-import { RowMenu, type RowAction } from "./shared/RowMenu";
+import { RowMenu, type RowAction } from "../../shared/RowMenu";
 
 /**
  * The image editor's action-bar menus: an **Image** menu (rotate, image /

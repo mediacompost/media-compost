@@ -10,7 +10,7 @@ import { Icon } from "../../../shared/Icon";
 import { Chevron } from "../../../shared/Chevron";
 import { useT } from "../../i18n";
 import type { Kind } from "../../store";
-import { RowMenu, type RowAction } from "./RowMenu";
+import { RowMenu, type RowAction } from "../../../shared/RowMenu";
 
 export const MEDIA_KINDS = [
   { kind: "image", label: "Images", icon: "image" },

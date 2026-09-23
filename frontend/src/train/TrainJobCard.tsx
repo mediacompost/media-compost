@@ -26,13 +26,15 @@ function ActionButton({ icon, title, onClick, danger, disabled }: {
   );
 }
 
-export function TrainJobCard({ job, selected, onSelect, dragHandle,
+export function TrainJobCard({ job, selected, onSelect, onMenu, dragHandle,
                               evalBusy, queueActive, onRefused }: {
   job: TrainingJobSummary;
   /** In the tab's ONE selection: what a bulk action would act on, and — while
    *  it holds exactly this row — what the detail pane is showing. */
   selected: boolean;
   onSelect: (mods: { meta: boolean; shift: boolean }) => void;
+  /** A right-click on the row: the list opens its context menu there. */
+  onMenu?: (e: React.MouseEvent) => void;
   /** An Evaluate generation holds the GPU this job would use. */
   evalBusy?: boolean;
   /** Whether the queue is working through jobs — the start button says which
@@ -85,6 +87,7 @@ export function TrainJobCard({ job, selected, onSelect, dragHandle,
     <div
       ref={rowRef}
       onClick={(e) => onSelect({ meta: e.metaKey || e.ctrlKey, shift: e.shiftKey })}
+      onContextMenu={onMenu ? (e) => { e.preventDefault(); onMenu(e); } : undefined}
       className="hoverable"
       style={{
         padding: "10px 12px", cursor: "pointer",

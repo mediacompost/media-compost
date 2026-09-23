@@ -12,12 +12,12 @@
  * panel it lives in.
  */
 import React, { useEffect, useRef, useState } from "react";
-import { MenuRow } from "../../../shared/MenuRow";
-import { SectionHeading } from "../../../shared/SectionHeading";
-import { Icon } from "../../../shared/Icon";
-import { AnchoredDropdown, useAnchorRect } from "../../../shared/AnchoredDropdown";
-import { useMenuDismiss } from "../../../shared/useMenuDismiss";
-import { isTypingTarget } from "../../../shared/typingTarget";
+import { MenuRow } from "./MenuRow";
+import { SectionHeading } from "./SectionHeading";
+import { Icon } from "./Icon";
+import { AnchoredDropdown, useAnchorRect } from "./AnchoredDropdown";
+import { useMenuDismiss } from "./useMenuDismiss";
+import { isTypingTarget } from "./typingTarget";
 
 export interface RowAction {
   /** Omitted where `checked` owns the slot, or to leave it blank. */

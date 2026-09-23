@@ -15,7 +15,7 @@
 import { escapeName } from "../../../query/tree";
 import { useUI } from "../../store";
 import { useT } from "../../i18n";
-import type { RowAction } from "./RowMenu";
+import type { RowAction } from "../../../shared/RowMenu";
 
 /** What a row is, for the purpose of naming it in a query. */
 export type SearchKind = "tag" | "subject" | "place" | "event";

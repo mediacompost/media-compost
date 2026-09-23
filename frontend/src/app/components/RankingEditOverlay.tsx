@@ -25,7 +25,7 @@ import { useT, useTn, useErrText } from "../i18n";
 import { Overlay } from "../../shared/Overlay";
 import { Button } from "../../shared/Button";
 import { tagFieldName } from "../tags";
-import { RowMenu } from "./shared/RowMenu";
+import { RowMenu } from "../../shared/RowMenu";
 import { useUI } from "../store";
 
 // The field and its label are the shared ones (`shared/Field.tsx`).

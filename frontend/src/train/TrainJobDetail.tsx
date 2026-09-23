@@ -408,7 +408,9 @@ export function TrainJobDetail({ uid, onEdit, onDelete }: {
   );
 }
 
-function LogOverlay({ uid, active, onClose }: {
+/** The job's log, as its own dialog — the detail pane's Log button and the
+ *  job list's context menu open the same one. */
+export function LogOverlay({ uid, active, onClose }: {
   uid: string; active: boolean; onClose: () => void;
 }) {
   const t = useT();

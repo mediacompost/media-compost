@@ -24,7 +24,7 @@ import { api, type TagSetMetaTagOut } from "../api";
 import { useT, useTn, useErrText } from "../i18n";
 import { sanitizeLinkTagInput } from "../tags";
 import { Icon } from "../../shared/Icon";
-import { RowMenu } from "./shared/RowMenu";
+import { RowMenu } from "../../shared/RowMenu";
 import { TOOLBAR_GAP, TOOLBAR_H, TOOLBAR_TOP, toolbarBtn } from "./TagsSidebar";
 import { Overlay, fieldStyle as field, FieldLabel as Label } from "../../shared/Overlay";
 import { Button } from "../../shared/Button";

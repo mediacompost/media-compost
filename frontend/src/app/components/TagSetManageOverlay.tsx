@@ -39,7 +39,7 @@ import { bumpEdits } from "../invalidation";
 import { Icon } from "../../shared/Icon";
 import { Overlay } from "../../shared/Overlay";
 import { Button } from "../../shared/Button";
-import { RowMenu } from "./shared/RowMenu";
+import { RowMenu } from "../../shared/RowMenu";
 import { Switch } from "../../shared/Switch";
 
 export function TagSetManageOverlay({

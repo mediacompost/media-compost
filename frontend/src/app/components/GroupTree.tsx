@@ -28,7 +28,7 @@ import { useWindowedList } from "../useWindowedList";
 import { useViewScope } from "../useItems";
 import { chunks, runBulk } from "../bulk";
 import { getDraggedItems } from "../dragState";
-import { PointerMenu, type RowAction } from "./shared/RowMenu";
+import { PointerMenu, type RowAction } from "../../shared/RowMenu";
 import { ActionToast } from "./shared/ActionToast";
 import { useUndoBar } from "./shared/useUndoBar";
 import { RankingEditOverlay } from "./RankingEditOverlay";

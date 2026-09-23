@@ -31,7 +31,7 @@ import { exactFirst } from "../exactFirst";
 import { TagCsvButtons } from "./TagCsvOverlay";
 import { TagEditOverlay, AddMenu, AddTagMenu, AliasCreateOverlay } from "./TagEditOverlay";
 import { TagMergeOverlay } from "./TagMergeOverlay";
-import { RowAction, RowMenu } from "./shared/RowMenu";
+import { RowAction, RowMenu } from "../../shared/RowMenu";
 import { useRowSelect } from "./shared/useRowSelect";
 import { downloadBlob } from "../csv";
 import { MetaTagEditOverlay, MetaTagMergeOverlay } from "./MetaTagEditOverlay";
@@ -48,7 +48,7 @@ import { FilterMenu, type FilterSection } from "./FilterMenu";
 import { Mark } from "./Mark";
 import { ActionToast } from "./shared/ActionToast";
 import { useUndoBar } from "./shared/useUndoBar";
-import { PointerMenu } from "./shared/RowMenu";
+import { PointerMenu } from "../../shared/RowMenu";
 import { MediaKindMenu } from "./shared/MediaKindMenu";
 import { SearchKind, useSearchActions } from "./shared/searchActions";
 
