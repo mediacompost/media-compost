@@ -1,6 +1,6 @@
 """Media Compost — deduplicating media library and dataset builder."""
 
-__version__ = "1.1.1.dev0"
+__version__ = "1.2.0"
 
 # The public scripting API. Open a library, query it, read and edit everything
 # the app can, import files — see `media_compost.library` for the tour.
