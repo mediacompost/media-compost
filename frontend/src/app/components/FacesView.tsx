@@ -28,6 +28,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type FaceRow, type SimilarFaceRow, type SubjectRow } from "../api";
 import { useT, useTn } from "../i18n";
 import { modalIsOpen, useUI } from "../store";
+import { APP_PREFS } from "../prefs";
 import { Icon } from "../../shared/Icon";
 import { flatGroup, groupByTags, groupBySequence, groupFaces, narrowByTags,
          noFacts, type FaceFacts,
@@ -354,7 +355,10 @@ export function FacesView({ scrollRef }: {
     return m;
   }, [subjects]);
 
-  const [view, setViewFilter] = useState<View>("all");
+  // Every cut and display choice on this page is REMEMBERED (`APP_PREFS
+  // .faces…`, owner 2026-09): read once at mount, written as it changes.
+  const [view, setViewFilter] = useState<View>(() => APP_PREFS.facesView.read());
+  useEffect(() => { APP_PREFS.facesView.write(view); }, [view]);
   //: WHAT THE PAGE IS SEARCHED FOR — a name, since that is the only thing a
   //  cluster says in words. An unnamed one matches nothing, which is the
   //  answer: it has no name to look for yet.
@@ -380,7 +384,8 @@ export function FacesView({ scrollRef }: {
   //  which for a big named one is its first page: a cluster whose only
   //  InsightFace crop is the four-hundredth answers "no" here, and the cut is
   //  a way of finding things rather than a count.
-  const [model, setModel] = useState("");
+  const [model, setModel] = useState(() => APP_PREFS.facesModel.read());
+  useEffect(() => { APP_PREFS.facesModel.write(model); }, [model]);
   //: WHAT IS BEING CARRIED, and onto which row it would land. The two halves
   //  of the page trade in both directions — crops onto a cluster, a cluster
   //  onto a cluster — so the row has to know which it is being offered.
@@ -543,6 +548,31 @@ export function FacesView({ scrollRef }: {
   const openIds = useRef<number[]>([]);
   if (drill) openIds.current = drill.faces.map((f) => f.id);
   useEffect(() => { setOpenKey(drill?.key ?? ""); }, [drill?.key]);
+  //: THE CLUSTER THAT WAS OPEN LAST TIME comes back (owner 2026-09) — once,
+  //  as soon as the list has loaded: by its key where the list still has
+  //  it, else by the crops it held, which the re-pick below turns into the
+  //  row holding most of them (a correction since may have re-keyed an
+  //  unnamed one). Declared BEFORE that effect, so both run in the commit
+  //  the list arrives in and the re-pick sees the ids.
+  const savedOpen = useRef(APP_PREFS.facesOpen.read());
+  const restoredOpen = useRef(false);
+  useEffect(() => {
+    if (restoredOpen.current || !faces.loaded) return;
+    restoredOpen.current = true;
+    const was = savedOpen.current;
+    if (!was) return;
+    if (clusterKeys.includes(was.key)) sel.set([was.key]);
+    else openIds.current = was.ids;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [faces.loaded, clusterKeys]);
+  //: …and the one open now is what is written, only after that: before it,
+  //  "nothing is open" means "not loaded yet", and writing it would forget.
+  useEffect(() => {
+    if (!restoredOpen.current) return;
+    APP_PREFS.facesOpen.write(drill
+      ? { key: drill.key, ids: drill.faces.slice(0, 64).map((f) => f.id) } : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drill?.key]);
   useEffect(() => {
     if (picked.length || !openIds.current.length || !faces.loaded) return;
     const want = new Set(openIds.current);
@@ -568,27 +598,34 @@ export function FacesView({ scrollRef }: {
   //: HOW THE GRID IS LAID OUT (owner 2026-09). Age is what it has always
   //  done; the other two are the same crops answering different questions —
   //  which book a page came from, and what the pictures are tagged.
-  const [grouping, setGrouping] = useState<FaceGrouping>("age");
+  const [grouping, setGrouping] = useState<FaceGrouping>(
+    () => APP_PREFS.facesGrouping.read());
+  useEffect(() => { APP_PREFS.facesGrouping.write(grouping); }, [grouping]);
   //: WHETHER THE OFFERS ROW IS DRAWN (owner 2026-09). It is the page's own
   //  suggestion — "might be the same person" — and somebody working down a
   //  cluster they have already judged does not want to be asked again on
   //  every one. Turning it off also stops ASKING: each answer is a fresh
   //  run over every unanswered crop, so a row nobody is reading is a run
   //  nobody is reading.
-  const [showNear, setShowNear] = useState(true);
+  const [showNear, setShowNear] = useState(() => APP_PREFS.facesShowNear.read());
+  useEffect(() => { APP_PREFS.facesShowNear.write(showNear); }, [showNear]);
   //: …AND THE TAGS SOMEBODY TICKED. Kept as NAMES across clusters, not
   //  reset with the open one: grouping by "smile" is a way of working, and
   //  a tag the next cluster's pictures do not carry simply offers no
   //  capsule and groups nothing.
-  const [pickedTags, setPickedTags] = useState<string[]>([]);
-  const [tagsOpen, setTagsOpen] = useState(false);
+  const [pickedTags, setPickedTags] = useState<string[]>(
+    () => APP_PREFS.facesTags.read());
+  useEffect(() => { APP_PREFS.facesTags.write(pickedTags); }, [pickedTags]);
+  const [tagsOpen, setTagsOpen] = useState(() => APP_PREFS.facesTagsOpen.read());
+  useEffect(() => { APP_PREFS.facesTagsOpen.write(tagsOpen); }, [tagsOpen]);
   //: …AND WHAT THE TICKS MEAN (owner 2026-09). The same set of tags answers
   //  three different questions about the grid, and which one is a choice
   //  rather than three controls: lay the crops out by them, keep only the
   //  crops carrying ALL of them, or drop every crop carrying ANY of them.
   //  The picker sits in FRONT of the capsules, so the row reads as a
   //  sentence: "Exclude — smile, frown".
-  const [tagMode, setTagMode] = useState<TagMode>("group");
+  const [tagMode, setTagMode] = useState<TagMode>(() => APP_PREFS.facesTagMode.read());
+  useEffect(() => { APP_PREFS.facesTagMode.write(tagMode); }, [tagMode]);
   //: WHAT THE OPEN CLUSTER'S PICTURES SAY. One request for both facts,
   //  because they are one question — how should these be laid out — and it
   //  is asked only of the cluster that is OPEN, which is at most a few

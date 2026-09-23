@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **The Faces page remembers how you left it**: the open cluster, the list
+  filters, the grouping, the "Might be the same person" row, the ticked
+  tags and the card size, across switching pages and reloads.
 - **A built-in tag set has a Make editable button** where an editable set
   has Add category. It puts an editable copy right after the built-in,
   switches the copy on and the built-in off, and opens the copy.

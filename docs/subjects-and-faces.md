@@ -72,7 +72,10 @@ the tab's top line, and it is **two columns**: every cluster as a row down the l
 its cover crop, its name or *Unknown*, how many faces it holds and how many
 of those are still a machine's guess — and the picked cluster's crops in the
 grid beside it. A search field narrows the rows by name; the **S / M / L**
-control, shown while a cluster is open, sizes the crops.
+control, shown while a cluster is open, sizes the crops. The page is kept as you
+left it — the open cluster, the filters, the grouping, whether the *Might be the
+same person* row shows, and the size — when you switch away and when you
+reload.
 
 It used to be two lists inside the Subjects sub-tab: people with their crops
 under them, then the clusters nobody had named. The question a person is

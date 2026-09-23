@@ -1068,7 +1068,8 @@ export const useUI = create<UIState>((set) => ({
   anchorItem: null,
   selMembers: new Set<number>(),
   gridSize: 168, // "M" in the S/M/L control
-  faceSize: 124, // "S": a face crop says what it is at a smaller size
+  // "S" by default: a face crop says what it is at a smaller size.
+  faceSize: APP_PREFS.facesSize.read(),
   sortField: "recent",
   sortDir: "desc",
   sortDirs: { ...SORT_DIR_DEFAULTS },
@@ -1419,7 +1420,7 @@ export const useUI = create<UIState>((set) => ({
   setSettingsFocusWarning: (settingsFocusWarning) => set({ settingsFocusWarning }),
   setSearch: (search) => set({ search }),
   setGridSize: (gridSize) => set({ gridSize }),
-  setFaceSize: (faceSize) => set({ faceSize }),
+  setFaceSize: (faceSize) => { APP_PREFS.facesSize.write(faceSize); set({ faceSize }); },
   // Changing the sort must normalize the grouping with it: the backend
   // REFUSES a pair it does not recognise, so leaving "month" set while
   // switching to Name would 400 every request until somebody noticed.

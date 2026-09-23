@@ -64,6 +64,33 @@ export const APP_PREFS = {
   pendingOpen: boolPref("mc.pendingOpen", true, { inverted: true }),
   ranksOpen: boolPref("mc.ranksOpen", true, { inverted: true }),
   quickLookInfo: boolPref("mc.quickLookInfo", false),
+  // THE FACES PAGE, AS IT WAS LEFT (owner 2026-09): the list's two cuts,
+  // how the open cluster's crops are laid out and narrowed, the crop size,
+  // and WHICH cluster was open. A page somebody works through over days is a
+  // place, and coming back to it — from the Tags page, or tomorrow — should
+  // find them where they were. The open cluster travels as its key AND the
+  // ids of its first crops: an unnamed cluster is keyed by its first face,
+  // which answering one can change, and the ids are how the page finds the
+  // row holding most of them instead (the page's own re-pick).
+  facesView: strPref<"all" | "named" | "unnamed" | "unknown" | "guess">(
+    "mc.faces.view", "all", ["all", "named", "unnamed", "unknown", "guess"]),
+  facesModel: strPref<string>("mc.faces.model", ""),
+  facesGrouping: strPref<"age" | "sequence" | "none">(
+    "mc.faces.grouping", "age", ["age", "sequence", "none"]),
+  facesShowNear: boolPref("mc.faces.showNear", true),
+  facesTagMode: strPref<"group" | "filter" | "exclude">(
+    "mc.faces.tagMode", "group", ["group", "filter", "exclude"]),
+  facesTags: jsonPref<string[]>("mc.faces.tags", [], (v): v is string[] =>
+    Array.isArray(v) && v.every((x) => typeof x === "string")),
+  facesTagsOpen: boolPref("mc.faces.tagsOpen", false),
+  facesSize: numPref("mc.faces.size", { def: 124, min: 124, max: 232 }),
+  facesOpen: jsonPref<{ key: string; ids: number[] } | null>(
+    "mc.faces.open", null, (v): v is { key: string; ids: number[] } | null => {
+      if (v === null) return true;
+      const o = v as { key?: unknown; ids?: unknown };
+      return !!o && typeof o.key === "string" && Array.isArray(o.ids)
+        && o.ids.every((x) => typeof x === "number");
+    }),
   // THE IMAGE EDITOR'S TOOL SETTINGS. A tolerance somebody dialled in by
   // dragging is an answer about the pictures they are working on, and the
   // whole set of them is usually one job — so they outlive the window, as
