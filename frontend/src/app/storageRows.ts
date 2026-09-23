@@ -13,6 +13,7 @@ export const STORAGE_ROW_LABELS: Record<string, string> = {
   // Everything in the library folder that is not an item's own bytes.
   thumbnails: "Thumbnails",
   training: "Training runs",
+  evaluate: "Evaluate images",
   scratch: "Scratch files",
   backups: "Backups from schema upgrades",
   database: "Database",
@@ -20,7 +21,8 @@ export const STORAGE_ROW_LABELS: Record<string, string> = {
 
 export const STORAGE_ROW_ICONS: Record<string, string> = {
   image: "image", video: "movie", sequence: "auto_stories",
-  thumbnails: "grid_view", training: "model_training", scratch: "cached",
+  thumbnails: "grid_view", training: "model_training",
+  evaluate: "science", scratch: "cached",
   backups: "backup", database: "database",
 };
 

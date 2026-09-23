@@ -2276,6 +2276,7 @@ const CATALOG: Catalog = {
     "缓存的训练 latent 会在下次需要它的训练中重新编码；此处其他内容则需要重新运行相应模型。",
   "Thumbnails": "缩略图",
   "Training runs": "训练运行",
+  "Evaluate images": "评估图片",
   "Scratch files": "临时文件",
   "Backups from schema upgrades": "架构升级备份",
   "Database": "数据库",

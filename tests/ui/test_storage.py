@@ -113,6 +113,27 @@ def test_nothing_is_counted_under_two_names(lib_client):
     assert scratch["bytes"] >= 5000, "the refs are inside the scratch row"
 
 
+def test_the_evaluate_pictures_are_their_own_row(lib_client):
+    """They live inside the training folder, and were counted as "Training
+    runs" — in a library that had never trained anything, all of that row."""
+    client, lib = lib_client
+    from media_compost.train import evaluate
+    from media_compost.ui.server.routers import stats
+    assert stats.EVAL_DIRNAME == evaluate._EVAL_DIRNAME
+
+    training = lib.config.data_dir / "training"
+    run = training / stats.EVAL_DIRNAME / "run1" / "images"
+    run.mkdir(parents=True)
+    (run / "p000.png").write_bytes(b"e" * 3000)
+    (training / "job1").mkdir()
+    (training / "job1" / "job.json").write_bytes(b"j" * 700)
+
+    other = {r["key"]: r for r in
+             client.get("/api/library/storage").json()["other"]}
+    assert (other["evaluate"]["count"], other["evaluate"]["bytes"]) == (1, 3000)
+    assert (other["training"]["count"], other["training"]["bytes"]) == (1, 700)
+
+
 def test_deleting_a_type_takes_the_rows_AND_the_bytes(lib_client):
     client, lib = lib_client
     keep = _add_artifact(lib, "latent", "sdxl", b"k" * 50)

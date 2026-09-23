@@ -2277,6 +2277,7 @@ const CATALOG: Catalog = {
     "캐시된 학습 latent는 필요한 다음 실행에서 다시 인코딩됩니다. 그 밖의 것은 해당 모델을 다시 실행해야 합니다.",
   "Thumbnails": "미리보기 이미지",
   "Training runs": "학습 실행",
+  "Evaluate images": "평가 이미지",
   "Scratch files": "임시 파일",
   "Backups from schema upgrades": "스키마 업그레이드 백업",
   "Database": "데이터베이스",

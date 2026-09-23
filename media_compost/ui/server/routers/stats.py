@@ -184,8 +184,17 @@ def library_stats(s: Session = Depends(get_session),
 # ---- storage ----------------------------------------------------------------
 
 
-def _dir_bytes(path: Path) -> tuple[int, int]:
-    """``(files, bytes)`` under ``path``, following no symlinks.
+#: Where the Evaluate tab writes its runs, under ``<data>/training``. The
+#: trainer's own name for it is `media_compost.train.evaluate._EVAL_DIRNAME`,
+#: spelled again here because the app reaches the trainer through one guarded
+#: import and nowhere else; `tests/ui/test_storage.py` holds the two equal.
+EVAL_DIRNAME = "_eval"
+
+
+def _dir_bytes(path: Path, skip: tuple[Path, ...] = ()) -> tuple[int, int]:
+    """``(files, bytes)`` under ``path``, following no symlinks, and not
+    descending into any directory in ``skip`` (one that has a row of its
+    own).
 
     `os.scandir` rather than `Path.rglob` + `stat`: the entry a directory
     listing already returns carries the size on every platform this runs on,
@@ -202,7 +211,8 @@ def _dir_bytes(path: Path) -> tuple[int, int]:
                 for entry in it:
                     try:
                         if entry.is_dir(follow_symlinks=False):
-                            stack.append(Path(entry.path))
+                            if Path(entry.path) not in skip:
+                                stack.append(Path(entry.path))
                         elif entry.is_file(follow_symlinks=False):
                             files += 1
                             total += entry.stat(follow_symlinks=False).st_size
@@ -264,11 +274,18 @@ def library_storage(s: Session = Depends(get_session),
     # overlapping walks: `refs_dir` lives INSIDE `tmp`, so the two rows first
     # written reported the same five files twice, under two names. One row
     # per directory, and `tmp` is the one that contains the other.
-    for key, path in (("thumbnails", cfg.thumbs_dir),
-                      ("training", cfg.data_dir / "training"),
-                      ("scratch", cfg.data_dir / "tmp"),
-                      ("backups", cfg.backup_dir)):
-        count, size = _dir_bytes(Path(path))
+    # THE EVALUATE TAB'S PICTURES LIVE INSIDE THE TRAINING FOLDER, and a
+    # library that had never trained anything reported all of them as
+    # "Training runs". They are their own row, and the training walk steps
+    # over them — the rule above, applied the other way round.
+    training = Path(cfg.data_dir) / "training"
+    evaluated = training / EVAL_DIRNAME
+    for key, path, skip in (("thumbnails", cfg.thumbs_dir, ()),
+                            ("training", training, (evaluated,)),
+                            ("evaluate", evaluated, ()),
+                            ("scratch", cfg.data_dir / "tmp", ()),
+                            ("backups", cfg.backup_dir, ())):
+        count, size = _dir_bytes(Path(path), skip)
         if count:
             other.append(StorageRow(key=key, count=count, bytes=size))
     count, size = _db_bytes(cfg.db_path)

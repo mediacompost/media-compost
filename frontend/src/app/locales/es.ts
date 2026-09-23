@@ -2287,6 +2287,7 @@ const CATALOG: Catalog = {
     "Un latente de entrenamiento en caché se vuelve a codificar en la siguiente ejecución que lo necesite; todo lo demás aquí implica volver a ejecutar su modelo.",
   "Thumbnails": "Miniaturas",
   "Training runs": "Ejecuciones de entrenamiento",
+  "Evaluate images": "Imágenes de Evaluar",
   "Scratch files": "Archivos temporales",
   "Backups from schema upgrades":
     "Copias de seguridad de actualizaciones de esquema",

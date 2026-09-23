@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Settings → Storage shows the Evaluate tab's pictures as their own
+  row.** They used to be counted as Training runs.
 - **The Evaluate grid's selection bar can cancel.** With a slot of a
   queued or running generation picked, it offers **Cancel** beside Remove.
 - **Tag counts read 0 in several places and are back**: the suggestions

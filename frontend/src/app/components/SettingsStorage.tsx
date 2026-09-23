@@ -48,6 +48,7 @@ const SEG_COLORS: Record<string, string> = {
   sequence: "#3fb6c9",
   artifacts: "#e0b84f",
   training: "#e07a4f",
+  evaluate: "var(--magenta-text)",
   database: "#9c6ade",
   thumbnails: "#4fc98a",
   rest: "#7a7a86",        // whatever is left, in the muted grey it deserves
@@ -734,7 +735,7 @@ export function StoragePage() {
   // in the legend that nothing on the bar corresponds to.
   const otherAt = (key: string) =>
     data.other.find((r) => r.key === key)?.bytes ?? 0;
-  const named = ["training", "database", "thumbnails"];
+  const named = ["training", "evaluate", "database", "thumbnails"];
   const candidates: Segment[] = [
     ...data.items.map((r) => ({
       key: r.key, label: t(storageRowLabel(r.key)), bytes: r.bytes,

@@ -2640,6 +2640,7 @@ const CATALOG: Catalog = {
     "Ein zwischengespeichertes Trainings-Latent wird vom nächsten Lauf neu berechnet; alles andere hier bedeutet, sein Modell erneut laufen zu lassen.",
   "Thumbnails": "Vorschaubilder",
   "Training runs": "Trainingsläufe",
+  "Evaluate images": "Bilder aus Testen",
   "Scratch files": "Temporäre Dateien",
   "Backups from schema upgrades": "Sicherungen von Schema-Updates",
   "Database": "Datenbank",

@@ -2288,6 +2288,7 @@ const CATALOG: Catalog = {
     "Un latent d’entraînement en cache est ré-encodé par le prochain entraînement qui en a besoin ; tout le reste ici suppose de relancer son modèle.",
   "Thumbnails": "Vignettes",
   "Training runs": "Entraînements",
+  "Evaluate images": "Images de Test",
   "Scratch files": "Fichiers temporaires",
   "Backups from schema upgrades":
     "Sauvegardes des mises à jour de schéma",

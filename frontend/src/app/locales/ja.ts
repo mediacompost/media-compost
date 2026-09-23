@@ -2277,6 +2277,7 @@ const CATALOG: Catalog = {
     "キャッシュされた学習用 latent は、必要とする次の実行で再エンコードされます。それ以外はモデルを再実行する必要があります。",
   "Thumbnails": "サムネイル",
   "Training runs": "学習の実行",
+  "Evaluate images": "テストの画像",
   "Scratch files": "一時ファイル",
   "Backups from schema upgrades": "スキーマ更新のバックアップ",
   "Database": "データベース",
