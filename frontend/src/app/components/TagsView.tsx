@@ -1,4 +1,5 @@
 import React, { useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { TagsPageSwitch } from "./TagsPageSwitch";
 import { storage } from "../../shared/storage";
 import { RECORD_ICON } from "../../shared/metaEnums";
 import { SearchField } from "../../shared/SearchField";
@@ -1775,7 +1776,13 @@ export function TagsView() {
   //
 
   return (
-    <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", minHeight: 0, background: "var(--bg)" }}>
+    // THE SCROLLBAR IS ALWAYS THERE, as on the Faces page (see `FacesPage`):
+    // the two pages share a top line whose right end is the Tags / Faces
+    // switch, and a bar that came and went with the content — or a reserved
+    // gutter, which Safari reserves at 17 px and draws in at 10 — moved the
+    // switch sideways.
+    <div ref={scrollRef} style={{ flex: 1, overflowY: "scroll", minHeight: 0,
+                                  background: "var(--bg)" }}>
       {/* NO WIDTH CAP (owner 2026-09). A tag list is a table of counts and
           a left column of categories beside it, and both are better for the
           room: at 1040 px on a wide screen the names truncated while half
@@ -1789,7 +1796,10 @@ export function TagsView() {
             own 10 px, and two insets stacked read as a gap somebody left
             rather than as the row of sets standing off the page. */}
         {withSidebar && (
-          <div>
+          // THE TAB'S PAGE SWITCH at the right end of this row (owner
+          // 2026-09), the pills taking what is left and wrapping in it.
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <TagSetShelf
               sets={setsQuery.data ?? []}
               // WHICH TAG SET IS LIT. The library's pill has no id of
@@ -1807,6 +1817,8 @@ export function TagsView() {
               onChanged={() => {
                 qc.invalidateQueries({ queryKey: ["tags"] });
               }} />
+          </div>
+          <TagsPageSwitch />
           </div>
         )}
         {/* TWO COLUMNS ON THE ITEMS LIST: the way IN on the left, the list

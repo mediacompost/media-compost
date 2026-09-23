@@ -7,7 +7,7 @@
 // the selected training job — is a query parameter, because those are states of
 // a page rather than pages of their own. The server serves index.html for any
 // path (see server/app.py), so every one of these URLs survives a reload.
-import type { ItemMode, Kind, Overlay, SettingsPage, TagsMode, View } from "./store";
+import type { ItemMode, Kind, Overlay, SettingsPage, TagsMode, TagsPage, View } from "./store";
 
 // The settings pages, and the guard both this module and the store read a
 // remembered/typed value through. It lives HERE rather than beside the type in
@@ -33,6 +33,10 @@ export interface Place {
   // A sub-tab IS a page — it lists different things and is what you were
   // looking at — so it belongs in the path rather than a query parameter.
   tagsMode: TagsMode;
+  /** Which of the Tags tab's two pages: the list (in `tagsMode`) or Faces,
+   *  written as the second segment in the list mode's place
+   *  (`/tags/faces`). */
+  tagsPage: TagsPage;
   /** A record kind an OLD address named as a sub-tab (`/tags/places`), read
    *  back as the Items list's `kind` filter. Empty for every current
    *  address; the store applies it once on arrival. */
@@ -157,14 +161,12 @@ const idList = (s: string | null | undefined): number[] =>
   (s ?? "").split(",").map((v) => Number(v))
     .filter((n) => Number.isFinite(n) && n > 0);
 
-/** FACES AND RANKINGS ARE NOT SUB-TABS ANY MORE — one is a tab of its own,
- *  the other a view of the library — and neither `/tags/faces` nor
- *  `/tags/rankings` is redirected: an unknown sub-segment already falls to
- *  the Items list below, which is a page rather than a blank and is where
- *  somebody arriving on an old address wants to be anyway. A cross-VIEW
- *  remap is a shape this file does not have (`LEGACY_TAGS_MODES` only moves
- *  a sub-tab WITHIN the tags view), and two addresses are not worth growing
- *  it for. */
+/** RANKINGS IS NOT A SUB-TAB ANY MORE — it is a view of the library — and
+ *  `/tags/rankings` is not redirected: an unknown sub-segment falls to the
+ *  Items list below, which is a page rather than a blank. FACES IS A PAGE OF
+ *  THIS TAB (`/tags/faces`, `TagsPage`), having been a tab of its own at
+ *  `/faces` for a while; that address is not redirected either (owner
+ *  2026-09) and falls to the library like any unknown view. */
 const TAGS_MODES: TagsMode[] = ["items", "links", "tagsets"];
 
 /** THE THREE RECORD SUB-TABS ARE THE ITEMS LIST, NARROWED.
@@ -184,7 +186,6 @@ const LEGACY_TAGS_MODES: Record<string, { mode: TagsMode; kind: string }> = {
 export const VIEW_PATHS: Record<View, string> = {
   library: "/library",
   tags: "/tags",
-  faces: "/faces",
   history: "/history",
   train: "/train",
   evaluate: "/evaluate",
@@ -194,7 +195,7 @@ export const VIEW_PATHS: Record<View, string> = {
 const PATH_VIEWS: Record<string, View> = {
   // "" keeps the bare root working (a bookmark, a hand-typed host); the app
   // rewrites it to /library on load so every tab has a path of its own.
-  "": "library", library: "library", tags: "tags", faces: "faces",
+  "": "library", library: "library", tags: "tags",
   history: "history", train: "train", evaluate: "evaluate", models: "models",
 };
 
@@ -220,6 +221,7 @@ export function readPlace(): Place {
     trainJobUid: q.get("job") || null,
     tagsMode: (TAGS_MODES as string[]).includes(sub ?? "")
       ? (sub as TagsMode) : "items",
+    tagsPage: sub === "faces" ? "faces" : "tags",
     tagsKind: "",
     tagSetId: Number(q.get("set")) > 0 ? Number(q.get("set")) : null,
     libCat: q.get("cat") || null,
@@ -246,7 +248,8 @@ export function placeUrl(p: Place): string {
   // of files this page was handed, which a reload cannot bring back.
   if (p.overlay === "group" && p.groupEditId) q.set("group", String(p.groupEditId));
   if (p.view === "train" && p.trainJobUid) q.set("job", p.trainJobUid);
-  if (p.view === "tags" && p.tagsMode === "tagsets" && p.tagSetId)
+  if (p.view === "tags" && p.tagsPage === "tags" && p.tagsMode === "tagsets"
+      && p.tagSetId)
     q.set("set", String(p.tagSetId));
   // The library category / media filter / search live in the URL only on the
   // library view, so switching to another tab never carries stale library state.
@@ -257,7 +260,9 @@ export function placeUrl(p: Place): string {
   }
   const s = q.toString();
   const path = VIEW_PATHS[p.view]
-    + (p.view === "tags" && p.tagsMode !== "items" ? `/${p.tagsMode}` : "");
+    + (p.view !== "tags" ? ""
+      : p.tagsPage === "faces" ? "/faces"
+      : p.tagsMode !== "items" ? `/${p.tagsMode}` : "");
   return path + (s ? `?${s}` : "");
 }
 

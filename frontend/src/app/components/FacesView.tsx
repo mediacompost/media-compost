@@ -49,6 +49,7 @@ import { PAGE_PAD, TagsPanes, usePaneHeight } from "./TagsPanes";
 import { WhenEditor } from "./PeopleSection";
 import { Overlay } from "../../shared/Overlay";
 import { Button } from "../../shared/Button";
+import { TagsPageSwitch } from "./TagsPageSwitch";
 import { isTypingTarget } from "../../shared/typingTarget";
 
 /** A cluster row, gap included — the windowed list's stride. */
@@ -295,8 +296,8 @@ type View = (typeof VIEWS)[number]["id"];
 export function FacesPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   return (
-    // THE GUTTER IS RESERVED WHETHER OR NOT THERE IS A BAR, the library
-    // grid's rule — and a grid of cards is why the rule exists.
+    // THE SCROLLBAR IS ALWAYS THERE, whether or not the page scrolls — and
+    // a grid of cards is why.
     //
     // A card's width is the track's, divided. So a bar appearing takes its
     // width off the track, off every cell, and — times the rows — enough
@@ -307,14 +308,16 @@ export function FacesPage() {
     // band tens of pixels wide. `columnsFor`'s hysteresis cannot see this
     // one — the column COUNT is not what moves.
     //
-    // What the gutter does is REVERSE THE SIGN of that feedback, which is
-    // the part worth knowing: Safari reserves 17 px and then draws a 10 px
-    // bar, so the track is WIDER with a bar than without, not narrower.
-    // "Bar" and "no bar" are then each self-consistent — bistable at worst,
-    // where before neither state could hold. (Chromium reserves exactly
-    // what it draws, so there the track simply never moves.)
-    <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", minHeight: 0,
-                                  scrollbarGutter: "stable",
+    // A reserved gutter (`scrollbarGutter: stable`) only reversed the sign
+    // of that feedback: Safari reserves 17 px and then draws a 10 px bar, so
+    // the track still MOVED when a bar came — by 7 px, which carried the
+    // Tags / Faces switch sideways the moment a cluster's crops made the
+    // page scroll. So the bar is ALWAYS drawn (`scroll`), in Chromium and
+    // Safari alike: the track is one width whatever the page holds, which
+    // ends the feedback outright, and it is the Tags page's rule too, so the
+    // switch stands at one place on both pages. (Overlay scrollbars take no
+    // width either way.)
+    <div ref={scrollRef} style={{ flex: 1, overflowY: "scroll", minHeight: 0,
                                   background: "var(--bg)" }}>
       {/* NO TOP PADDING HERE: both columns pin, and each carries this
           page's own inset inside its sticky box so neither travels before
@@ -1397,7 +1400,7 @@ export function FacesView({ scrollRef }: {
     <div style={{ position: "sticky", top: 0, zIndex: 3,
                   background: "var(--bg)",
                   margin: `-${PAGE_PAD_TOP}px -${PAGE_PAD}px 12px 0`,
-                  padding: `${PAGE_PAD_TOP + 2}px ${PAGE_PAD}px 10px 0`,
+                  padding: `${PAGE_PAD_TOP}px ${PAGE_PAD}px 10px 0`,
                   // THE BAND IS A COLUMN OF ROWS, the Tags toolbar's shape:
                   // the verbs and the menus are one row, and what the grid
                   // is GROUPED BY is a row under them. The tags are a set,
@@ -1526,7 +1529,13 @@ export function FacesView({ scrollRef }: {
             onPick: (id) => setGrouping(id as FaceGrouping),
           }]} />
       )}
-      <GridSizeControl size={faceSize} onSize={setFaceSize} t={t} />
+      {/* The card size is the open cluster's grid's, so it shows with one
+          (owner 2026-09); the page switch beside it always does. */}
+      {drill && <GridSizeControl size={faceSize} onSize={setFaceSize} t={t} />}
+      {/* THE TAGS TAB'S PAGE SWITCH, beside the card size (owner 2026-09):
+          the right end of this page's top line, as it is the right end of
+          the tag-set row on the list page. */}
+      <TagsPageSwitch />
       </div>
       {/* WHAT THE PICTURES ARE TAGGED, as a set of ticks (owner 2026-09).
           Ticking one or more lays the grid out by them — and by the
@@ -1563,7 +1572,7 @@ export function FacesView({ scrollRef }: {
           that slides 18 px before catching is a column that jumps. */}
       <div style={{ position: "sticky", top: 0, alignSelf: "start",
                     marginTop: -PAGE_PAD_TOP,
-                    paddingTop: PAGE_PAD_TOP + 2 }}>
+                    paddingTop: PAGE_PAD_TOP }}>
         {sidebar}
       </div>
       <div style={{ minWidth: 0 }} ref={stripRef}>

@@ -54,9 +54,6 @@ function WhoAmI() {
 
 export function TopBar() {
   const { view, setView, setOverlay, setHistoryFilter } = useUI();
-  const { data: uiPrefs } = useQuery({
-    queryKey: ["settings"], queryFn: api.getSettings });
-  const facesHidden = uiPrefs?.hide_faces_tab ?? false;
   const t = useT();
   const tab = (active: boolean): React.CSSProperties => ({
     display: "flex",
@@ -128,17 +125,6 @@ export function TopBar() {
           <Icon name="sell" size={17} />
           {t("Tags")}
         </button>
-        {/* ABSENT, NOT DISABLED, when it is hidden (Settings → Faces) — the
-            training tabs' rule: a tab you cannot press says the app is
-            broken, a tab that is not there says this deployment does not do
-            that. `?? false` keeps it showing while the query is in flight,
-            so it never flashes away on a slow load. */}
-        {!facesHidden && (
-          <button onClick={() => setView("faces")} style={tab(view === "faces")}>
-            <Icon name="face" size={17} />
-            {t("Faces")}
-          </button>
-        )}
         <button onClick={() => { setHistoryFilter([]); setView("history"); }} style={tab(view === "history")}>
           <Icon name="history" size={17} />
           {t("History")}

@@ -26,7 +26,7 @@ Media Compost is a self-hosted web app for organizing and annotating images and 
 
 - [Tags](tags.md) — the Tags tab, implications, aliases, merging, and meta tags.
 - [Tag sets](tag-sets.md) — imported tag lists that advise every tag field.
-- [Subjects and faces](subjects-and-faces.md) — people, face detection, the Faces tab, and name suggestions.
+- [Subjects and faces](subjects-and-faces.md) — people, face detection, the Faces page, and name suggestions.
 - [Places](places.md) — location data on tags, GPS import, and address forms.
 - [Events](events.md) — time spans, venues, suggestions, and capture dates.
 - [Rankings and batch sessions](rankings.md) — rating pictures on an axis, and the three full-window sessions.

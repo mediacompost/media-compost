@@ -22,6 +22,13 @@ import { useT } from "../i18n";
 import type { TagSetOut } from "../api";
 import { Icon } from "../../shared/Icon";
 
+/** THE ROW'S HEIGHT, the Faces page's (owner 2026-09): the Tags tab's two
+ *  pages share one top line — the pills here, the cluster filter there, and
+ *  the Tags / Faces switch at the right end of both — and its controls are
+ *  34 px (`FilterMenu`, the segmented controls). No `Button` size is, so the
+ *  pills say it themselves. */
+const PILL_H = 34;
+
 export function TagSetPills({
   sets, setId, setPickedId, onManage,
 }: {
@@ -60,7 +67,8 @@ export function TagSetPills({
               // first. A div rather than a button is what is left of that.
               <Button key={s.id} round size="sm" variant={on ? "primary" : "soft"}
                       onClick={() => setPickedId(s.id)} className="hoverable"
-                      style={{ color: fg, fontSize: "var(--fs-3)", fontWeight: 500 }}>
+                      style={{ color: fg, fontSize: "var(--fs-3)", fontWeight: 500,
+                               height: PILL_H }}>
                 {/* NO PILL WEARS A LEADING GLYPH (owner 2026-09). The
                     library's had one and then a built-in's, on the reasoning
                     that an icon says WHICH KIND of pill this is — and a row
@@ -125,7 +133,8 @@ export function TagSetPills({
           {/* A round pill the height of the others, the glyph dead centre. */}
           <Button round size="sm" variant="soft" icon="edit" title={t("Manage tag sets…")}
                   onClick={onManage} className="hoverable"
-                  style={{ width: 32, padding: 0, color: "var(--text)" }} />
+                  style={{ width: PILL_H, height: PILL_H, padding: 0,
+                           color: "var(--text)" }} />
         </div>
   );
 }

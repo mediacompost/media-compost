@@ -6,7 +6,8 @@ import { catFromScope, placeUrl, readPlace, samePlace, scopeFromPlace, type Plac
 
 const place = (p: Partial<Place> = {}): Place => ({
   view: "library", overlay: null, settingsPage: "general",
-  groupEditId: null, trainJobUid: null, tagsMode: "items", tagSetId: null,
+  groupEditId: null, trainJobUid: null, tagsMode: "items", tagsPage: "tags",
+  tagSetId: null,
   libCat: null, libKinds: "", search: "",
   itemIds: [], itemMode: "annotate", itemTab: null, ...p,
 });
@@ -173,3 +174,17 @@ test("a ranking view rides the URL, with or without its pool", () => {
   // unknown path falls back to the library.
   assert.equal(scopeFromPlace(place({ libCat: "rankx" })).rankingView, null);
 });
+
+test("Faces is a page of the Tags tab, and its old address is not kept", () => {
+  assert.equal(placeUrl(place({ view: "tags", tagsPage: "faces" })), "/tags/faces");
+  // The list mode it was on is not in the address while Faces shows…
+  assert.equal(placeUrl(place({ view: "tags", tagsPage: "faces",
+                                tagsMode: "tagsets", tagSetId: 7 })), "/tags/faces");
+  const p = at("/tags/faces");
+  assert.equal(p.view, "tags");
+  assert.equal(p.tagsPage, "faces");
+  assert.equal(at("/tags").tagsPage, "tags");
+  // …and `/faces` is an unknown view like any other.
+  assert.equal(at("/faces").view, "library");
+});
+

@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { SplitHandle, useSplit } from "../shared/Split";
 import { APP_PREFS } from "./prefs";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "./api";
 import { TopBar } from "./components/TopBar";
 import { TrainingPages, useTrainingOffered } from "./training";
 import { GroupTree } from "./components/GroupTree";
@@ -10,6 +8,7 @@ import { ItemGrid } from "./components/ItemGrid";
 import { PropertiesPanel } from "./components/PropertiesPanel";
 import { TagsView } from "./components/TagsView";
 import { FacesPage } from "./components/FacesView";
+import { useFacesHidden } from "./components/TagsPageSwitch";
 import { HistoryView } from "./components/HistoryView";
 import { ErrorBoundary } from "../shared/ErrorBoundary";
 import { ConfirmHost } from "../shared/ConfirmModal";
@@ -56,19 +55,18 @@ export function App() {
   useEffect(() => {
     if (!trainingOffered && TRAINING_VIEWS.includes(view)) setView("library");
   }, [trainingOffered, view, setView]);
-  // AND THE FACES TAB CAN BE PUT AWAY (Settings → Faces), which is the same
+  // AND THE FACES PAGE CAN BE PUT AWAY (Settings → Faces), which is the same
   // errand with one difference: training is a launch-time fact, so its answer
   // cannot change under an open page, and this one can. Somebody who hides
-  // the tab WHILE STANDING ON IT has to be moved, not just left on a page
-  // whose tab has gone — so the effect answers to the value CHANGING rather
-  // than only to the mount. `?? false` errs toward showing while the query is
-  // in flight, the same direction `useTrainingOffered` defaults.
-  const { data: uiPrefs } = useQuery({
-    queryKey: ["settings"], queryFn: api.getSettings });
-  const facesHidden = uiPrefs?.hide_faces_tab ?? false;
+  // Faces WHILE STANDING ON IT has to be moved, not just left on a page whose
+  // switch has gone — so the effect answers to the value CHANGING rather than
+  // only to the mount. The move is to the Tags tab's other page.
+  const facesHidden = useFacesHidden();
+  const tagsPage = useUI((s) => s.tagsPage);
+  const setTagsPage = useUI((s) => s.setTagsPage);
   useEffect(() => {
-    if (facesHidden && view === "faces") setView("library");
-  }, [facesHidden, view, setView]);
+    if (facesHidden && tagsPage === "faces") setTagsPage("tags");
+  }, [facesHidden, tagsPage, setTagsPage]);
   const overlay = useUI((s) => s.overlay);
   // Reflect the chosen UI language on <html lang> for the whole document.
   const lang = useLang();
@@ -115,7 +113,7 @@ export function App() {
     // WRITING an address never names a legacy sub-tab: the three record
     // lists are the Items list narrowed, and `/tags` plus the filter is what
     // this build produces. `tagsKind` exists only to be READ.
-    view, overlay, settingsPage, groupEditId, trainJobUid, tagsMode,
+    view, overlay, settingsPage, groupEditId, trainJobUid, tagsMode, tagsPage,
     tagsKind: "", tagSetId,
     libCat, libKinds: mediaKinds.join(","), search,
     itemIds: itemTabs, itemTab: itemActive,
@@ -130,7 +128,7 @@ export function App() {
   // history entry; the search box updates per keystroke, so a search-only change
   // REPLACES the current entry (the URL still updates for reload, without a
   // hundred history entries as you type).
-  const structural = `${view}|${overlay}|${settingsPage}|${groupEditId}|${trainJobUid}|${tagsMode}|${tagSetId}|${libCat}|${mediaKinds.join(",")}|${itemTabs.join(",")}`;
+  const structural = `${view}|${overlay}|${settingsPage}|${groupEditId}|${trainJobUid}|${tagsMode}|${tagsPage}|${tagSetId}|${libCat}|${mediaKinds.join(",")}|${itemTabs.join(",")}`;
   const prevStructural = useRef(structural);
   useEffect(() => {
     if (url === shown.current) return;
@@ -153,7 +151,8 @@ export function App() {
       if (samePlace(p, {
         view: st.view, overlay: st.overlay, settingsPage: st.settingsPage,
         groupEditId: st.groupEditId, trainJobUid: st.trainJobUid,
-        tagsMode: st.tagsView.mode, tagsKind: "", tagSetId: st.tagSetId,
+        tagsMode: st.tagsView.mode, tagsPage: st.tagsPage, tagsKind: "",
+        tagSetId: st.tagSetId,
         libCat: catFromScope(st), libKinds: st.mediaKinds.join(","), search: st.search,
         itemIds: st.editorTabs, itemTab: st.editorItemId,
         itemMode: (at != null ? st.editorModes[at] : undefined)
@@ -162,7 +161,7 @@ export function App() {
       useUI.setState({
         view: p.view, overlay: p.overlay, settingsPage: p.settingsPage,
         groupEditId: p.groupEditId, trainJobUid: p.trainJobUid,
-        tagSetId: p.tagSetId,
+        tagSetId: p.tagSetId, tagsPage: p.tagsPage,
         // Back closes the item window, or opens it again on the way forward.
         editorTabs: p.itemIds,
         editorItemId: p.itemTab ?? p.itemIds[0] ?? null,
@@ -268,10 +267,10 @@ export function App() {
           <SplitHandle split={right} title="Drag to resize panel" style={{ right: rightW - 3 }} />
         </div>
         </ErrorBoundary>
+      ) : view === "tags" && tagsPage === "faces" ? (
+        <ErrorBoundary key="faces" what={t("The Faces tab")} t={t}><FacesPage /></ErrorBoundary>
       ) : view === "tags" ? (
         <ErrorBoundary key={view} what={t("The Tags tab")} t={t}><TagsView /></ErrorBoundary>
-      ) : view === "faces" ? (
-        <ErrorBoundary key={view} what={t("The Faces tab")} t={t}><FacesPage /></ErrorBoundary>
       ) : TRAINING_VIEWS.includes(view) ? (
         // One lazy door for all three (see app/training.tsx): the train UI
         // is its own chunk, fetched the first time one of these opens.

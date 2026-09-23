@@ -64,14 +64,15 @@ Once a subject has confirmed faces, the app can **suggest** names for new ones:
 
 Items with unanswered face guesses appear under the **Pending → Faces** scope in the Library sidebar, so reviewing them is a queue you can work through.
 
-## The Faces tab
+## The Faces page
 
-**Which crops are one person** is its own tab in the main navigation
-(`/faces`), and it is **two columns**: every cluster as a row down the left —
+**Which crops are one person** is the second page of the **Tags** tab
+(`/tags/faces`), reached with the **Tags / Faces** switch at the right end of
+the tab's top line, and it is **two columns**: every cluster as a row down the left —
 its cover crop, its name or *Unknown*, how many faces it holds and how many
 of those are still a machine's guess — and the picked cluster's crops in the
 grid beside it. A search field narrows the rows by name; the **S / M / L**
-control sizes the crops.
+control, shown while a cluster is open, sizes the crops.
 
 It used to be two lists inside the Subjects sub-tab: people with their crops
 under them, then the clusters nobody had named. The question a person is

@@ -23,8 +23,14 @@ import {
   sortSets, type QaSet,
 } from "./qaSets";
 
-export type View = "library" | "tags" | "faces" | "history"
+export type View = "library" | "tags" | "history"
   | "train" | "evaluate" | "models";
+/** THE TAGS TAB'S TWO PAGES (owner 2026-09): the list of names — in any of
+ *  its three modes — and the Faces page, which was a top-level tab until
+ *  then. Apart from `TagsMode` on purpose: the modes are one list with a
+ *  state parked per mode (`tagsViewByMode`), and Faces has none of it, so
+ *  switching to Faces and back returns to whichever list was open. */
+export type TagsPage = "tags" | "faces";
 /** The two halves of the item window: labelling the picture, or changing it.
  *  One window, one item, two things you can be doing to it. */
 export type ItemMode = "annotate" | "edit";
@@ -693,6 +699,8 @@ interface UIState {
   // reason and stays one.)
   tagsViewByMode: Partial<Record<TagsMode, TagsViewState>>;
   setTagsMode: (mode: TagsModeAsked, focus?: string | null) => void;
+  tagsPage: TagsPage;
+  setTagsPage: (page: TagsPage) => void;
   // Switch to the History tab filtered to the given items (empty = jump with no
   // filter). Used by the "View history" button in the right sidebar.
   showHistoryFor: (ids: number[]) => void;
@@ -1326,6 +1334,9 @@ export const useUI = create<UIState>((set) => ({
   // row somebody asked for once, not a way the list is narrowed. Landing on
   // the tab you are already on still focuses, since the row may be off
   // screen.
+  tagsPage: START.tagsPage,
+  setTagsPage: (tagsPage) => set({ tagsPage }),
+  // Every way INTO a list of names lands on the list page, not on Faces.
   setTagsMode: (mode, focus = null) =>
     set((s) => {
       // THE THREE RETIRED SUB-TABS LAND ON THE ITEMS LIST, narrowed to that
@@ -1352,9 +1363,12 @@ export const useUI = create<UIState>((set) => ({
                   negative: { lo: null, hi: null } },
       } : {};
       if (s.tagsView.mode === to && !kind) {
-        return focus ? { tagsView: { ...s.tagsView, ...clear, focus } } : {};
+        return focus ? { tagsPage: "tags" as const,
+                         tagsView: { ...s.tagsView, ...clear, focus } }
+          : { tagsPage: "tags" as const };
       }
       return {
+        tagsPage: "tags" as const,
         ...enterTagsMode(s, to),
         tagsView: {
           ...tagsModeState(s, to), ...clear, focus,
@@ -1369,6 +1383,7 @@ export const useUI = create<UIState>((set) => ({
   showCategoryInTagSet: (setId, trail) =>
     set((s) => ({
       view: "tags",
+      tagsPage: "tags",
       tagSetId: setId,
       ...enterTagsMode(s, "tagsets"),
       tagsView: { ...tagsModeState(s, "tagsets"), focusCategory: trail,
@@ -1377,6 +1392,7 @@ export const useUI = create<UIState>((set) => ({
   showTagInTagSet: (setId, name, edit = false) =>
     set((s) => ({
       view: "tags",
+      tagsPage: "tags",
       tagSetId: setId,
       // ARRIVING FROM ELSEWHERE IS A SUB-TAB SWITCH, so it goes through the
       // same two helpers `setTagsMode` does: the sub-tab being left is

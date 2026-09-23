@@ -71,7 +71,7 @@ question about the same tags:
 - **[Events](events.md)** — what was happening, as a time span with venues,
   which can then say *when* an undated picture was taken.
 
-![The Faces tab: clusters, their crops, and the crops that look most like them](assets/screenshots/subjects.webp){ .mc-shot }
+![The Faces page: clusters, their crops, and the crops that look most like them](assets/screenshots/subjects.webp){ .mc-shot }
 
 Two face detectors — one for photographs, one for illustration — find the
 faces, cluster them and suggest names; naming a cluster assigns that person's
