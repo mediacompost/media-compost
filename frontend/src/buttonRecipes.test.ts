@@ -78,7 +78,7 @@ const BUDGET: Record<string, number> = {
   "query/ConditionRow.tsx": 2,
   "shared/SegmentedControl.tsx": 1,
   "train/DegradeSection.tsx": 4,
-  "train/EvaluateView.tsx": 3,
+  "train/EvaluateView.tsx": 2,
   "train/FormRows.tsx": 1,
   "train/Lightbox.tsx": 2,
   "train/LossGraph.tsx": 4,

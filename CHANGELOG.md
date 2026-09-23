@@ -7,6 +7,8 @@
   gone.
 - **The Evaluate grid can be grouped by session, model, adapters or
   prompt**, from the new group-by dropdown above it.
+- **The Evaluate grid's section headings no longer have a Clear button.**
+  To remove a group, drag a box over it and press **Remove**.
 - **The Evaluate grid behaves like the library's.** Drag a box from the
   background to select, pick a size with S/M/L, and every picture sits in a
   square card like the library's.

@@ -894,16 +894,15 @@ const ARROWS: Record<string, StepDir | undefined> = {
 };
 
 /** ONE GROUP'S HEADING in the contact sheet: what its runs share (the
- *  sitting's start, the model, the adapters or the prompt), how many results
- *  it holds, and the only bulk action there is — clearing the whole group,
- *  which is how a page full of experiments gets tidied without 20
- *  confirmations. Drawn by `CardGrid` as a section header, whose height is
- *  fixed, so this is one line and never wraps: a long prompt is cut. */
-function GroupHeader({ group, grouping, models, onClear }: {
+ *  sitting's start, the model, the adapters or the prompt) and how many
+ *  results it holds. No verb: a group is removed by picking it (a box drag
+ *  over it) and pressing the selection bar's Remove. Drawn by `CardGrid` as
+ *  a section header, whose height is fixed, so this is one line and never
+ *  wraps: a long prompt is cut. */
+function GroupHeader({ group, grouping, models }: {
   group: RunGroup;
   grouping: EvalGrouping;
   models: TrainModelSpec[];
-  onClear: () => void;
 }) {
   const t = useT();
   const tn = useTn();
@@ -927,7 +926,7 @@ function GroupHeader({ group, grouping, models, onClear }: {
       ) : (
         // A NAME, not a label: the section heading's capitals would shout a
         // prompt, and it yields (ellipsis, the whole of it on hover) before
-        // the count and the button do.
+        // the count does.
         <span title={title} style={{
           flex: "0 1 auto", minWidth: 0, overflow: "hidden",
           textOverflow: "ellipsis", whiteSpace: "nowrap",
@@ -938,21 +937,6 @@ function GroupHeader({ group, grouping, models, onClear }: {
         {tn({ one: "1 result", other: "{n} results" }, group.runs.length)}
       </span>
       <div style={{ flex: 1, minWidth: 12, height: 1, background: "var(--border-soft)" }} />
-      <button
-        onClick={onClear}
-        title={grouping === "session" ? t("Delete every result in this session")
-          : t("Delete every result in this group")}
-        className="hoverable"
-        style={{
-          display: "inline-flex", alignItems: "center", gap: 5, height: 24,
-          padding: "0 9px", borderRadius: "var(--r-3)", border: "1px solid var(--border)",
-          background: "transparent", color: "var(--muted)", fontSize: "var(--fs-2)",
-          cursor: "pointer", fontFamily: "inherit", flex: "0 0 auto",
-        }}
-      >
-        <Icon name="delete_sweep" size={14} />
-        {t("Clear")}
-      </button>
     </div>
   );
 }
@@ -1275,7 +1259,8 @@ export function EvaluateView() {
     for (const x of removableTiles) {
       byRun.set(x.run.uid, [...(byRun.get(x.run.uid) ?? []), x]);
     }
-    // Sequential, like clearGroup: the manager writes under one lock.
+    // Sequential: the manager writes the run folders under one lock, and a
+    // burst of parallel deletes only queues there.
     for (const [uid, tiles] of byRun) {
       const run = tiles[0].run;
       const names = tiles.map((x) => x.name).filter((n): n is string => !!n);
@@ -1287,22 +1272,6 @@ export function EvaluateView() {
       } catch { /* already gone */ }
     }
     clearPicked();
-    qc.invalidateQueries({ queryKey: ["eval-runs"] });
-  };
-
-  const clearGroup = async (group: EvalRun[]) => {
-    if (!(await confirm({
-      title: grouping === "session"
-        ? t("Delete all {n} results from this session?", { n: group.length })
-        : t("Delete all {n} results in this group?", { n: group.length }),
-      body: t("The generated images go with them."),
-      answer: { label: t("Delete"), danger: true },
-    }))) return;
-    // Sequential rather than Promise.all: the manager writes the run folders
-    // under one lock, and a burst of parallel deletes only queues there.
-    for (const r of group) {
-      try { await api.evalDelete(r.uid); } catch { /* already gone */ }
-    }
     qc.invalidateQueries({ queryKey: ["eval-runs"] });
   };
 
@@ -1636,8 +1605,7 @@ export function EvaluateView() {
               runs={sectionRuns} groupGap={18}
               renderHeader={(_, section) => (
                 <GroupHeader group={groups[section]} grouping={grouping}
-                  models={models}
-                  onClear={() => clearGroup(groups[section].runs)} />
+                  models={models} />
               )}
               renderCard={(i) => {
                 const tile = allTiles[i];
