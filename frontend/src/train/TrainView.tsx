@@ -25,11 +25,15 @@ import { anyJobActive, errText } from "./util";
 import { SELECTION_BAR_GAP, SELECTION_BAR_H, SelectionBar }
   from "../shared/SelectionBar";
 
-function SectionHeader({ label, count, trailing }: {
+function SectionHeader({ label, count, trailing, first }: {
   label: string; count: number; trailing?: React.ReactNode;
+  /** The list's first section: the scroller's own padding is the space above
+   *  it, and the 12 px a section keeps from the one before would double it. */
+  first?: boolean;
 }) {
   return (
-    <SectionHeading style={{ display: "flex", alignItems: "center", gap: 7, padding: "12px 2px 6px" }}>
+    <SectionHeading style={{ display: "flex", alignItems: "center", gap: 7,
+                             padding: `${first ? 2 : 12}px 2px 6px` }}>
       {label}
       <span style={{
         minWidth: 17, height: 17, padding: "0 5px", borderRadius: "var(--r-5)",
@@ -565,11 +569,6 @@ export function TrainView({ jobUid, onSelectJob }: {
       <div style={{ position: "absolute", inset: 0, overflowY: "auto",
                     padding: 14 }}>
         {status && !status.env_ready && <TrainSetupBanner />}
-        <Button variant="primary" size="md" block
-     onClick={() => setEditorFor("")}>
-          <Icon name="add" size={18} />
-          {t("New training job")}
-        </Button>
 
         {/* WHY THE LAST ACTION DID NOTHING — at the top of the list, where
             both a row's button and a drag between the sections can put it.
@@ -580,10 +579,7 @@ export function TrainView({ jobUid, onSelectJob }: {
             display: "flex", alignItems: "flex-start", gap: 8,
             border: "1px solid var(--red)", borderRadius: "var(--r-6)",
             background: "var(--danger-dim)",
-            // Top margin as well as bottom: the box sits directly under the
-            // New-job button, which has none of its own, so without it the
-            // red edge touched the accent one.
-            padding: "8px 10px", margin: "10px 0",
+            padding: "8px 10px", margin: "0 0 10px",
             fontSize: "var(--fs-2)", lineHeight: 1.5, color: "var(--red-text)",
           }}>
             <Icon name="error" size={14} />
@@ -603,7 +599,7 @@ export function TrainView({ jobUid, onSelectJob }: {
 
         {sections.running.length > 0 && (
           <>
-            <SectionHeader label={t("Running")} count={sections.running.length}
+            <SectionHeader label={t("Running")} count={sections.running.length} first
               trailing={<PauseControl running={sections.running} />} />
             <JobPanel onRefused={setRefused} queueActive={!!data?.queue_active} jobs={sections.running}
               picked={picked} onPick={pick} />
@@ -620,6 +616,7 @@ export function TrainView({ jobUid, onSelectJob }: {
           <DropSection active={!!dragUid} hint={!!dragUid && !draggingQueued}
             onDrop={() => dropToQueue(sections.queued.length)}>
             <SectionHeader label={t("Up next")} count={sections.queued.length}
+              first={sections.running.length === 0}
               trailing={<RunControl running={sections.running.length}
                 queued={sections.queued.length} />} />
             {sections.queued.length > 0 ? (
@@ -754,6 +751,16 @@ export function TrainView({ jobUid, onSelectJob }: {
           />
         </div>
       )}
+      </div>
+      {/* The page's one way to START something, pinned at the foot of the
+          column where the Evaluate tab keeps Generate: the list above it
+          scrolls, and a button at its top went off screen with it. */}
+      <div style={{ flex: "0 0 auto", padding: 14, borderTop: "1px solid var(--border-soft)" }}>
+        <Button variant="primary" size="md" block
+          onClick={() => setEditorFor("")}>
+          <Icon name="add" size={18} />
+          {t("New training job")}
+        </Button>
       </div>
         <GpuStatsBar />
       </div>

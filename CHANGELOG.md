@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **New training job sits at the foot of the Train tab's job list**, where
+  the Evaluate tab keeps Generate, so it no longer scrolls away.
 - **Settings → Storage can empty more.** Thumbnails (made again as they are
   shown), every Evaluate result, and every finished training job each have a
   Delete button. Adapters kept from deleted jobs have a row of their own.
