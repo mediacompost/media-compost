@@ -271,7 +271,6 @@ const CATALOG: Catalog = {
   "Remove from the queue": "从队列移除",
   "Select to copy": "选中以复制",
   "generation failed": "生成失败",
-  "Library tags autocomplete as you type.": "媒体库标签会随输入自动补全。",
   "Sampler steps": "采样步数",
   "CFG scale": "CFG 比例",
   "This model isn't downloaded yet, and downloads are switched off": "此模型尚未下载，且下载已关闭",
@@ -712,10 +711,8 @@ const CATALOG: Catalog = {
     "适配器的输出在加到模型上之前会乘以 alpha ÷ 秩，所以在给定容量下，alpha 决定适配器说话有多大声。两种适配器的机制相同。\n\n惯例是 alpha = 秩，这样系数为 1，改秩时行为也便于比较。把 alpha 设为秩的一半，是让过强的适配器变柔和的常见做法。它和学习率相互影响——把 alpha 减半和把学习率减半效果相近——所以一次只改一样。",
   "This architecture can only be trained as an adapter (LoRA or LoKr) alongside the frozen model. The \"Full finetune\" method, which rewrites the model's own weights, is not offered for it.":
     "该架构只能以适配器（LoRA 或 LoKr）的形式在冻结的模型旁训练。 它不提供会重写模型自身权重的“全量微调”方式。",
-  "No adapters for this base model yet — an adapter fits the model it was trained on and any other built on the same one.":
-    "还没有适用于此基础模型的适配器——适配器适用于训练它的模型，以及任何以同一模型为基础构建的模型。",
-  "No trained adapters yet — finish a training job first. Generating with the plain base model works regardless.":
-    "还没有训练好的适配器——先完成一个训练任务。只用基础模型生成始终可用。",
+  "No adapters for this base model yet.": "此基础模型还没有适配器。",
+  "No trained adapters yet.": "还没有训练好的适配器。",
   "Which adapter this row applies":
     "这一行应用哪个适配器",
   "Adapter strength: 1 = as trained, below weakens, above strengthens (can distort past ~1.5).":

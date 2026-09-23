@@ -129,8 +129,8 @@ function LorasEditor({ model, models, rows, onChange }: {
     return (
       <div style={{ padding: "12px 16px", fontSize: "var(--fs-2)", color: "var(--muted-2)", lineHeight: 1.55 }}>
         {(data?.loras ?? []).length > 0
-          ? t("No adapters for this base model yet — an adapter fits the model it was trained on and any other built on the same one.")
-          : t("No trained adapters yet — finish a training job first. Generating with the plain base model works regardless.")}
+          ? t("No adapters for this base model yet.")
+          : t("No trained adapters yet.")}
       </div>
     );
   }
@@ -612,9 +612,11 @@ function RunDetails({ run, models, onApply, trainingBusy, onClose,
  *  text encoders…" — and a native option list has nowhere to put it, so it
  *  used to sit under the row describing only whichever model happened to
  *  be selected. Groups are headed only where there is more than one. */
-function PickMenuRow({ label, hint, value, valueLabel, groups, onPick, last }: {
+function PickMenuRow({ label, hint, details, value, valueLabel, groups, onPick, last }: {
   label: string;
   hint?: string;
+  /** The long form, behind the row's `?`. */
+  details?: string;
   value: string;
   valueLabel: string;
   groups: { title?: string; items: { id: string; label: string; note?: string }[] }[];
@@ -630,7 +632,7 @@ function PickMenuRow({ label, hint, value, valueLabel, groups, onPick, last }: {
   const filled = groups.filter((g) => g.items.length > 0);
   const headed = filled.length > 1;
   return (
-    <RowShell label={label} hint={hint} last={last}>
+    <RowShell label={label} hint={hint} details={details} last={last}>
       <button ref={menuAnchor}
         onClick={() => setMenu((v) => !v)}
         style={{
@@ -748,7 +750,7 @@ function ModelRows({ models, model, finetune, onModel, onFinetune }: {
         if (first) onModel(first.key);
       }} />
     <PickMenuRow label={t("Weights")}
-      hint={finetunes.length || custom.length
+      details={finetunes.length || custom.length
         ? t("The built-in release, one of your own models, or a full finetune's weights in place of the base model's. Adapters stack on top of whatever is picked here.")
         : undefined}
       value={finetune ? finetuneKey(finetune) : model}
@@ -1445,7 +1447,7 @@ export function EvaluateView() {
           <ModelRows models={models} model={model} finetune={finetune}
             onModel={switchModel} onFinetune={setFinetune} />
           <RowShell label={t("Adapters")} last
-            hint={t("Stack trained adapters on the base model, each with its own strength — LoRA or LoKr. An adapter fits the model it was trained on and any other built on the same one.")}>
+            details={t("Stack trained adapters on the base model, each with its own strength — LoRA or LoKr. An adapter fits the model it was trained on and any other built on the same one.")}>
             <span />
           </RowShell>
           <div style={{ margin: "-10px 0 0" }}>
@@ -1457,7 +1459,6 @@ export function EvaluateView() {
         <Section label={t("Prompt")}>
           <PromptArea label={t("Prompt")} value={prompt} rows={3}
             placeholder={t("what to generate — include your trigger word")}
-            hint={t("Library tags autocomplete as you type.")}
             onChange={setPrompt} />
           <PromptArea label={t("Negative prompt")} value={negative} rows={2}
             onChange={setNegative} last />
@@ -1467,7 +1468,7 @@ export function EvaluateView() {
           <SizeRow label={t("Size")} width={width} height={height}
             onChange={(w, h) => { setWidth(w); setHeight(h); }} />
           <ToggleRow label={t("Random seed")} checked={randomSeed}
-            hint={t("A new seed is drawn each time you click Generate; the field below shows the seed used for the last generation.")}
+            details={t("A new seed is drawn each time you click Generate; the field below shows the seed used for the last generation.")}
             onChange={setRandomSeed} />
           <NumRow label={t("Seed")} value={seed} step={1}
             disabled={randomSeed} onChange={setSeed} />
@@ -1479,12 +1480,12 @@ export function EvaluateView() {
             aLabel={t("batches")} bLabel={t("per batch")}
             total={tn({ one: "= 1 image", other: "= {n} images" },
                        batches * batch)}
-            hint={t("Each batch goes through the model in one pass: a larger batch needs that much more memory and is faster only where there is bandwidth to spare, while more batches simply take longer. Seeds run seed, seed+1, … across the whole set, so an image comes out identical however it was grouped.")}
+            details={t("Each batch goes through the model in one pass: a larger batch needs that much more memory and is faster only where there is bandwidth to spare, while more batches simply take longer. Seeds run seed, seed+1, … across the whole set, so an image comes out identical however it was grouped.")}
             onChange={(nb, sz) => { setBatches(nb); setBatch(sz); }} />
           <NumRow label={t("Sampler steps")} value={steps} min={1} max={150}
             step={1} onChange={setSteps} />
           <NumRow label={t("CFG scale")} value={cfg} min={0} max={30} last
-            hint={t("How strongly the prompt is enforced. Anything above 1 makes the model run TWICE per sampler step — once with the prompt and once without — so it costs about double the time (measured here on SDXL at 1024², 20 steps: 53 s at 6 against 24 s at 1). At 1 or below that second pass is skipped, but these models are trained to lean on guidance and the picture changes completely without it — so treat this as a quality dial that happens to cost time, not as a speed setting.")}
+            details={t("How strongly the prompt is enforced. Anything above 1 makes the model run TWICE per sampler step — once with the prompt and once without — so it costs about double the time (measured here on SDXL at 1024², 20 steps: 53 s at 6 against 24 s at 1). At 1 or below that second pass is skipped, but these models are trained to lean on guidance and the picture changes completely without it — so treat this as a quality dial that happens to cost time, not as a speed setting.")}
             onChange={setCfg} />
         </Section>
 

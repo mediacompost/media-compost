@@ -291,7 +291,6 @@ const CATALOG: Catalog = {
   "Remove from the queue": "Aus der Warteschlange entfernen",
   "Select to copy": "Zum Kopieren markieren",
   "generation failed": "Generierung fehlgeschlagen",
-  "Library tags autocomplete as you type.": "Tags der Bibliothek werden beim Tippen vervollständigt.",
   "Sampler steps": "Sampler-Schritte",
   "CFG scale": "CFG-Skala",
   "This model isn't downloaded yet, and downloads are switched off": "Dieses Modell ist noch nicht heruntergeladen, und Downloads sind ausgeschaltet",
@@ -738,10 +737,8 @@ const CATALOG: Catalog = {
     "Die Ausgabe des Adapters wird mit Alpha ÷ Rang multipliziert, bevor sie zum Modell addiert wird — Alpha bestimmt also, wie laut der Adapter bei gegebener Kapazität spricht. Das funktioniert bei beiden Adapter-Typen gleich.\n\nÜblich ist Alpha = Rang, was den Faktor auf 1 bringt und das Verhalten beim Ändern des Rangs vergleichbar hält. Alpha auf den halben Rang zu setzen ist ein gängiger Weg, einen zu starken Adapter abzumildern. Es wirkt mit der Lernrate zusammen — Alpha zu halbieren hat einen ähnlichen Effekt wie die Rate zu halbieren — also ändere immer nur eines.",
   "This architecture can only be trained as an adapter (LoRA or LoKr) alongside the frozen model. The \"Full finetune\" method, which rewrites the model's own weights, is not offered for it.":
     "Diese Architektur lässt sich nur als Adapter (LoRA oder LoKr) neben dem eingefrorenen Modell trainieren. Die Methode „Komplettes Finetuning“, die die eigenen Gewichte des Modells umschreibt, wird dafür nicht angeboten.",
-  "No adapters for this base model yet — an adapter fits the model it was trained on and any other built on the same one.":
-    "Für dieses Basismodell gibt es noch keine Adapter — ein Adapter passt zu dem Modell, mit dem er trainiert wurde, und zu jedem anderen, das darauf aufbaut.",
-  "No trained adapters yet — finish a training job first. Generating with the plain base model works regardless.":
-    "Noch keine trainierten Adapter — schließe zuerst einen Trainingsauftrag ab. Mit dem reinen Basismodell lässt sich trotzdem generieren.",
+  "No adapters for this base model yet.": "Für dieses Basismodell gibt es noch keine Adapter.",
+  "No trained adapters yet.": "Noch keine trainierten Adapter.",
   "Which adapter this row applies":
     "Welchen Adapter diese Zeile anwendet",
   "Adapter strength: 1 = as trained, below weakens, above strengthens (can distort past ~1.5).":

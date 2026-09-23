@@ -272,7 +272,6 @@ const CATALOG: Catalog = {
   "Remove from the queue": "Retirer de la file",
   "Select to copy": "Sélectionnez pour copier",
   "generation failed": "génération échouée",
-  "Library tags autocomplete as you type.": "Les tags de la bibliothèque s'autocomplètent à la frappe.",
   "Sampler steps": "Pas d'échantillonneur",
   "CFG scale": "Échelle CFG",
   "This model isn't downloaded yet, and downloads are switched off": "Ce modèle n'est pas encore téléchargé, et les téléchargements sont désactivés",
@@ -713,10 +712,8 @@ const CATALOG: Catalog = {
     "La sortie de l'adaptateur est multipliée par alpha ÷ rang avant d'être ajoutée au modèle : alpha décide donc du volume auquel l'adaptateur parle, à capacité donnée. Cela fonctionne pareil pour les deux types d'adaptateur.\n\nLa convention usuelle est alpha = rang, ce qui met le facteur à 1 et garde un comportement comparable quand on change le rang. Mettre alpha à la moitié du rang est une façon courante d'adoucir un adaptateur trop fort. Cela interagit avec le taux d'apprentissage — diviser alpha par deux ressemble à diviser le taux par deux — donc ne change qu'une chose à la fois.",
   "This architecture can only be trained as an adapter (LoRA or LoKr) alongside the frozen model. The \"Full finetune\" method, which rewrites the model's own weights, is not offered for it.":
     "Cette architecture ne peut être entraînée que comme adaptateur (LoRA ou LoKr) à côté du modèle gelé. La méthode « Finetuning complet », qui réécrit les poids propres du modèle, n’est pas proposée pour elle.",
-  "No adapters for this base model yet — an adapter fits the model it was trained on and any other built on the same one.":
-    "Aucun adaptateur pour ce modèle de base pour l'instant — un adaptateur convient au modèle sur lequel il a été entraîné et à tout autre bâti sur le même.",
-  "No trained adapters yet — finish a training job first. Generating with the plain base model works regardless.":
-    "Aucun adaptateur entraîné pour l'instant — termine d'abord une tâche d'entraînement. Générer avec le modèle de base seul fonctionne quand même.",
+  "No adapters for this base model yet.": "Pas encore d'adaptateur pour ce modèle de base.",
+  "No trained adapters yet.": "Pas encore d'adaptateur entraîné.",
   "Which adapter this row applies":
     "Quel adaptateur cette ligne applique",
   "Adapter strength: 1 = as trained, below weakens, above strengthens (can distort past ~1.5).":

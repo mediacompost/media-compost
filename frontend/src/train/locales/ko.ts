@@ -271,7 +271,6 @@ const CATALOG: Catalog = {
   "Remove from the queue": "대기열에서 제거",
   "Select to copy": "선택하여 복사",
   "generation failed": "생성 실패",
-  "Library tags autocomplete as you type.": "라이브러리 태그가 입력 중 자동 완성됩니다.",
   "Sampler steps": "샘플러 스텝",
   "CFG scale": "CFG 스케일",
   "This model isn't downloaded yet, and downloads are switched off": "이 모델은 아직 다운로드되지 않았고, 다운로드가 꺼져 있습니다",
@@ -712,10 +711,8 @@ const CATALOG: Catalog = {
     "어댑터의 출력은 모델에 더해지기 전에 alpha ÷ 랭크가 곱해집니다. 즉 alpha는 주어진 용량에서 어댑터가 얼마나 크게 말하는지를 정합니다. 두 어댑터 종류에서 똑같이 작동합니다.\n\n관행은 alpha = 랭크이며, 그러면 계수가 1이 되어 랭크를 바꿔도 동작을 비교하기 쉽습니다. alpha를 랭크의 절반으로 두는 것은 너무 센 어댑터를 누그러뜨리는 흔한 방법입니다. 학습률과 서로 영향을 주므로(alpha를 반으로 줄이는 것은 학습률을 반으로 줄이는 것과 비슷합니다) 한 번에 하나씩만 바꾸세요.",
   "This architecture can only be trained as an adapter (LoRA or LoKr) alongside the frozen model. The \"Full finetune\" method, which rewrites the model's own weights, is not offered for it.":
     "이 아키텍처는 얼어 있는 모델 옆에 두는 어댑터(LoRA 또는 LoKr)로만 학습할 수 있습니다. 모델 자체의 가중치를 다시 쓰는 ‘전체 파인튜닝’ 방식은 제공되지 않습니다.",
-  "No adapters for this base model yet — an adapter fits the model it was trained on and any other built on the same one.":
-    "이 베이스 모델에 쓸 어댑터가 아직 없습니다. 어댑터는 학습에 사용한 모델과 같은 모델을 바탕으로 만든 다른 모델에도 맞습니다.",
-  "No trained adapters yet — finish a training job first. Generating with the plain base model works regardless.":
-    "학습된 어댑터가 아직 없습니다. 먼저 학습 작업을 하나 끝내세요. 베이스 모델만으로 생성하는 것은 언제든 됩니다.",
+  "No adapters for this base model yet.": "이 기본 모델용 어댑터가 아직 없습니다.",
+  "No trained adapters yet.": "학습된 어댑터가 아직 없습니다.",
   "Which adapter this row applies":
     "이 행이 적용하는 어댑터",
   "Adapter strength: 1 = as trained, below weakens, above strengthens (can distort past ~1.5).":

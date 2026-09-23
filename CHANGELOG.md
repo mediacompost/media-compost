@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **The Evaluate sidebar is shorter.** Its explanations are behind **?**
+  marks, as in the training job editor, and the ones that said nothing are
+  gone.
 - **The Evaluate grid behaves like the library's.** Drag a box from the
   background to select, pick a size with S/M/L, and every picture sits in a
   square card like the library's.

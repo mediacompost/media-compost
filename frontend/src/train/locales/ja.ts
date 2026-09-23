@@ -271,7 +271,6 @@ const CATALOG: Catalog = {
   "Remove from the queue": "キューから削除",
   "Select to copy": "選択してコピー",
   "generation failed": "生成に失敗しました",
-  "Library tags autocomplete as you type.": "入力中にライブラリのタグが自動補完されます。",
   "Sampler steps": "サンプラーステップ",
   "CFG scale": "CFG スケール",
   "This model isn't downloaded yet, and downloads are switched off": "このモデルはまだダウンロードされておらず、ダウンロードはオフになっています",
@@ -712,10 +711,8 @@ const CATALOG: Catalog = {
     "アダプターの出力はモデルに足される前に alpha ÷ ランク が掛けられます。つまり alpha は、与えられた容量のもとでアダプターがどれだけ大きな声で話すかを決めます。2 種類のアダプターで同じように働きます。\n\n慣習は alpha = ランクで、係数が 1 になり、ランクを変えても挙動を比べやすくなります。alpha をランクの半分にするのは、効きすぎるアダプターを和らげるよくあるやり方です。学習率と相互作用するので（alpha を半分にするのは学習率を半分にするのと似た効果です）、変えるのは一度に一つにしてください。",
   "This architecture can only be trained as an adapter (LoRA or LoKr) alongside the frozen model. The \"Full finetune\" method, which rewrites the model's own weights, is not offered for it.":
     "このアーキテクチャは、凍結したモデルの横に置くアダプター（LoRA または LoKr）としてしか学習できません。 モデル自身の重みを書き換える「フルファインチューニング」は選べません。",
-  "No adapters for this base model yet — an adapter fits the model it was trained on and any other built on the same one.":
-    "このベースモデル向けのアダプターはまだありません。アダプターは学習に使ったモデルと、同じモデルを土台にした他のモデルに適用できます。",
-  "No trained adapters yet — finish a training job first. Generating with the plain base model works regardless.":
-    "学習済みのアダプターがまだありません。まず学習ジョブを 1 つ終わらせてください。ベースモデルだけでの生成はいつでもできます。",
+  "No adapters for this base model yet.": "このベースモデル用のアダプターはまだありません。",
+  "No trained adapters yet.": "学習済みのアダプターはまだありません。",
   "Which adapter this row applies":
     "この行が適用するアダプター",
   "Adapter strength: 1 = as trained, below weakens, above strengthens (can distort past ~1.5).":
