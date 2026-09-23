@@ -37,9 +37,8 @@ your changes under that licence.
   after it can. **The site is one site, at the root**, describing the release
   that is out — there is no version in the address and no switcher; read
   unreleased prose with `mkdocs serve` instead.
-- **`gh-pages` is written by machines** (`mkdocs gh-deploy`, from the docs
-  workflow, which replaces the whole branch each time). Never commit to it,
-  never branch from it.
+- **The site is deployed by the docs workflow, never from a branch** (GitHub
+  Pages' source is *GitHub Actions*). Nothing built is committed.
 
 ## Opening a pull request
 

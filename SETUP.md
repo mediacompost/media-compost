@@ -177,14 +177,14 @@ restyled rather than replaced; the theme
 control is a three-state menu whose entries are labels pointing at Material's
 own palette radios, so Material still owns applying and persisting the choice.
 
-`.github/workflows/docs.yml` publishes it to GitHub Pages with **`mkdocs
-gh-deploy`**, which writes the built site to the ROOT of the `gh-pages`
-branch. **One site, for the version people can install**: no
+`.github/workflows/docs.yml` publishes it to GitHub Pages: **`mkdocs build
+--strict`** in the runner, then GitHub's own `upload-pages-artifact` and
+`deploy-pages` actions — no branch holds the built site. **One site, for the
+version people can install**: no
 version in the address, no switcher, no `latest` alias — a link to a page is
 a link to the current documentation and stays one. It was `mike`, a directory
 per minor series with a switcher over them, which made four URLs for one page
-and an archive nobody asked for; the first gh-deploy replaces the branch, so
-`/1.0/`, `/latest/` and `/dev/` stop answering.
+and an archive nobody asked for.
 
 It runs FROM A TAG, always — `publish.yml` calls it with the tag it has just
 published, and *Actions → Docs → Run workflow* takes one too, which is how a
@@ -193,7 +193,10 @@ build from a branch: the site would then describe code nobody can install, and
 `mkdocs serve` above is how unreleased prose is read. It runs on RELEASES
 ONLY — republishing the whole site for a typo in a docstring put a job in the
 queue behind every push and changed nothing anybody had installed.
-Set Pages to *Deploy from a branch → gh-pages / (root)* once.
+Set *Settings → Pages → Source* to **GitHub Actions** once; the deploy is
+refused otherwise. The `github-pages` environment that setting creates takes
+the default branch only, which both ways in satisfy (each run belongs to
+`main`; the tag is only what it checks out).
 
 `site_url` and `repo_url` in `website/mkdocs.yml` name the published site
 (<https://mediacompost.github.io/media-compost/>) and the repository
@@ -202,10 +205,8 @@ against the first, so a wrong one is every page claiming to live somewhere it
 does not — including the trailing `/media-compost/`, since a project site is
 served from a subdirectory and joining a page's path onto an address with no
 trailing slash replaces that last segment. A custom domain would be a setting
-in the repository's Pages page and this line moving with it — and, now that
-the deploy replaces the whole branch root, a `CNAME` in `docs/`, which is
-exactly what mike made useless (see the note at the top of
-`.github/workflows/docs.yml`). The version in the site's footer is
+in the repository's Pages page and this line moving with it — and nothing
+else: deploying from Actions needs no `CNAME` file. The version in the site's footer is
 `extra.version_number`, moved by `scripts/bump_version.py` with the package's
 own three copies. The screenshots under `docs/assets/screenshots/` are real captures of
 the app — WebP at 2560×1600 (a 1280×800 window at 2×), with 640×400 `-thumb`

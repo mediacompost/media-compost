@@ -1,29 +1,30 @@
 # Publishes the website (website/mkdocs.yml + docs/) to GitHub Pages.
 #
 # ONE SITE, AT THE ROOT. It was `mike`, which keeps a
-# directory per minor series in the `gh-pages` branch and a switcher over
+# directory per minor series in a `gh-pages` branch and a switcher over
 # them, so the address carried a version (`/1.0/`), `latest` was an alias
 # somebody might be reading instead, and `/dev/` was a fourth answer to the
 # same question. What the site is for is the version people can install, and
-# there is one of those — so `mkdocs gh-deploy` now writes the built site to
-# the branch ROOT and every link into the documentation is a link to the
-# current documentation.
+# there is one of those — so each deploy publishes the whole site at the ROOT
+# and every link into the documentation is a link to the current
+# documentation.
 #
-# THE FIRST RUN OF THIS REPLACES THE BRANCH: gh-deploy commits the site it
-# just built as the whole tree, where mike only ever touched the directories
-# it owned. `/1.0/`, `/latest/`, `/dev/` and `versions.json` stop answering
-# the moment it lands. That is the change, not a side effect of it, but it is
-# worth knowing before pressing the button.
+# PAGES IS SET TO "GitHub Actions", NOT "Deploy from a branch" (2026-09).
+# The site is built in the runner, handed over as an artifact
+# (`upload-pages-artifact`) and published by `deploy-pages`; nothing is
+# committed anywhere, and the `gh-pages` branch `mkdocs gh-deploy` used to
+# rewrite has no reader any more. The repository's Settings -> Pages -> Source
+# has to say GitHub Actions, or the deploy step is refused.
 #
-# Pages stays on "Deploy from a branch → gh-pages / (root)" — the same
-# setting mike needed, so there is nothing to change there.
+# A CUSTOM DOMAIN is a setting in that same place and nothing else: with no
+# branch there is no `CNAME` file to lose, and none belongs in `docs/`.
+# `site_url` in `website/mkdocs.yml` has to move with it.
 #
-# A CUSTOM DOMAIN is one more setting in the same place, and `site_url` in
-# `website/mkdocs.yml` has to move with it. That setting writes `CNAME` to the
-# branch root, and THIS DEPLOY WOULD THEN REMOVE IT on its next run: with the
-# whole root replaced, a `CNAME` has to be part of the build, which now means
-# a file in `docs/` (under mike that landed inside a version directory and was
-# useless; `docs_dir` is the site root now).
+# THE `github-pages` ENVIRONMENT GUARDS THE DEPLOY, and by default it takes
+# only the default branch. Both ways in pass it: publish.yml is started by
+# hand from `main`, and so is a dispatched run here — the tag is what is
+# CHECKED OUT, never the ref the run belongs to. Adding a trigger that runs on
+# a tag means adding the tag pattern to that environment's rules.
 #
 # IT RUNS FROM A TAG, ALWAYS. `publish.yml` calls it with the tag it has just
 # published, and a hand-started run takes one too: a documentation fix for the
@@ -67,10 +68,13 @@ on:
         required: true
         type: string
 
-# `gh-deploy` pushes the built site to gh-pages, so this needs write access to
-# the repository rather than the Pages deploy token.
+# The Pages deploy token, not write access to the repository: `id-token` is
+# what `deploy-pages` proves the run's identity with. publish.yml has to grant
+# the same three, since a called workflow gets no more than its caller gives.
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
   group: docs
@@ -79,12 +83,12 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
         with:
-          # gh-deploy appends a commit to gh-pages, which a shallow clone has
-          # neither of.
-          fetch-depth: 0
           ref: ${{ inputs.ref }}
 
       - uses: actions/setup-python@v7
@@ -94,27 +98,17 @@ jobs:
 
       - run: pip install -r website/requirements.txt
 
-      # ghp-import (inside gh-deploy) makes a real commit, and git refuses to
-      # write one from a runner with nobody configured.
-      - name: Identify as the bot
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      # `--strict` turns a broken cross-link or a page missing from the nav
+      # into a failed build, and nothing is uploaded when it fails.
+      # `site_dir` is relative to the config, so the site lands in
+      # `website/_build` — the same scratch folder a local build writes.
+      - name: Build the site strictly
+        run: mkdocs build --strict -f website/mkdocs.yml
 
-      # ONE COMMAND, AND IT BUILDS BEFORE IT PUSHES: `--strict` turns a broken
-      # cross-link or a page missing from the nav into a failed build, and
-      # nothing reaches the branch when it fails. It was a separate `mkdocs
-      # build --strict` gate ahead of `mike deploy`, which built the site
-      # twice to say the same thing.
-      - name: Build the site strictly and publish it to gh-pages
-        env:
-          TAG: ${{ inputs.ref }}
-        # The message NAMES THE TAG — `gh-pages` is otherwise a list of
-        # identical subjects and nothing on the branch says which release the
-        # site describes — and KEEPS MkDocs' own suffix: the next deploy reads
-        # its version back out of that line to refuse an older MkDocs writing
-        # over a newer one's output, and a message it cannot parse quietly
-        # drops the check.
-        run: |
-          mkdocs gh-deploy --strict -f website/mkdocs.yml \
-            --message "Docs for $TAG — Deployed {sha} with MkDocs version: {version}"
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: website/_build
+
+      - name: Publish it to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v5

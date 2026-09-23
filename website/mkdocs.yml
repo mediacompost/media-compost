@@ -25,7 +25,8 @@
 #
 # Build:   .venv-docs/bin/mkdocs serve -f website/mkdocs.yml --watch-theme
 #          (preview on :8000; --watch-theme is NOT optional here — see below)
-# Publish: see .github/workflows/docs.yml — it runs `mkdocs gh-deploy`.
+# Publish: see .github/workflows/docs.yml — it builds with `mkdocs build` and
+#          hands the result to GitHub Pages' own deploy action.
 
 site_name: Media Compost
 site_description: >-
@@ -33,8 +34,8 @@ site_description: >-
   training — a web app that runs on your own machine.
 site_author: Media Compost
 # `site_url` is what the canonical links and the sitemap are built against.
-# It is the PROJECT PAGES ADDRESS: the one GitHub serves off `gh-pages` with
-# nothing to configure, nothing to renew and nothing that can expire out from
+# It is the PROJECT PAGES ADDRESS: the one GitHub serves the repository's
+# site at with nothing to configure, nothing to renew and nothing that can expire out from
 # under the site. A project site is served from a SUBDIRECTORY, hence
 # `/media-compost/`.
 #
@@ -48,16 +49,10 @@ site_author: Media Compost
 #
 # IT WAS THE CUSTOM DOMAIN `compost.media` until 2026-09, and putting one back
 # is TWO changes rather than this line alone: the domain also goes in the
-# repository's Pages settings, which is what writes the `CNAME` at the root of
-# `gh-pages`. While a custom domain is set there, Pages REDIRECTS this address
-# to it, so a `site_url` left behind is not merely cosmetic.
-#
-# AND THE `CNAME` WOULD HAVE TO BE IN THE BUILD NOW: `mkdocs gh-deploy`
-# replaces the branch root with the site it just built, where mike only ever
-# touched the directories it owned. So a domain also means a `CNAME` file in
-# `docs/`, which is exactly what this note used to say would NOT work — it
-# did not while `docs_dir` landed inside a version directory, and `docs_dir`
-# IS the site root now.
+# repository's Pages settings. While a custom domain is set there, Pages
+# REDIRECTS this address to it, so a `site_url` left behind is not merely
+# cosmetic. No `CNAME` file goes with it: Pages deploys from GitHub Actions
+# (see .github/workflows/docs.yml), where the setting alone is the domain.
 site_url: https://mediacompost.github.io/media-compost/
 repo_url: https://github.com/mediacompost/media-compost
 repo_name: media-compost
@@ -66,7 +61,7 @@ edit_uri: edit/main/docs/
 docs_dir: ../docs
 # A LOCAL PREVIEW BUILD, and nothing else — it is gitignored, and the published
 # site is never built from here: `.github/workflows/docs.yml` builds in the
-# runner and commits the HTML to the `gh-pages` branch. So this
+# runner and hands it straight to GitHub Pages. So this
 # names a scratch directory beside the config that produces it, rather than a
 # `site/` at the repository root pretending to be part of the project. The
 # leading underscore is this repository's mark for a generated directory (see

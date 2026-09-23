@@ -95,7 +95,9 @@ jobs:
   docs:
     needs: publish
     permissions:
-      contents: write
+      contents: read
+      pages: write
+      id-token: write
     uses: ./.github/workflows/docs.yml
     with:
       ref: ${{ inputs.tag }}
