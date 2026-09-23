@@ -151,6 +151,7 @@ const CATALOG: Catalog = {
   "Open the image in a new tab": "이미지를 새 탭에서 열기",
   "Remove the selected images? They cannot be recovered.": "선택한 이미지를 삭제할까요? 복구할 수 없습니다.",
   "Remove the selected images (a generation that is still running stays)": "선택한 이미지 삭제 (아직 실행 중인 생성은 남습니다)",
+  "Stop the selected generations (the images they have made are kept)": "선택한 생성 중지 (이미 만든 이미지는 남습니다)",
   "Put every setting that made this picture into the form": "이 이미지를 만든 모든 설정을 양식에 넣기",
   "Use all settings": "모든 설정 사용",
   "Preview the selected image (Space)": "선택한 이미지 미리 보기 (스페이스)",

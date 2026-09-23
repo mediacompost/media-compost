@@ -151,6 +151,7 @@ const CATALOG: Catalog = {
   "Open the image in a new tab": "在新标签页中打开图片",
   "Remove the selected images? They cannot be recovered.": "删除所选图片？删除后无法恢复。",
   "Remove the selected images (a generation that is still running stays)": "删除所选图片（仍在运行的生成会保留）",
+  "Stop the selected generations (the images they have made are kept)": "停止所选生成（已生成的图片会保留）",
   "Put every setting that made this picture into the form": "把生成这张图片的全部设置填入表单",
   "Use all settings": "使用全部设置",
   "Preview the selected image (Space)": "预览所选图片（空格）",

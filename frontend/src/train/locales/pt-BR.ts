@@ -151,6 +151,7 @@ const CATALOG: Catalog = {
   "Open the image in a new tab": "Abrir a imagem em uma nova aba",
   "Remove the selected images? They cannot be recovered.": "Remover as imagens selecionadas? Elas não podem ser recuperadas.",
   "Remove the selected images (a generation that is still running stays)": "Remover as imagens selecionadas (uma geração ainda em andamento permanece)",
+  "Stop the selected generations (the images they have made are kept)": "Parar as gerações selecionadas (as imagens já criadas são mantidas)",
   "Put every setting that made this picture into the form": "Colocar no formulário todas as configurações que geraram esta imagem",
   "Use all settings": "Usar todas as configurações",
   "Preview the selected image (Space)": "Visualizar a imagem selecionada (Espaço)",

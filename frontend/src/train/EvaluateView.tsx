@@ -1224,6 +1224,21 @@ export function EvaluateView() {
     .filter((x): x is Tile => !!x);
   const removableTiles = pickedTiles.filter(
     (x) => x.run.status !== "running" && x.run.status !== "queued");
+  // What Cancel will STOP: every generation a picked SLOT belongs to while
+  // it is queued or running — a slot being a picture still to come. Counted
+  // in generations, since that is what stops; the pictures a running one
+  // has already made stay, as they do from the run's own ⏹.
+  const cancelRuns = [...new Set(pickedTiles
+    .filter((x) => !x.name
+      && (x.run.status === "running" || x.run.status === "queued"))
+    .map((x) => x.run.uid))];
+  const cancelPicked = async () => {
+    // Sequential, like the deletes below: the manager writes under one lock.
+    for (const uid of cancelRuns) {
+      try { await api.evalCancel(uid); } catch { /* already finished */ }
+    }
+    qc.invalidateQueries({ queryKey: ["eval-runs"] });
+  };
   const removePicked = async () => {
     if (removableTiles.length === 0) return;
     if (!(await confirm({ title: t("Remove the selected images?"),
@@ -1628,6 +1643,10 @@ export function EvaluateView() {
             removeLabel={t("Remove")}
             removeCount={removableTiles.length}
             removeTitle={t("Remove the selected images (a generation that is still running stays)")}
+            onCancel={cancelPicked}
+            cancelCount={cancelRuns.length}
+            cancelLabel={t("Cancel")}
+            cancelTitle={t("Stop the selected generations (the images they have made are kept)")}
             // The bar's third verb — the preview over the selection, the
             // same thing Space does — offered only while a picked tile has
             // a picture to show.

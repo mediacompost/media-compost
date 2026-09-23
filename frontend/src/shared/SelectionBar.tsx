@@ -61,6 +61,15 @@ export interface SelectionReport {
    *  Reject button was two words for one button, and the one that had to be
    *  learned. */
   onAccept?: () => void;
+  /** STOPPING work the picks stand for — the Evaluate grid's slots of a
+   *  generation that is queued or still running. Not Remove: a run being
+   *  written cannot be removed, and what it has already made is kept, so the
+   *  two verbs act on different picks and say different numbers. Shown only
+   *  while `cancelCount` is above zero, Remove's own rule. */
+  onCancel?: () => void;
+  cancelCount?: number;
+  cancelLabel?: string;
+  cancelTitle?: string;
   /** How many of the picks are guesses, for the buttons' own labels. */
   pending?: number;
   /** ONE list-specific verb, beside the two above — icon-only, because the
@@ -173,6 +182,7 @@ export function useReportSelection(id: string, r: SelectionReport | null) {
 export function SelectionBar({ count, total, onSelectAll, onRemove, onClear,
                               removeTitle, removeLabel, removeIcon,
                               removeCount, onAccept,
+                              onCancel, cancelCount, cancelLabel, cancelTitle,
                               pending, extra, options, floating, style, t,
                               onHeight }: SelectionReport & {
   /** REQUIRED, like the rest of the shared chrome: this lives in `shared/`
@@ -322,6 +332,14 @@ export function SelectionBar({ count, total, onSelectAll, onRemove, onClear,
           {removeLabel ?? t("Remove")}
           {num(removeCount ?? count)}
         </button>
+        )}
+        {onCancel && (cancelCount ?? 0) > 0 && (
+          <button onClick={onCancel} title={cancelTitle}
+            style={{ ...btn("plain"), flex: "0 0 auto" }}>
+            <Icon name="stop" size={13} />
+            {cancelLabel ?? t("Cancel")}
+            {num(cancelCount ?? 0)}
+          </button>
         )}
         {answers && (
           <button onClick={onAccept} title={t("Agree with what was guessed")}

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **The Evaluate grid's selection bar can cancel.** With a slot of a
+  queued or running generation picked, it offers **Cancel** beside Remove.
 - **Tag counts read 0 in several places and are back**: the suggestions
   under the Train and Evaluate prompts (which also rank by them), the tag
   CSV export's count columns, and the merge and edit dialogs' tag lists.

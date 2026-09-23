@@ -151,6 +151,7 @@ const CATALOG: Catalog = {
   "Open the image in a new tab": "画像を新しいタブで開く",
   "Remove the selected images? They cannot be recovered.": "選択した画像を削除しますか？元に戻すことはできません。",
   "Remove the selected images (a generation that is still running stays)": "選択した画像を削除（実行中の生成は残ります）",
+  "Stop the selected generations (the images they have made are kept)": "選択した生成を停止（すでに生成された画像は残ります）",
   "Put every setting that made this picture into the form": "この画像を生成したすべての設定をフォームに入れる",
   "Use all settings": "すべての設定を使う",
   "Preview the selected image (Space)": "選択した画像をプレビュー（スペース）",
