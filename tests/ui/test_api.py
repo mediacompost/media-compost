@@ -812,6 +812,13 @@ def test_tag_aliases(client):
     rows = client.get("/api/tags").json()
     alias = next(t for t in rows if t["name"] == "automobile")
     assert alias["alias_of"] == "car" and alias["positive"] == 1
+    # …and says it in the `numbers` map too, which is the ONLY spelling the
+    # frontend reads (`tags.ts: tagCount`): without it every count off this
+    # listing — the training and evaluate prompt autocomplete among them —
+    # read as zero.
+    car = next(t for t in rows if t["name"] == "car")
+    for row in (car, alias):
+        assert row["numbers"] == {"positive": 1, "implicit": 0, "negative": 0}
 
     # A name already in use can't be added again — neither as a plain tag nor as
     # an alias shadowing an existing tag's name.

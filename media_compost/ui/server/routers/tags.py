@@ -121,6 +121,19 @@ def _tag_rows(s: Session, lib=None) -> list[dict]:
     trails = (tagsets_ops.category_trails(s, lib_set.id)
               if lib_set is not None else {})
 
+    def _library_numbers(name: Optional[str]) -> dict[str, int]:
+        # THE MAP THE FRONTEND READS (`TagRow.numbers`, `tags.ts: tagCount`),
+        # keyed as `LIBRARY_COLUMNS` and as `POST /api/tags/rows` answers.
+        # The three named fields above it stay for the Python side; a row
+        # without the map read as zero everywhere this listing is used — the
+        # training and evaluate prompt autocomplete, the tag CSV export, the
+        # merge and edit overlays' suggestions.
+        if not name:
+            return {"positive": 0, "implicit": 0, "negative": 0}
+        return {"positive": pos_count.get(name, 0),
+                "implicit": ind_count.get(name, 0),
+                "negative": neg_count.get(name, 0)}
+
     rows = []
     for t in all_tags:
         if t.alias_of_id is not None:
@@ -134,6 +147,7 @@ def _tag_rows(s: Session, lib=None) -> list[dict]:
                 "positive": pos_count.get(tname, 0) if tname else 0,
                 "positive_indirect": ind_count.get(tname, 0) if tname else 0,
                 "negative": neg_count.get(tname, 0) if tname else 0,
+                "numbers": _library_numbers(tname),
                 "alias_of": tname or "",
                 "implies": [],
                 "meta_tags": metas.get(t.id, []),
@@ -151,6 +165,7 @@ def _tag_rows(s: Session, lib=None) -> list[dict]:
             "positive": pos_count.get(t.name, 0),
             "positive_indirect": ind_count.get(t.name, 0),
             "negative": neg_count.get(t.name, 0),
+            "numbers": _library_numbers(t.name),
             "alias_of": None,
             "implies": implied.get(t.id, []),
             "meta_tags": metas.get(t.id, []),

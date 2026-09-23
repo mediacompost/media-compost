@@ -1496,6 +1496,10 @@ class TagRow(BaseModel):
     # beside the count so the effective number can be read for what it is.
     positive_indirect: int = 0
     negative: int
+    #: The same three figures keyed by column (`positive`, `implicit`,
+    #: `negative`) — the shape `POST /api/tags/rows` answers and the only one
+    #: the frontend reads (`tags.ts: tagCount`).
+    numbers: dict[str, Optional[int]] = {}
     # When this tag is an alias, the name of the tag it links to (else None).
     # For an alias, positive/negative carry the *linked* tag's counts (so tag
     # autocomplete can show them); the flat tag list renders them as empty.

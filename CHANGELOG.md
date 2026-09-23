@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Tag counts read 0 in several places and are back**: the suggestions
+  under the Train and Evaluate prompts (which also rank by them), the tag
+  CSV export's count columns, and the merge and edit dialogs' tag lists.
 - **Selections stay smooth when zoomed in, especially in Safari.** With
   a selection on screen every frame used to pay for redrawing its outline,
   and zoomed in a drag redrew it on every mouse move. Dragging out a new
