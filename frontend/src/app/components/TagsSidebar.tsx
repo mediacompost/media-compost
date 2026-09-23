@@ -232,7 +232,8 @@ export function TagsSidebar({
   categories, uncategorized, namespaces,
   tree, narrowing, onNarrow,
   onAddCategory, onDeleteCategories, onCategoryMenu, onNamespaceMenu,
-  categoryDrag, looseDrag, extraActions,
+  categoryDrag, looseDrag, extraActions, onMakeEditable, makingEditable,
+  makeEditableError,
 }: {
   maxHeight?: number;
   /** HOW TALL THE BAND OVER THE TREE IS — the list's own toolbar band,
@@ -265,6 +266,14 @@ export function TagsSidebar({
   narrowing: TagsNarrowing;
   onNarrow: (next: TagsNarrowing) => void;
   onAddCategory?: () => void;
+  /** A READ-ONLY set's toolbar has no Add category; this stands in its place
+   *  (owner 2026-09) — an editable copy of the set takes its place in the
+   *  row, and the read-only one is switched off. `makingEditable` while the
+   *  copy is being written, which on a big set takes seconds. */
+  onMakeEditable?: () => void;
+  makingEditable?: boolean;
+  /** Why the last Make editable did not finish, shown as a mark on hover. */
+  makeEditableError?: string;
   /** Delete the picked categories — the toolbar's second button, drawn only
    *  where something is picked and the host offers the verb. */
   onDeleteCategories?: (ids: number[]) => void;
@@ -379,7 +388,7 @@ export function TagsSidebar({
   const toolbarRef = useRef<HTMLDivElement>(null);
   const needW = useRef<Map<string, number>>(new Map());
   const picked = narrowing.category;
-  const toolbarKey = `${t("Add category")}|${picked.length > 0
+  const toolbarKey = `${onMakeEditable ? t("Make editable") : t("Add category")}|${picked.length > 0
     ? tn({ one: "Delete {n}", other: "Delete {n}" }, picked.length) : ""}`;
   const [, bumpToolbar] = useState(0);
   const need = needW.current.get(toolbarKey);
@@ -411,6 +420,24 @@ export function TagsSidebar({
            // and the list start on one line.
            style={{ display: "flex", alignItems: "center", gap: 8,
                     minHeight: Math.max(TOOLBAR_H, bandH ?? 0) }}>
+        {onMakeEditable && (
+          <button style={wide ? toolbarBtn()
+                              : { ...toolbarBtn(), width: TOOLBAR_H, padding: 0,
+                                  justifyContent: "center" }}
+                  disabled={makingEditable}
+                  title={t("Make an editable copy of this set, and switch this one off")}
+                  onClick={onMakeEditable}>
+            {makingEditable
+              ? <Icon name="progress_activity" size={15} spin />
+              : <Icon name="edit" size={15} />}
+            {wide && (makingEditable ? t("Making editable…") : t("Make editable"))}
+          </button>
+        )}
+        {onMakeEditable && makeEditableError && (
+          <span title={makeEditableError} style={{ display: "inline-flex" }}>
+            <Icon name="error" size={15} color="var(--red)" />
+          </span>
+        )}
         {onAddCategory && (
           <button style={wide ? toolbarBtn()
                               : { ...toolbarBtn(), width: TOOLBAR_H, padding: 0,

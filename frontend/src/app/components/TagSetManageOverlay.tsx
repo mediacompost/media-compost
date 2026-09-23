@@ -375,7 +375,6 @@ export function TagSetManageOverlay({
                     row.name, () => run(() => api.updateBuiltinTagSet(row.id))),
                 }] : []),
                 { icon: "content_copy", label: t("Duplicate"),
-                  hint: row.builtin ? t("A copy you can edit") : undefined,
                   separated: row.outdated,
                   onClick: () => void makeSet(row.name, () => onDuplicate(row)) },
                 { icon: "download", label: t("Export"),

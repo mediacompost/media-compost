@@ -34,6 +34,47 @@ import { TagSetCsvOverlay } from "./TagSetCsvOverlay";
 import { useTagSetFileImport } from "./SettingsTagSets";
 import { TagSetPropertiesOverlay } from "./TagSetsView";
 
+/** `want`, or the first `want 2`, `want 3`… that no set in `sets` is called
+ *  — the server refuses a taken name. The shelf's makers and the Tags
+ *  page's Make editable share it. */
+export function freeSetName(sets: TagSetOut[], want: string): string {
+  const taken = new Set(sets.map((s) => s.name.trim().toLowerCase()));
+  if (!taken.has(want.trim().toLowerCase())) return want;
+  for (let n = 2; ; n++) {
+    const next = `${want} ${n}`;
+    if (!taken.has(next.trim().toLowerCase())) return next;
+  }
+}
+
+/** MAKE A READ-ONLY SET EDITABLE (owner 2026-09): an editable copy takes
+ *  its place — right AFTER it in the row of sets (owner), switched on — and
+ *  the built-in is switched off, so the names on offer are the same ones
+ *  and only the copy can be changed. The built-in stays in the list, just
+ *  before its copy, to come back to or to update from. Every step is a request the
+ *  app already makes (Duplicate, the switch, and the positions the tag-set
+ *  list's drag writes), so each is logged and revertible as it always was.
+ *  Slow on a big set: the copy is written from the shipped file. */
+export async function makeEditableCopy(sets: TagSetOut[], src: TagSetOut,
+                                       copyName: string): Promise<TagSetOut> {
+  const made = await api.duplicateTagSet(src.id, copyName);
+  if (!made.enabled) await api.setTagSetEnabled(made.id, true);
+  if (src.enabled) await api.setTagSetEnabled(src.id, false);
+  // WHERE IT GOES: directly after the built-in. The library's own row is
+  // pinned first and has no place in this order.
+  const order = sets.filter((x) => !x.library && x.id !== made.id)
+    .sort((a, b) => a.position - b.position || a.id - b.id);
+  const at = order.findIndex((x) => x.id === src.id);
+  const ids = order.map((x) => x.id);
+  ids.splice(at < 0 ? ids.length : at + 1, 0, made.id);
+  const was = new Map(order.map((x) => [x.id, x.position]));
+  for (const [i, id] of ids.entries()) {
+    if (id === made.id ? true : was.get(id) !== i) {
+      await api.updateTagSet(id, { position: i });
+    }
+  }
+  return made;
+}
+
 export function TagSetShelf({ sets, setId, onPick, onChanged }: {
   sets: TagSetOut[];
   /** The tag set on screen — the library's own id (or 0 while its row is
@@ -84,14 +125,7 @@ export function TagSetShelf({ sets, setId, onPick, onChanged }: {
    *  one nothing else has — the server refuses a duplicate, and a refusal
    *  is not what a person pressing "New empty set" asked for. Renaming it
    *  is the row's own Properties, one line below where it appears. */
-  const freeName = (want: string) => {
-    const taken = new Set(takenNames());
-    if (!taken.has(want.trim().toLowerCase())) return want;
-    for (let n = 2; ; n++) {
-      const next = `${want} ${n}`;
-      if (!taken.has(next.trim().toLowerCase())) return next;
-    }
-  };
+  const freeName = (want: string) => freeSetName(sets, want);
   const newEmptySet = async () => {
     const made = await api.createTagSet({ name: freeName(t("New set")) });
     pick(made.id);

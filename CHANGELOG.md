@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **A built-in tag set has a Make editable button** where an editable set
+  has Add category. It puts an editable copy right after the built-in,
+  switches the copy on and the built-in off, and opens the copy.
 - **Faces is part of the Tags tab now.** A **Tags / Faces** switch at the
   right end of the tag-set row moves between the two; the Faces button in
   the top bar is gone, and its old `/faces` address is not kept.

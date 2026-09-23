@@ -9,22 +9,23 @@ import { IconButton } from "../../shared/IconButton";
 import { Button } from "../../shared/Button";
 import { EmptyState } from "../../shared/EmptyState";
 import { fieldStyleSm } from "../../shared/Field";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { confirm } from "../../shared/ConfirmModal";
-import { api, EventRow, FaceRow, LinkTagRow, PlaceRow, RankingItemRef, SubjectRow, TagRow, TagSetCategoryOut, TagSetEntryOut, TagSetText } from "../api";
+import { api, EventRow, FaceRow, LinkTagRow, PlaceRow, RankingItemRef, SubjectRow, TagRow, TagSetCategoryOut, TagSetEntryOut, TagSetOut, TagSetText } from "../api";
 import { TagsSidebar, TOOLBAR_GAP, TOOLBAR_TOP, toolbarBtn, useCategoryTree,
          type TagsNarrowing } from "./TagsSidebar";
 import { PAGE_PAD } from "./TagsPanes";
 import { TagsPanes, usePaneHeight } from "./TagsPanes";
 import { useCategoryDrag, useCategoryOps } from "./categoryOps";
-import { TagSetShelf } from "./TagSetShelf";
+import { freeSetName, makeEditableCopy, TagSetShelf } from "./TagSetShelf";
+import { bumpEdits } from "../invalidation";
 import { MetaTagsEmpty, TagSetMetaList } from "./TagSetMetaList";
 import { LOOSE_DROP } from "./TagsTree";
 import { CategoryTrail, trailLabel } from "./CategoryTrail";
 import { Icon } from "../../shared/Icon";
 import { TagsGrouping, TagsModeAsked, TagsRelation, TagsScope, TagsSuggest,
          modalIsOpen, useUI } from "../store";
-import { useLang, useT, useTn } from "../i18n";
+import { useErrText, useLang, useT, useTn } from "../i18n";
 import { compactCount } from "../format";
 import { sanitizeLinkTagInput, tagFieldInput, tagFieldName } from "../tags";
 import { chunks } from "../bulk";
@@ -258,6 +259,31 @@ export function TagsView() {
    *  never `paneSetId` — that one falls back to the LIBRARY's set, which is
    *  never built-in and whose categories stay the person's to edit. */
   const readOnly = shownSetId != null && !!openSet?.builtin;
+  /** MAKE EDITABLE, in the read-only set's toolbar where Add category is
+   *  on an editable one (`makeEditableCopy`): the copy is opened once it
+   *  stands in the list, and a refusal is said on the button. */
+  const errText = useErrText();
+  const [makeEditableError, setMakeEditableError] = useState("");
+  const makeEditable = useMutation({
+    mutationFn: (src: TagSetOut) => {
+      const sets = setsQuery.data ?? [];
+      return makeEditableCopy(sets, src,
+        freeSetName(sets, tr("{name} (copy)", { name: src.name })));
+    },
+    onSuccess: (made) => {
+      setMakeEditableError("");
+      setTagSetId(made.id);
+      qc.invalidateQueries({ queryKey: ["tag-sets"] });
+      qc.invalidateQueries({ queryKey: ["tags"] });
+      bumpEdits();
+    },
+    // Whatever got as far as the server stands (each step is its own
+    // request), so the list is re-read either way.
+    onError: (e) => {
+      setMakeEditableError(errText(e));
+      qc.invalidateQueries({ queryKey: ["tag-sets"] });
+    },
+  });
   /** THE SET WHOSE CATEGORIES, NAMESPACES AND COUNTS THE PANE IS ABOUT —
    *  the picked tag set's own. The library files its tags in its own
    *  (lazy) set's categories, an imported set in its own; same rows, same
@@ -1922,6 +1948,10 @@ export function TagsView() {
               }}
               onAddCategory={readOnly ? undefined
                              : () => setAddingCategory(true)}
+              onMakeEditable={readOnly && openSet
+                ? () => makeEditable.mutate(openSet) : undefined}
+              makingEditable={makeEditable.isPending}
+              makeEditableError={makeEditableError}
               onDeleteCategories={readOnly ? undefined
                                   : (ids) => void deleteCategories(ids)}
               // A NAMESPACE ROW OFFERS WHAT ITS PARENT ROW IN THE LIST DOES
