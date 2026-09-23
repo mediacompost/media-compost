@@ -1577,8 +1577,12 @@ export function EvaluateView() {
           <GridSizeControl size={tileSize} onSize={setTileSize} t={t} />
         </div>
       )}
+      {/* The side inset is the scroller's and the grid keeps only enough of
+          its own for the selection ring (5 px outside a card): the grid's
+          `pad` is applied at the TOP as well, so a 20 px one sat the first
+          heading well clear of the toolbar above it. */}
       <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto",
-                                    paddingTop: 12 }}>
+                                    padding: "0 16px" }}>
         {runs.length === 0 ? (
           <div style={{
             height: "100%", display: "flex", flexDirection: "column",
@@ -1600,7 +1604,7 @@ export function EvaluateView() {
           <div style={{ paddingBottom: SELECTION_BAR_H + SELECTION_BAR_GAP * 2 }}>
             <CardGrid
               handleRef={gridRef}
-              count={order.length} size={tileSize} gap={TILE_GAP} pad={20}
+              count={order.length} size={tileSize} gap={TILE_GAP} pad={4}
               scrollRef={scrollRef}
               runs={sectionRuns} groupGap={18}
               renderHeader={(_, section) => (
