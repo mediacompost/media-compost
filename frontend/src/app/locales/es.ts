@@ -1304,7 +1304,6 @@ const CATALOG: Catalog = {
   "Meta": "Meta",
   "Not this person": "No es esta persona",
   "The Faces tab": "La pestaña Caras",
-  "Hide the Faces tab": "Ocultar la pestaña Caras",
   "Naming": "Nombrado",
   "No tag sets imported yet.": "Aún no se ha importado ningún conjunto de etiquetas.",
   "Manage tag sets…": "Gestionar conjuntos de etiquetas…",

@@ -119,15 +119,15 @@ def _read_prefs(s: Session, user: str) -> dict:
         "language": lang if lang in _LANGUAGES else _LANGUAGES[0],
         "date_format": fmt if fmt in _DATE_FORMATS else _DATE_FORMATS[0],
         "time_24h": bool(prefs.get("time_24h", False)),
-        # THE TWO "HIDE A PIECE OF UI" SETTINGS ARE THE WHOLE SERVER'S
-        # (owner 2026-09). `hide_unready_actions` was per user for a while,
-        # which made one of the two a preference and the other a fact about
-        # the deployment — the same switch meaning two different things
-        # depending which one you were looking at. They read from the GLOBAL
-        # blob now, so whatever a person had stored under their own key is
-        # left behind, which costs a default and nothing else.
+        # HIDING UNREADY ACTIONS IS THE WHOLE SERVER'S (owner 2026-09). It
+        # was per user for a while, beside a "hide the Faces tab" that was
+        # server-wide, which made the same kind of switch mean two different
+        # things. It reads from the GLOBAL blob, so whatever a person had
+        # stored under their own key is left behind, which costs a default
+        # and nothing else. (The Faces switch went when Faces became a page
+        # of the Tags tab; its stored value is dropped by the next save,
+        # which writes the blob whole.)
         "hide_unready_actions": bool(glob.get("hide_unready_actions", False)),
-        "hide_faces_tab": bool(glob.get("hide_faces_tab", False)),
         "subject_tag_prefix": read_tag_prefix(s, "subject"),
         "place_tag_prefix": read_tag_prefix(s, "place"),
         "event_tag_prefix": read_tag_prefix(s, "event"),
@@ -174,9 +174,8 @@ def update_settings(body: AppSettings, s: Session = Depends(get_session),
         "place_tag_prefix": (body.place_tag_prefix or "").strip().lower(),
         "event_tag_prefix": (body.event_tag_prefix or "").strip().lower(),
         "face_match_threshold": float(body.face_match_threshold),
-        # Server-wide, both of them — see the comment in `_read_prefs`.
+        # Server-wide — see the comment in `_read_prefs`.
         "hide_unready_actions": bool(body.hide_unready_actions),
-        "hide_faces_tab": bool(body.hide_faces_tab),
         # Tag NAMES, so they take the tag fields' normalization on the way in
         # (lowercase; the readers normalize again on the way out, so a value
         # an older build stored still reads right without a re-save).

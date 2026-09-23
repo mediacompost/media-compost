@@ -2913,11 +2913,9 @@ class AppSettings(RequestModel):
     language: str = "en"
     date_format: str = "D MMM YYYY"
     time_24h: bool = False
-    # THE TWO "HIDE A PIECE OF UI" SETTINGS, both SERVER-WIDE and both
-    # default OFF. Whether a deployment offers a thing at all is a fact about
-    # the deployment rather than a taste, and with one of these per user and
-    # the other global the same switch meant two things depending which one
-    # you had found (owner 2026-09; `hide_unready_actions` was per user).
+    # SERVER-WIDE and default OFF: whether a deployment offers a thing at all
+    # is a fact about the deployment rather than a taste (owner 2026-09; it
+    # was per user for a while).
     #
     # Hide AI actions whose dependencies or weights are not ready, instead of
     # offering them with a "needs download" / "Run setup" chip — the chips are
@@ -2925,12 +2923,6 @@ class AppSettings(RequestModel):
     # Actions is unaffected either way: it is where you go to set one up, so
     # hiding things there would be a trap.
     hide_unready_actions: bool = False
-    # Take the Faces tab out of the header. It hides the TAB and nothing else:
-    # detection still runs, Pending → Faces still fills, and the annotator
-    # still asks who somebody is — a library nobody works faces in should not
-    # carry the queue in its header, which is not the same as turning the
-    # feature off.
-    hide_faces_tab: bool = False
     # Prepended to the tag name INVENTED for a new subject / place / event
     # ("subject:" gives `subject:albert_einstein`), so each kind gets a
     # namespace of its own and `place:berlin` can sit beside a plain `berlin`.

@@ -5,6 +5,8 @@
 - **Faces is part of the Tags tab now.** A **Tags / Faces** switch at the
   right end of the tag-set row moves between the two; the Faces button in
   the top bar is gone, and its old `/faces` address is not kept.
+- **Settings → Faces no longer has "Hide the Faces tab".** Faces is a page
+  of the Tags tab now, not a tab to hide.
 - **Right-click a job in the Train tab's list** for a menu of everything
   that can be done to it: start or resume now, queue, pause, edit, log,
   download the result, delete.

@@ -1305,7 +1305,6 @@ const CATALOG: Catalog = {
   "Meta": "Méta",
   "Not this person": "Pas cette personne",
   "The Faces tab": "L'onglet Visages",
-  "Hide the Faces tab": "Masquer l'onglet Visages",
   "Naming": "Nommage",
   "No tag sets imported yet.": "Aucun jeu de tags importé pour l'instant.",
   "Manage tag sets…": "Gérer les jeux de tags…",

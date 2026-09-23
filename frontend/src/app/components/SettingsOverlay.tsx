@@ -36,7 +36,7 @@ const PREFIXES: { key: "subject_tag_prefix" | "place_tag_prefix" | "event_tag_pr
     example: "san_diego_comic_con_2014" },
 ];
 
-const EMPTY: AppSettings = { model_paths: {}, dblclick_image: "quicklook", dblclick_video: "quicklook", florence_model: "florence2_base", language: "en", date_format: DATE_FORMAT_OPTIONS[0], time_24h: false, hide_unready_actions: false, hide_faces_tab: false, subject_tag_prefix: "subject:", place_tag_prefix: "place:", event_tag_prefix: "event:", face_match_threshold: 0.9, watermark_tag: "watermark", text_tag: "" };
+const EMPTY: AppSettings = { model_paths: {}, dblclick_image: "quicklook", dblclick_video: "quicklook", florence_model: "florence2_base", language: "en", date_format: DATE_FORMAT_OPTIONS[0], time_24h: false, hide_unready_actions: false, subject_tag_prefix: "subject:", place_tag_prefix: "place:", event_tag_prefix: "event:", face_match_threshold: 0.9, watermark_tag: "watermark", text_tag: "" };
 
 
 // Date-format dropdown options, labelled with a live example. The sample is
@@ -295,26 +295,6 @@ export function SettingsOverlay() {
           </div>
         ) : page === "faces" ? (
           <div className="mc-settings-page" style={{ flex: 1, padding: 20, display: "flex", flexDirection: "column", gap: 16, overflowY: "auto" }}>
-            {/* THE TAB FIRST, THEN WHAT IT IS FOR. Whether the queue is
-                offered at all is the larger question, and somebody who has
-                come here to put the tab away should not have to read past a
-                threshold to find the switch.
-
-                HIDING THE TAB TURNS NOTHING OFF: detection still runs, its
-                findings still land, Pending → Faces still fills and the
-                annotator still asks who somebody is. That is why the
-                threshold below stays live and un-dimmed with the tab
-                hidden — it decides whether a name lands, which happens
-                whether or not anybody is looking at a queue. */}
-            <Section title={t("The Faces tab")}>
-              <ToggleRow
-                label={t("Hide the Faces tab")}
-                checked={f.hide_faces_tab}
-                onChange={(v) => setPref({ hide_faces_tab: v })}
-                last
-              />
-            </Section>
-
             {/* "Naming", not "Faces": the page is already called that, and a
                 section repeating its page's title says nothing. What this one
                 number decides is when the app puts a name on by itself. */}

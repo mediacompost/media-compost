@@ -8,7 +8,6 @@ import { ItemGrid } from "./components/ItemGrid";
 import { PropertiesPanel } from "./components/PropertiesPanel";
 import { TagsView } from "./components/TagsView";
 import { FacesPage } from "./components/FacesView";
-import { useFacesHidden } from "./components/TagsPageSwitch";
 import { HistoryView } from "./components/HistoryView";
 import { ErrorBoundary } from "../shared/ErrorBoundary";
 import { ConfirmHost } from "../shared/ConfirmModal";
@@ -55,18 +54,7 @@ export function App() {
   useEffect(() => {
     if (!trainingOffered && TRAINING_VIEWS.includes(view)) setView("library");
   }, [trainingOffered, view, setView]);
-  // AND THE FACES PAGE CAN BE PUT AWAY (Settings → Faces), which is the same
-  // errand with one difference: training is a launch-time fact, so its answer
-  // cannot change under an open page, and this one can. Somebody who hides
-  // Faces WHILE STANDING ON IT has to be moved, not just left on a page whose
-  // switch has gone — so the effect answers to the value CHANGING rather than
-  // only to the mount. The move is to the Tags tab's other page.
-  const facesHidden = useFacesHidden();
   const tagsPage = useUI((s) => s.tagsPage);
-  const setTagsPage = useUI((s) => s.setTagsPage);
-  useEffect(() => {
-    if (facesHidden && tagsPage === "faces") setTagsPage("tags");
-  }, [facesHidden, tagsPage, setTagsPage]);
   const overlay = useUI((s) => s.overlay);
   // Reflect the chosen UI language on <html lang> for the whole document.
   const lang = useLang();

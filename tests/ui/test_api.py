@@ -637,7 +637,6 @@ def test_settings_default_and_update(client):
                 "florence_model": "florence2_base", "language": "en",
                 "date_format": "D MMM YYYY", "time_24h": False,
                 "hide_unready_actions": False,
-                "hide_faces_tab": False,
                 "subject_tag_prefix": "subject:",
         "place_tag_prefix": "place:",
         "event_tag_prefix": "event:", "face_match_threshold": 0.90,

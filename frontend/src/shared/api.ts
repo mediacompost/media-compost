@@ -563,10 +563,6 @@ export interface AppSettings {
   /** Hide AI actions whose dependencies or weights are not ready, instead of
    *  offering them with a "needs download" chip. Server-wide; default off. */
   hide_unready_actions: boolean;
-  /** Take the Faces tab out of the header. The TAB and nothing else:
-   *  detection still runs and Pending → Faces still fills. Server-wide;
-   *  default off. */
-  hide_faces_tab: boolean;
   /** Prepended to the tag name INVENTED for a new subject ("subject:"). A tag
    *  typed by hand is never touched. Library-wide, not per user. */
   // Prepended to the tag INVENTED for a new subject / place / event, so each

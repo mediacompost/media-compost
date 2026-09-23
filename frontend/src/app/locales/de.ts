@@ -1498,7 +1498,6 @@ const CATALOG: Catalog = {
   "Not this person": "Nicht diese Person",
 
   "The Faces tab": "Der Gesichter-Tab",
-  "Hide the Faces tab": "Gesichter-Tab ausblenden",
   "Naming": "Benennung",
   "No tag sets imported yet.": "Noch keine Tag-Sets importiert.",
   "Manage tag sets…": "Tag-Sets verwalten…",

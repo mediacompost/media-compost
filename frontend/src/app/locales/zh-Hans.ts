@@ -1298,7 +1298,6 @@ const CATALOG: Catalog = {
   "Meta": "元",
   "Not this person": "不是此人",
   "The Faces tab": "“面孔”选项卡",
-  "Hide the Faces tab": "隐藏“面孔”选项卡",
   "Naming": "命名",
   "No tag sets imported yet.": "尚未导入标签集。",
   "Manage tag sets…": "管理标签集…",

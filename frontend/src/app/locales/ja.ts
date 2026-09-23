@@ -1298,7 +1298,6 @@ const CATALOG: Catalog = {
   "Meta": "メタ",
   "Not this person": "この人ではない",
   "The Faces tab": "「顔」タブ",
-  "Hide the Faces tab": "「顔」タブを隠す",
   "Naming": "名前付け",
   "No tag sets imported yet.": "タグセットはまだインポートされていません。",
   "Manage tag sets…": "タグセットを管理…",

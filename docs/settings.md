@@ -23,7 +23,7 @@ A bordered list pairs each media kind with a dropdown choosing what a double-cli
 
 Sequences always open in the grid regardless. See the [image editor](image-editor.md), [annotation editor](annotation-editor.md), and [video editor](video-editor.md) for what each opens.
 
-Changes apply immediately across the app. The double-click and Language & Region choices are personal — kept per user in a shared [deployment](installation.md#multi-user-access) — while everything else is library-wide: the Tagging page, the Faces page, the Actions page's model paths and its Florence-2 checkpoint, and both of the switches that hide a piece of the UI ("Hide actions that need setting up" and "Hide the Faces tab"). Whether a deployment offers a thing at all is not a matter of taste.
+Changes apply immediately across the app. The double-click and Language & Region choices are personal — kept per user in a shared [deployment](installation.md#multi-user-access) — while everything else is library-wide: the Tagging page, the Faces page, the Actions page's model paths and its Florence-2 checkpoint, and "Hide actions that need setting up". Whether a deployment offers a thing at all is not a matter of taste.
 
 ## Tagging
 
@@ -42,9 +42,7 @@ Two rows name the tags a detector's findings become boxes on. **Tag for detected
 
 ## Faces
 
-The [Faces tab](subjects-and-faces.md)'s own page.
-
-**Hide the Faces tab** — off by default. On, the tab leaves the header: absent rather than greyed, since a tab you cannot press reads as a broken app while a tab that is not there reads as a deployment that does not do that. Hiding it while you are standing on it moves you to the Library. It hides the **tab** and nothing else — detection still runs, its findings still land, Pending → Faces still fills, and the annotator still asks who somebody is — which is why the threshold below stays live with the tab away. Library-wide, like the switch on the Actions page.
+The settings of the [Faces page](subjects-and-faces.md#the-faces-page) in the Tags tab.
 
 ### Naming
 
