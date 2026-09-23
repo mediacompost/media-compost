@@ -1,6 +1,6 @@
 [project]
 name = "media-compost"
-version = "1.2.0"
+version = "1.2.1.dev0"
 description = "Organize, deduplicate and annotate images with tags/captions for AI training datasets."
 readme = "README.md"
 requires-python = ">=3.11"

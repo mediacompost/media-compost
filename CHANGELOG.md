@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## 1.2.0
 
 - Bookmarks: right-click an item to bookmark it; a bookmarks dropdown beside
