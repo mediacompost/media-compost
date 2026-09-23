@@ -36,7 +36,7 @@ on:
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     environment:
       name: pypi
       url: https://pypi.org/project/media-compost/
@@ -78,7 +78,7 @@ jobs:
   # nothing can be attached to it ever again.
   release:
     needs: publish
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
     steps:

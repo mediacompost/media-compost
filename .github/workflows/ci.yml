@@ -58,7 +58,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# EVERY JOB BELOW SAYS `ubuntu-26.04`, NOT `ubuntu-latest`, AND THAT IS THE
+# EVERY JOB BELOW SAYS `ubuntu-26.04`, NOT `ubuntu-latest` — and so does every
+# job in draft.yml, publish.yml and docs.yml, which install nothing from the
+# image at all (Python and Node from the tool cache) and move with this one so
+# no workflow carries the migration notice. HERE IT IS THE
 # MIGRATION TAKEN EARLY RATHER THAN A PIN. GitHub moves `ubuntu-latest` from
 # 24 to 26 over the weeks from 2026-10-19, so the only question is whether
 # this suite meets the new image on a morning chosen by the rollout or on one
