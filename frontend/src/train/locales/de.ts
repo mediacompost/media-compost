@@ -278,6 +278,10 @@ const CATALOG: Catalog = {
   "{n} results":
     { one: "1 Ergebnis", other: "{n} Ergebnisse" },
   "Delete every result in this session": "Alle Ergebnisse dieser Sitzung löschen",
+  "Session": "Sitzung",
+  "No adapters": "Keine Adapter",
+  "Delete every result in this group": "Alle Ergebnisse dieser Gruppe löschen",
+  "Delete all {n} results in this group?": "Alle {n} Ergebnisse dieser Gruppe löschen?",
   "Delete all {n} results from this session? The generated images go with them.": "Alle {n} Ergebnisse dieser Sitzung löschen? Die erzeugten Bilder verschwinden mit ihnen.",
   "sampling": "Testbilder werden erzeugt",
   "What does this do?": "Was macht das?",

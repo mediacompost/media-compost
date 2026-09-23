@@ -13,7 +13,7 @@ import { Select } from "../shared/Select";
 import { useMenuDismiss } from "../shared/useMenuDismiss";
 import { AnchoredDropdown, useAnchorRect } from "../shared/AnchoredDropdown";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, EvalRun, EvalRunBody, TrainModelSpec } from "./api";
+import { api, EvalRun, EvalRunBody, EvalRunFinetune, EvalRunLora, TrainModelSpec } from "./api";
 import { Icon } from "../shared/Icon";
 import { useT, useTn } from "./i18n";
 import { GpuStatsBar } from "./GpuStatsBar";
@@ -28,7 +28,7 @@ import { PromptArea } from "./PromptArea";
 import { architectureLabel, errText, fitsModel, groupBy, groupByArchitecture, releaseLabel } from "./util";
 import { CardGrid, GridSizeControl, type CardGridHandle } from "../shared/CardGrid";
 import { stepIndex, type GroupRun } from "../shared/gridGeom";
-import { TRAIN_PREFS } from "./prefs";
+import { EVAL_GROUPINGS, TRAIN_PREFS, type EvalGrouping } from "./prefs";
 import { useDateFormatters } from "../shared/time";
 import { SidebarSplit } from "../shared/SidebarSplit";
 import { TokenWarning } from "../shared/HfWarnings";
@@ -68,6 +68,13 @@ interface LoraRow {
 function modelLabel(models: TrainModelSpec[], key: string): string {
   return models.find((m) => m.key === key)?.label || key;
 }
+
+/** How a run's finetune and each of its adapters are named — one spelling,
+ *  so the card's chips and the grid's group headings say the same thing. */
+const finetuneLabel = (f: EvalRunFinetune) =>
+  `${f.name || f.job_uid}${f.step != null ? ` @${f.step}` : ""}`;
+const adapterLabel = (lo: EvalRunLora) =>
+  `${lo.name || lo.job_uid || lo.user_key}${lo.step != null ? ` @${lo.step}` : ""} ×${lo.weight}`;
 
 /** One key per adapter SOURCE — a training job, or a hand-added LoRA. The
  *  select in a row swaps between them by this key. */
@@ -403,14 +410,13 @@ function RunDetails({ run, models, onApply, trainingBusy, onClose,
     // right after the model and before the adapters stacked on it. It sets
     // the model too: a finetune only means anything on the one it is of.
     ...(run.finetune?.job_uid ? [{
-      label: `${run.finetune.name || run.finetune.job_uid}${
-        run.finetune.step != null ? ` @${run.finetune.step}` : ""}`,
+      label: finetuneLabel(run.finetune),
       apply: { model: run.model, finetune: {
         job_uid: run.finetune.job_uid, step: run.finetune.step ?? null,
       } } as ChipApply,
     }] : []),
     ...run.loras.map((lo) => ({
-      label: `${lo.name || lo.job_uid || lo.user_key}${lo.step != null ? ` @${lo.step}` : ""} ×${lo.weight}`,
+      label: adapterLabel(lo),
       apply: { lora: { model: run.model, row: {
         job_uid: lo.job_uid, user_key: lo.user_key || undefined,
         step: lo.step, weight: lo.weight,
@@ -887,39 +893,61 @@ const ARROWS: Record<string, StepDir | undefined> = {
   ArrowUp: "up", ArrowDown: "down",
 };
 
-/** ONE SESSION'S HEADING in the contact sheet: when the sitting started, how
- *  many results it holds, and the only bulk action there is — clearing the
- *  whole session, which is how a page full of experiments gets tidied without
- *  20 confirmations. Drawn by `CardGrid` as a section header, whose height is
- *  fixed, so this is one line and never wraps. */
-function SessionHeader({ runs, onClear }: {
-  runs: EvalRun[];
+/** ONE GROUP'S HEADING in the contact sheet: what its runs share (the
+ *  sitting's start, the model, the adapters or the prompt), how many results
+ *  it holds, and the only bulk action there is — clearing the whole group,
+ *  which is how a page full of experiments gets tidied without 20
+ *  confirmations. Drawn by `CardGrid` as a section header, whose height is
+ *  fixed, so this is one line and never wraps: a long prompt is cut. */
+function GroupHeader({ group, grouping, models, onClear }: {
+  group: RunGroup;
+  grouping: EvalGrouping;
+  models: TrainModelSpec[];
   onClear: () => void;
 }) {
   const t = useT();
   const tn = useTn();
   const { formatUnix } = useDateFormatters();
+  const first = group.runs[0];
+  const title = grouping === "session"
+    ? formatUnix(group.runs[group.runs.length - 1].created_at)
+    : grouping === "model"
+      ? modelLabel(models, first.model)
+        + (first.finetune?.job_uid ? ` · ${finetuneLabel(first.finetune)}` : "")
+      : grouping === "adapters"
+        ? first.loras.map(adapterLabel).join(", ") || t("No adapters")
+        : first.prompt || t("(no prompt)");
   return (
     <div style={{
       flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 8,
       padding: "0 2px",
     }}>
-      <SectionHeading>
-        {formatUnix(runs[runs.length - 1].created_at)}
-      </SectionHeading>
-      <span style={{ fontSize: "var(--fs-2)", color: "var(--muted-3)" }}>
-        {tn({ one: "1 result", other: "{n} results" }, runs.length)}
+      {grouping === "session" ? (
+        <SectionHeading style={{ flex: "0 0 auto" }}>{title}</SectionHeading>
+      ) : (
+        // A NAME, not a label: the section heading's capitals would shout a
+        // prompt, and it yields (ellipsis, the whole of it on hover) before
+        // the count and the button do.
+        <span title={title} style={{
+          flex: "0 1 auto", minWidth: 0, overflow: "hidden",
+          textOverflow: "ellipsis", whiteSpace: "nowrap",
+          fontSize: "var(--fs-3)", fontWeight: 600, color: "var(--text-2)",
+        }}>{title}</span>
+      )}
+      <span style={{ flex: "0 0 auto", fontSize: "var(--fs-2)", color: "var(--muted-3)" }}>
+        {tn({ one: "1 result", other: "{n} results" }, group.runs.length)}
       </span>
-      <div style={{ flex: 1, height: 1, background: "var(--border-soft)" }} />
+      <div style={{ flex: 1, minWidth: 12, height: 1, background: "var(--border-soft)" }} />
       <button
         onClick={onClear}
-        title={t("Delete every result in this session")}
+        title={grouping === "session" ? t("Delete every result in this session")
+          : t("Delete every result in this group")}
         className="hoverable"
         style={{
           display: "inline-flex", alignItems: "center", gap: 5, height: 24,
           padding: "0 9px", borderRadius: "var(--r-3)", border: "1px solid var(--border)",
           background: "transparent", color: "var(--muted)", fontSize: "var(--fs-2)",
-          cursor: "pointer", fontFamily: "inherit",
+          cursor: "pointer", fontFamily: "inherit", flex: "0 0 auto",
         }}
       >
         <Icon name="delete_sweep" size={14} />
@@ -927,6 +955,22 @@ function SessionHeader({ runs, onClear }: {
       </button>
     </div>
   );
+}
+
+/** A section of the contact sheet: runs sharing what the grouping is about,
+ *  newest first, keyed by that shared thing (a session by its first run). */
+interface RunGroup { key: string; runs: EvalRun[] }
+
+/** What a run is grouped under, as a key — everything but a session, which
+ *  is a question about its neighbours rather than about the run. Adapters
+ *  count with their step and strength: the same LoRA at 0.6 and at 1.0 is
+ *  the comparison this tab exists for, and two groups show it. */
+function groupKey(run: EvalRun, grouping: Exclude<EvalGrouping, "session">): string {
+  if (grouping === "model") {
+    return `${run.model}\u0000${run.finetune?.job_uid ?? ""}\u0000${run.finetune?.step ?? ""}`;
+  }
+  if (grouping === "adapters") return run.loras.map(adapterLabel).sort().join("\u0000");
+  return run.prompt;
 }
 
 /** ONE TILE: a finished picture, or the slot of one still to come (or that
@@ -1058,30 +1102,46 @@ export function EvaluateView() {
   // say what it is actually waiting for.
   const trainingBusy = !!status?.running_uid;
 
-  // A "session" is one sitting at the tab: runs arrive newest-first, and a
-  // gap longer than SESSION_GAP starts a new group. Wall-clock alone (per
-  // day, per hour) would split an evening's work at midnight and lump
-  // yesterday morning in with yesterday night.
-  const sessions = useMemo(() => {
-    const out: EvalRun[][] = [];
+  const [grouping, setGrouping] = useState<EvalGrouping>(
+    () => TRAIN_PREFS.evalGroupBy.read());
+  useEffect(() => { TRAIN_PREFS.evalGroupBy.write(grouping); }, [grouping]);
+  // THE GROUPS, newest first: a group stands where its newest run does, and
+  // holds its runs newest first. A "session" is one sitting at the tab — a
+  // gap longer than SESSION_GAP starts a new one. Wall-clock alone (per day,
+  // per hour) would split an evening's work at midnight and lump yesterday
+  // morning in with yesterday night.
+  const groups = useMemo<RunGroup[]>(() => {
+    const out: RunGroup[] = [];
+    if (grouping === "session") {
+      for (const r of runs) {
+        const cur = out[out.length - 1];
+        const prev = cur && cur.runs[cur.runs.length - 1];
+        if (prev && prev.created_at - r.created_at <= SESSION_GAP) cur.runs.push(r);
+        else out.push({ key: r.uid, runs: [r] });
+      }
+      return out;
+    }
+    const by = new Map<string, RunGroup>();
     for (const r of runs) {
-      const cur = out[out.length - 1];
-      const prev = cur && cur[cur.length - 1];
-      if (prev && prev.created_at - r.created_at <= SESSION_GAP) cur.push(r);
-      else out.push([r]);
+      const key = groupKey(r, grouping);
+      const g = by.get(key);
+      if (g) g.runs.push(r);
+      else { const n = { key, runs: [r] }; by.set(key, n); out.push(n); }
     }
     return out;
-  }, [runs]);
-  // Every tile of the page in reading order — the sessions newest-first,
-  // each session's runs newest-first, each run's pictures in order.
-  const allTiles = useMemo(() => sessions.flatMap((g) => tilesOf(g)), [sessions]);
+  }, [runs, grouping]);
+  // Every tile of the page in reading order — the groups newest-first, each
+  // group's runs newest-first, each run's pictures in order.
+  const allTiles = useMemo(() => groups.flatMap((g) => tilesOf(g.runs)), [groups]);
   const order = useMemo(
     () => allTiles.map((x) => tileKey(x.run.uid, x.index)), [allTiles]);
-  // THE SESSIONS AS THE GRID'S SECTIONS, runs of that order: each starts a
-  // fresh row under its own heading.
-  const sessionRuns = useMemo<GroupRun[]>(
-    () => sessions.map((g) => ({ key: g[0].uid, count: tilesOf(g).length })),
-    [sessions]);
+  // THE GROUPS AS THE GRID'S SECTIONS, runs of that order: each starts a
+  // fresh row under its own heading. The key carries the grouping, so a
+  // switch is a new layout even where a key happens to repeat.
+  const sectionRuns = useMemo<GroupRun[]>(
+    () => groups.map((g) => ({ key: `${grouping}:${g.key}`,
+                               count: tilesOf(g.runs).length })),
+    [groups, grouping]);
   const pickedSet = useMemo(() => new Set(picked), [picked]);
   // A tile that is gone (its run deleted, or a slot filled by its picture
   // arriving) leaves the selection, or the bar counts things nobody can see.
@@ -1215,7 +1275,7 @@ export function EvaluateView() {
     for (const x of removableTiles) {
       byRun.set(x.run.uid, [...(byRun.get(x.run.uid) ?? []), x]);
     }
-    // Sequential, like clearSession: the manager writes under one lock.
+    // Sequential, like clearGroup: the manager writes under one lock.
     for (const [uid, tiles] of byRun) {
       const run = tiles[0].run;
       const names = tiles.map((x) => x.name).filter((n): n is string => !!n);
@@ -1230,9 +1290,11 @@ export function EvaluateView() {
     qc.invalidateQueries({ queryKey: ["eval-runs"] });
   };
 
-  const clearSession = async (group: EvalRun[]) => {
+  const clearGroup = async (group: EvalRun[]) => {
     if (!(await confirm({
-      title: t("Delete all {n} results from this session?", { n: group.length }),
+      title: grouping === "session"
+        ? t("Delete all {n} results from this session?", { n: group.length })
+        : t("Delete all {n} results in this group?", { n: group.length }),
       body: t("The generated images go with them."),
       answer: { label: t("Delete"), danger: true },
     }))) return;
@@ -1519,9 +1581,30 @@ export function EvaluateView() {
       <div style={{ minHeight: 0, position: "relative", display: "flex",
                     flexDirection: "column" }}>
       {runs.length > 0 && (
-        // The grid's one view option, where the library's toolbar keeps it.
-        <div style={{ display: "flex", justifyContent: "flex-end",
+        // The grid's two view options, where the library's toolbar keeps
+        // them: what it is grouped by at the left, the card size at the right.
+        <div style={{ display: "flex", alignItems: "center", gap: 8,
                       padding: "12px 20px 0" }}>
+          {/* The library toolbar's group-by, drawn the same: the glyph and
+              the tooltip say what the box is for, so it needs no label. */}
+          <Select
+            value={grouping}
+            onChange={(v) => setGrouping(v as EvalGrouping)}
+            title={t("Group by")}
+            height={34} minWidth={0}
+            leading={<Icon name="view_agenda" size={17}
+                           style={{ position: "absolute", left: 10, color: "var(--muted-2)",
+                                    pointerEvents: "none" }} />}
+            style={{
+              padding: "0 28px 0 32px", borderRadius: "var(--r-5)",
+              background: "var(--panel-2)", color: "var(--text-3)",
+              fontSize: "var(--fs-3)",
+            }}
+            options={EVAL_GROUPINGS.map((g) => [g,
+              g === "session" ? t("Session") : g === "model" ? t("Model")
+                : g === "adapters" ? t("Adapters") : t("Prompt")] as const)}
+          />
+          <span style={{ flex: 1 }} />
           <GridSizeControl size={tileSize} onSize={setTileSize} t={t} />
         </div>
       )}
@@ -1550,10 +1633,11 @@ export function EvaluateView() {
               handleRef={gridRef}
               count={order.length} size={tileSize} gap={TILE_GAP} pad={20}
               scrollRef={scrollRef}
-              runs={sessionRuns} groupGap={18}
+              runs={sectionRuns} groupGap={18}
               renderHeader={(_, section) => (
-                <SessionHeader runs={sessions[section]}
-                  onClear={() => clearSession(sessions[section])} />
+                <GroupHeader group={groups[section]} grouping={grouping}
+                  models={models}
+                  onClear={() => clearGroup(groups[section].runs)} />
               )}
               renderCard={(i) => {
                 const tile = allTiles[i];
