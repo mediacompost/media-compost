@@ -2288,6 +2288,13 @@ const CATALOG: Catalog = {
   "Thumbnails": "Miniaturas",
   "Training runs": "Ejecuciones de entrenamiento",
   "Evaluate images": "Imágenes de Evaluar",
+  "Delete all thumbnails? That is {size}.": "¿Eliminar todas las miniaturas? Son {size}.",
+  "Each one is made again the next time it is shown, which takes a moment. A video's hand-picked thumbnail frame goes back to the default one.": "Cada una se vuelve a crear la próxima vez que se muestra, lo que tarda un momento. La miniatura elegida a mano de un vídeo vuelve a ser la predeterminada.",
+  "Delete every Evaluate result? That is {size}.": "¿Eliminar todos los resultados de Evaluar? Son {size}.",
+  "The pictures leave the Evaluate grid too. A generation that is still running is left alone.": "Las imágenes también salen de la cuadrícula de Evaluar. Una generación que aún se está ejecutando no se toca.",
+  "Delete every finished training job?": "¿Eliminar todos los trabajos de entrenamiento terminados?",
+  "Completed, failed and canceled jobs go, with their checkpoints and samples. Drafts and queued, paused or running jobs stay, and a locked checkpoint is kept as one of your adapters.": "Se eliminan los trabajos completados, fallidos y cancelados, con sus checkpoints y muestras. Los borradores y los trabajos en cola, en pausa o en ejecución se quedan, y un checkpoint bloqueado se conserva como uno de tus adaptadores.",
+  "Kept adapters": "Adaptadores conservados",
   "Scratch files": "Archivos temporales",
   "Backups from schema upgrades":
     "Copias de seguridad de actualizaciones de esquema",

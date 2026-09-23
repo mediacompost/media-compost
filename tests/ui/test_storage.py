@@ -7,6 +7,7 @@ rows and bytes — while a cache stays refusable while a trainer is reading it.
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from pathlib import Path
 
@@ -388,3 +389,92 @@ def test_a_READ_does_not_move_the_stats_token(lib_client):
         client.get("/api/items?page=1&page_size=10")
         client.get("/api/groups")
     assert lib.db.commits == before
+
+
+# ---- the three caches the page can empty ------------------------------------
+
+
+def test_emptying_the_thumbnails_leaves_a_thumbnail_being_written(lib_client):
+    """Every thumbnail is made again when it is next shown; a `tmp…` file is
+    one being written right now and is its writer's to finish. A film's
+    hand-picked frame goes with the rest, and its token moves so a browser
+    that has it asks again."""
+    client, lib = lib_client
+    with lib.db.session() as s:
+        f = s.execute(select(File)).scalars().first()
+        fid, sha = f.id, f.sha256
+        f.thumb_rev = 2
+        s.commit()
+    shard = lib.config.thumbs_dir / "ab"
+    shard.mkdir(parents=True, exist_ok=True)
+    (shard / "7-deadbeef.webp").write_bytes(b"t" * 300)
+    (shard / "tmpq1w2e3.webp").write_bytes(b"w" * 50)
+
+    out = client.delete("/api/library/storage/thumbnails").json()
+    assert out["deleted"] >= 1 and out["bytes"] >= 300
+    assert not (shard / "7-deadbeef.webp").exists()
+    assert (shard / "tmpq1w2e3.webp").exists()
+    with lib.db.session() as s:
+        assert s.get(File, fid).thumb_rev == 3
+    # …and it comes back on request.
+    assert client.get(f"/api/files/{fid}/thumb").status_code == 200
+    assert lib.store.thumb_path(fid, sha).exists()
+
+
+def test_the_folder_names_are_the_trainer_s(lib_client):
+    from media_compost.train import evaluate, paths
+    from media_compost.ui.server.routers import stats
+    assert stats.EVAL_DIRNAME == evaluate._EVAL_DIRNAME
+    assert stats.KEPT_DIRNAME == paths.KEPT_DIRNAME
+
+
+def _eval_run(lib, uid: str, created: int) -> None:
+    d = lib.config.data_dir / "training" / "_eval" / uid
+    (d / "images").mkdir(parents=True)
+    (d / "spec.json").write_text(json.dumps(
+        {"model": "sdxl", "prompt": "p", "count": 1, "created_at": created}),
+        encoding="utf-8")
+    (d / "state.json").write_text(json.dumps({"phase": "completed"}),
+                                  encoding="utf-8")
+    (d / "images" / "p000.png").write_bytes(b"i" * 2000)
+
+
+def test_emptying_evaluate_deletes_every_result(lib_client):
+    client, lib = lib_client
+    _eval_run(lib, "r1", 1)
+    _eval_run(lib, "r2", 2)
+    out = client.delete("/api/library/storage/evaluate").json()
+    assert (out["deleted"], out["skipped"]) == (2, 0)
+    assert out["bytes"] >= 4000
+    assert lib.evaluation.list_runs() == []
+    keys = [r["key"] for r in client.get("/api/library/storage").json()["other"]]
+    assert "evaluate" not in keys
+
+
+def _job(lib, uid: str, status: str, *, locked: bool = False) -> None:
+    from media_compost.train import paths as tp
+    d = lib.config.data_dir / "training" / uid
+    (d / "output").mkdir(parents=True)
+    tp.write_json(tp.job_path(d), {"uid": uid, "name": uid, "status": status,
+                                   "total_steps": 10})
+    (d / "output" / "adapter.safetensors").write_bytes(b"w" * 1000)
+    if locked:
+        tp.lock_marker(d / "output").write_text("", encoding="utf-8")
+
+
+def test_emptying_training_takes_finished_jobs_and_keeps_what_was_locked(
+        lib_client):
+    """A draft is work in progress and stays; a locked output outlives its
+    job as the user's own adapter, in a row of its own."""
+    client, lib = lib_client
+    _job(lib, "done", "completed")
+    _job(lib, "locked", "canceled", locked=True)
+    _job(lib, "draft", "draft")
+    out = client.delete("/api/library/storage/training").json()
+    assert (out["deleted"], out["skipped"], out["kept"]) == (2, 1, 1)
+    assert [j["uid"] for j in lib.training.list_jobs()] == ["draft"]
+    other = {r["key"]: r for r in
+             client.get("/api/library/storage").json()["other"]}
+    assert other["kept"]["bytes"] >= 1000
+    assert other["training"]["bytes"] < 2000, "the kept weights are not a job"
+

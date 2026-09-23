@@ -647,6 +647,20 @@ export const api = {
   deleteStorageBackups: () =>
     req<{ ok: boolean; deleted: number; bytes: number }>(
       "/api/library/storage/backups", { method: "DELETE" }),
+  /** Every cached thumbnail; each is made again when next shown. */
+  deleteStorageThumbnails: () =>
+    req<{ ok: boolean; deleted: number; bytes: number }>(
+      "/api/library/storage/thumbnails", { method: "DELETE" }),
+  /** Every Evaluate result but a running one (`skipped`). */
+  deleteStorageEvaluate: () =>
+    req<{ ok: boolean; deleted: number; skipped: number; bytes: number }>(
+      "/api/library/storage/evaluate", { method: "DELETE" }),
+  /** Every FINISHED training job; `kept` locked weights live on as the
+   *  user's adapters, `skipped` counts the jobs left alone. */
+  deleteStorageTraining: () =>
+    req<{ ok: boolean; deleted: number; skipped: number; kept: number;
+          bytes: number }>(
+      "/api/library/storage/training", { method: "DELETE" }),
 
   /** What the rule would remove. A read-only POST (see `READ_ONLY_POSTS`
    *  server-side): the rule is a body, and it counts without writing. */

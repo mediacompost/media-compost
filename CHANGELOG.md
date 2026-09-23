@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Settings → Storage can empty more.** Thumbnails (made again as they are
+  shown), every Evaluate result, and every finished training job each have a
+  Delete button. Adapters kept from deleted jobs have a row of their own.
 - **The Evaluate sidebar is shorter.** Its explanations are behind **?**
   marks, as in the training job editor, and the ones that said nothing are
   gone.

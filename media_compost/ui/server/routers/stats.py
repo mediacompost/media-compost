@@ -189,6 +189,14 @@ def library_stats(s: Session = Depends(get_session),
 #: spelled again here because the app reaches the trainer through one guarded
 #: import and nowhere else; `tests/ui/test_storage.py` holds the two equal.
 EVAL_DIRNAME = "_eval"
+#: …and where a deleted job's LOCKED weights go to live on as the user's own
+#: adapters (`media_compost.train.paths.KEPT_DIRNAME`, held equal the same way).
+KEPT_DIRNAME = "kept"
+
+#: The job states the Storage page's delete takes: a job that is over. A draft,
+#: a queued, paused or running job is work somebody has not finished with, and
+#: a bulk delete from Settings is not the place to decide otherwise.
+FINISHED_JOB_STATES = ("completed", "failed", "canceled")
 
 
 def _dir_bytes(path: Path, skip: tuple[Path, ...] = ()) -> tuple[int, int]:
@@ -278,11 +286,16 @@ def library_storage(s: Session = Depends(get_session),
     # library that had never trained anything reported all of them as
     # "Training runs". They are their own row, and the training walk steps
     # over them — the rule above, applied the other way round.
+    # …and so do the adapters kept from deleted jobs: they are the user's own
+    # now, and a row that could not drop to nothing after every job was
+    # deleted would read as a delete that did not work.
     training = Path(cfg.data_dir) / "training"
     evaluated = training / EVAL_DIRNAME
+    kept = training / KEPT_DIRNAME
     for key, path, skip in (("thumbnails", cfg.thumbs_dir, ()),
-                            ("training", training, (evaluated,)),
+                            ("training", training, (evaluated, kept)),
                             ("evaluate", evaluated, ()),
+                            ("kept", kept, ()),
                             ("scratch", cfg.data_dir / "tmp", ()),
                             ("backups", cfg.backup_dir, ())):
         count, size = _dir_bytes(Path(path), skip)
@@ -372,6 +385,103 @@ def delete_storage_backups(lib: Library = Depends(get_library)):
         deleted += 1
         freed += size
     return {"ok": True, "deleted": deleted, "bytes": freed}
+
+
+@router.delete("/storage/thumbnails")
+def delete_storage_thumbnails(ctx: Ctx = Depends(get_ctx),
+                              s: Session = Depends(get_session),
+                              lib: Library = Depends(get_library)):
+    """Empty the thumbnail cache — the Storage page's row action.
+
+    Every thumbnail is made again the next time it is shown
+    (`ItemStore.ensure_thumb`), so this costs time and nothing else — save a
+    film's hand-picked frame, which lives only here and goes back to the
+    default one (`ops.files.forget_chosen_thumbs` says so to the browsers).
+    A `tmp…` name is a thumbnail being written right now (`_write_thumb`
+    renames it into place), and is left for its writer to finish.
+    """
+    deleted = freed = 0
+    root = Path(lib.config.thumbs_dir)
+    for shard in (root.iterdir() if root.is_dir() else ()):
+        if not shard.is_dir():
+            continue
+        for p in shard.iterdir():
+            if p.name.startswith("tmp") or not p.is_file():
+                continue
+            try:
+                size = p.stat().st_size
+                p.unlink()
+            except OSError:
+                continue
+            deleted += 1
+            freed += size
+    ops_files.forget_chosen_thumbs(ctx)
+    s.commit()
+    return {"ok": True, "deleted": deleted, "bytes": freed}
+
+
+def _training_dirs(lib: Library) -> tuple[Path, Path, Path]:
+    training = Path(lib.config.data_dir) / "training"
+    return training, training / EVAL_DIRNAME, training / KEPT_DIRNAME
+
+
+@router.delete("/storage/evaluate")
+def delete_storage_evaluate(lib: Library = Depends(get_library)):
+    """Delete every Evaluate result — the Storage page's row action, and the
+    same delete the Evaluate grid's Remove makes, run over all of them.
+
+    A generation that is RUNNING is left alone (its folder is being written,
+    and the single delete refuses it too) and counted in ``skipped``; a queued
+    one is taken off the queue first, as the single delete does.
+    """
+    ev = lib.evaluation
+    if ev is None:
+        raise HTTPException(404, "training is not offered by this server")
+    _, evaluated, _ = _training_dirs(lib)
+    before = _dir_bytes(evaluated)[1]
+    deleted = skipped = 0
+    for run in ev.list_runs():
+        if run.get("status") == "running":
+            skipped += 1
+            continue
+        try:
+            ev.delete(run["uid"])
+        except Exception:  # noqa: BLE001 — it started running meanwhile
+            skipped += 1
+            continue
+        deleted += 1
+    return {"ok": True, "deleted": deleted, "skipped": skipped,
+            "bytes": max(0, before - _dir_bytes(evaluated)[1])}
+
+
+@router.delete("/storage/training")
+def delete_storage_training(lib: Library = Depends(get_library)):
+    """Delete every FINISHED training job — completed, failed or canceled —
+    through the job list's own delete, so a locked checkpoint survives as one
+    of the user's adapters exactly as it does from there (``kept`` says how
+    many). Drafts and queued, paused or running jobs are left and counted in
+    ``skipped``. ``bytes`` is what the jobs' own row gave back, which is less
+    than the folders held wherever weights moved to the kept adapters.
+    """
+    manager = lib.training
+    if manager is None:
+        raise HTTPException(404, "training is not offered by this server")
+    training, evaluated, kept_dir = _training_dirs(lib)
+    skip = (evaluated, kept_dir)
+    before = _dir_bytes(training, skip)[1]
+    deleted = skipped = kept = 0
+    for job in manager.list_jobs():
+        if job.get("status") not in FINISHED_JOB_STATES:
+            skipped += 1
+            continue
+        try:
+            kept += manager.delete(job["uid"])
+        except Exception:  # noqa: BLE001 — it was restarted meanwhile
+            skipped += 1
+            continue
+        deleted += 1
+    return {"ok": True, "deleted": deleted, "skipped": skipped, "kept": kept,
+            "bytes": max(0, before - _dir_bytes(training, skip)[1])}
 
 
 # ---- pruning files by rule --------------------------------------------------

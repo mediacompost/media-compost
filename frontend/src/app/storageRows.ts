@@ -14,6 +14,7 @@ export const STORAGE_ROW_LABELS: Record<string, string> = {
   thumbnails: "Thumbnails",
   training: "Training runs",
   evaluate: "Evaluate images",
+  kept: "Kept adapters",
   scratch: "Scratch files",
   backups: "Backups from schema upgrades",
   database: "Database",
@@ -22,7 +23,7 @@ export const STORAGE_ROW_LABELS: Record<string, string> = {
 export const STORAGE_ROW_ICONS: Record<string, string> = {
   image: "image", video: "movie", sequence: "auto_stories",
   thumbnails: "grid_view", training: "model_training",
-  evaluate: "science", scratch: "cached",
+  evaluate: "science", kept: "lock", scratch: "cached",
   backups: "backup", database: "database",
 };
 

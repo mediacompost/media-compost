@@ -738,3 +738,27 @@ def prune(ctx: Ctx, rule: PruneRule, *,
         # (now holding nothing but a sidecar) with it.
         ops_items.delete_items(ctx, emptied)
     return len(rows), freed, len(emptied), more
+
+
+def forget_chosen_thumbs(ctx: Ctx) -> int:
+    """Move the thumbnail token of every file whose thumbnail was CHOSEN.
+
+    A film's picked frame ("use this frame as the thumbnail") lives only in
+    the thumbnail cache: `ops/video.set_thumb_frame` writes the picture and
+    bumps `File.thumb_rev`, and nothing records which frame. So when the
+    Storage page clears that cache, the thumbnail generated next is the
+    default one — and it would be served under the SAME ETag and URL token
+    as the picked one (both read `thumb_rev`), so a browser that has the
+    picked frame goes on showing it. Moving the counter says the picture
+    changed. Answers how many files it touched.
+
+    Deliberately unlogged: the thumbnail is a derived cache and the counter
+    is its version, not something anybody set (the frame pick logs nothing
+    either).
+    """
+    res = ctx.session.execute(
+        File.__table__.update()
+        .where(File.thumb_rev > 0)
+        .values(thumb_rev=File.thumb_rev + 1))
+    return int(res.rowcount or 0)
+

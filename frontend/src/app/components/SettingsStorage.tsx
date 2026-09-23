@@ -28,6 +28,7 @@ import { confirm } from "../../shared/ConfirmModal";
 import { Overlay } from "../../shared/Overlay";
 import { useErrText, useT, useTn } from "../i18n";
 import { bumpLibrary } from "../invalidation";
+import { useTrainingOffered } from "../training";
 
 
 /** A row's share of everything measured, as a bar. The denominator is the
@@ -280,15 +281,21 @@ function DeleteArtifacts({ row, label, onDone }: {
  *  one costs, because it is the only thing on this page that cannot be made
  *  again: an artifact is its model run a second time, and a backup is the way
  *  back from an upgrade that went wrong. */
-function DeleteBackups({ row, onDone }: {
-  row: StorageRow; onDone: () => void;
+/** A ROW'S DELETE in "Everything else": a question first, then one request.
+ *  The backups, the thumbnails, the Evaluate results and the finished
+ *  training jobs each empty a different place with a different catch, so the
+ *  question is the caller's; what asking and deleting look like is one. */
+function RowDelete({ question, detail, run, onDone }: {
+  question: string;
+  detail: string;
+  run: () => Promise<unknown>;
+  onDone: () => void;
 }) {
   const t = useT();
-  const tn = useTn();
   const errText = useErrText();
   const [error, setError] = useState("");
   const del = useMutation({
-    mutationFn: () => api.deleteStorageBackups(),
+    mutationFn: run,
     onSuccess: () => { setError(""); onDone(); },
     onError: (e) => setError(errText(e)),
   });
@@ -299,13 +306,8 @@ function DeleteBackups({ row, onDone }: {
     </span>;
   }
   const ask = async () => {
-    const what = tn({
-      one: "Delete the backup left by a schema upgrade? That is 1 file, {size}.",
-      other: "Delete the {n} backups left by schema upgrades? That is {size}.",
-    }, row.count, { size: formatBytes(row.bytes) });
     if (!(await confirm({
-      title: what,
-      body: t("A backup is how a library is put back if an upgrade goes wrong. Nothing here can make one again."),
+      title: question, body: detail,
       answer: { label: t("Delete"), danger: true },
     }))) return;
     setError("");
@@ -323,6 +325,48 @@ function DeleteBackups({ row, onDone }: {
       </Button>
     </div>
   );
+}
+
+/** What each deletable row asks, and the request it makes — the Evaluate
+ *  and training rows only where this server offers training at all. */
+function useRowDelete(onDone: () => void) {
+  const t = useT();
+  const tn = useTn();
+  const qc = useQueryClient();
+  const training = useTrainingOffered();
+  return (r: StorageRow): React.ReactNode => {
+    const size = formatBytes(r.bytes);
+    if (r.key === "backups") {
+      return <RowDelete onDone={onDone} run={api.deleteStorageBackups}
+        question={tn({
+          one: "Delete the backup left by a schema upgrade? That is 1 file, {size}.",
+          other: "Delete the {n} backups left by schema upgrades? That is {size}.",
+        }, r.count, { size })}
+        detail={t("A backup is how a library is put back if an upgrade goes wrong. Nothing here can make one again.")} />;
+    }
+    if (r.key === "thumbnails") {
+      return <RowDelete onDone={onDone} run={api.deleteStorageThumbnails}
+        question={t("Delete all thumbnails? That is {size}.", { size })}
+        detail={t("Each one is made again the next time it is shown, which takes a moment. A video's hand-picked thumbnail frame goes back to the default one.")} />;
+    }
+    if (r.key === "evaluate" && training) {
+      return <RowDelete onDone={() => {
+          qc.invalidateQueries({ queryKey: ["eval-runs"] });
+          onDone();
+        }} run={api.deleteStorageEvaluate}
+        question={t("Delete every Evaluate result? That is {size}.", { size })}
+        detail={t("The pictures leave the Evaluate grid too. A generation that is still running is left alone.")} />;
+    }
+    if (r.key === "training" && training) {
+      return <RowDelete onDone={() => {
+          qc.invalidateQueries({ queryKey: ["train-jobs"] });
+          onDone();
+        }} run={api.deleteStorageTraining}
+        question={t("Delete every finished training job?")}
+        detail={t("Completed, failed and canceled jobs go, with their checkpoints and samples. Drafts and queued, paused or running jobs stay, and a locked checkpoint is kept as one of your adapters.")} />;
+    }
+    return undefined;
+  };
 }
 
 /** A switch row inside the prune card. Spelled out here rather than imported
@@ -697,6 +741,7 @@ export function StoragePage() {
     refetchOnWindowFocus: false,
   });
 
+  const rowDelete = useRowDelete(() => refresh());
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: ["library-storage"] });
     // The sidebar's footer counts the same bytes.
@@ -859,12 +904,12 @@ export function StoragePage() {
           <Row key={r.key} icon={STORAGE_ROW_ICONS[r.key] ?? "folder"}
                label={t(storageRowLabel(r.key))} count={r.count} bytes={r.bytes}
                of={total} last={i === data.other.length - 1}
-               // The one row here with anything to do about it. Thumbnails
-               // and scratch are rebuilt on demand and the database is the
-               // library; a training run belongs to the Train tab, which is
-               // where its own delete already lives.
-               action={r.key === "backups"
-                 ? <DeleteBackups row={r} onDone={refresh} /> : undefined} />
+               // The rows with something to do about them: the backups, the
+               // thumbnails (made again on demand), and — where training is
+               // offered — the Evaluate results and the finished training
+               // jobs. Scratch is the app's own and the database is the
+               // library; the kept adapters are the user's.
+               action={rowDelete(r)} />
         ))}
         {data.other.length === 0 && <Empty text={t("Nothing here")} />}
       </Section>
